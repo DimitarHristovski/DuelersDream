@@ -31,10 +31,38 @@ interface ClassSelectionProps {
 
 // Define class categories
 export const CLASS_CATEGORIES = {
-  "⚔️ Melee & Warrior": ["Knight", "Barbarian", "Duelist", "Paladin", "Sellsword", "Warlord", "Gladiator", "Blademaster", "Spearman"],
-  "🏹 Ranged & Stealth": ["Archer", "Crossbowman", "Falconer", "Marksman"],
-  "🧙 Magic Users": ["Mage", "Necromancer", "Druid", "Sorcerer", "Cleric", "Warlock"],
-  "🛡 Hybrid & Special": ["Battlemage", "Templar", "Alchemist", "Assassin", "Berserker", "SoulfireWarlock"]
+  "⚔️ Melee & Warrior": [
+    "Knight", "Barbarian", "Paladin", "Sellsword", "Warlord", "Gladiator", "Blademaster", "Spearman", "Duelist",
+    "Axemaster", "Hammerlord", "Swordsman", "Guardian", "Sentinel", "Ironclad", "Noble", "Champion", "KnightCommander"
+  ],
+  "🏹 Ranged & Hunter": [
+    "Archer", "Crossbowman", "Falconer", "Marksman", "Ranger", "Sniper", "Beastmaster", "Sharpshooter", "Trapper", "Scout"
+  ],
+  "🧙 Magic & Elemental": [
+    "Mage", "Necromancer", "Druid", "Sorcerer", "Cleric", "Warlock", "Pyromancer", "Cryomancer", "Stormcaller", "Earthshaker",
+    "Firebender", "Icebender", "Earthbender"
+  ],
+  "🛡 Hybrid & Battle": [
+    "Battlemage", "Templar", "Alchemist", "Assassin", "Berserker", "SoulfireWarlock"
+  ],
+  "🗡️ Assassin & Rogue": [
+    "Shadowblade", "Thief", "Ninja", "Rogue"
+  ],
+  "🎭 Support & Utility": [
+    "Bard", "Enchanter", "Illusionist"
+  ],
+  "🌟 Unique & Special": [
+    "Timekeeper", "Voidwalker", "Chaosweaver", "Dreamweaver"
+  ],
+  "🎯 Precision & Specialist": [
+    "Sharpshooter", "Trapper", "Scout"
+  ],
+  "🎭 Performance & Art": [
+    "Jester", "Dancer", "Musician"
+  ],
+  "🏺 Crafting & Artisan": [
+    "Blacksmith", "Artificer", "Tinkerer"
+  ]
 };
 
 // For animation variants
