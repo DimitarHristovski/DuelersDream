@@ -688,12 +688,6 @@ export const BattleArena = ({
     ability: Ability
   ) => {
     let damage;
-    let fireballMin;
-    let fireballMax;
-    let fireballDamage;
-    let drainDamage;
-    let falconDamage;
-    let cripplingDamage;
     
     // Calculate effect duration as half of cooldown (rounded up)
     const calculateEffectDuration = (cooldown: number) => Math.ceil(cooldown / 2);
@@ -704,12 +698,14 @@ export const BattleArena = ({
     switch(ability.name) {
       // Knight abilities
       case 'Shield Wall':
-        applyShieldEffect(player, setPlayer, 50, effectDuration, addLogMessage, 
-          `${player.name} uses Shield Wall, reducing damage by 50% for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Shield Wall for ${damage} damage!`);
         break;
       case 'Heavy Strike':
-        applyAttackBoost(player, setPlayer, 50, effectDuration, addLogMessage, 
-          `${player.name} prepares a Heavy Strike with 50% more attack for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Heavy Strike for ${damage} damage!`);
         break;
       case 'Rally':
         applyHeal(player, setPlayer, 15, addLogMessage, `${player.name} uses Rally, healing for 15 health!`);
@@ -717,33 +713,29 @@ export const BattleArena = ({
         
       // Archer abilities  
       case 'Quick Shot':
-        // Deal two attacks at once
-        const quickShot1 = calculateAttackDamage(player.attackMin, player.attackMax);
-        const quickShot2 = calculateAttackDamage(player.attackMin, player.attackMax);
-        const quickShotTotal = quickShot1 + quickShot2;
-        
-        dealDamage(quickShotTotal, opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Quick Shot, hitting twice for ${quickShotTotal} total damage!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Quick Shot for ${damage} damage!`);
         break;
       case 'Poison Arrow':
-        applyPoison(opponent, setOpponent, calculateEffectDuration(ability.cooldown), addLogMessage, 
-          `${player.name} fires a Poison Arrow, causing damage over ${calculateEffectDuration(ability.cooldown)} turns!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} fires a Poison Arrow for ${damage} damage!`);
         break;
       case 'Evasion':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Evasion, gaining 50% chance to dodge for ${calculateEffectDuration(ability.cooldown)} turns!`);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Evasion for ${damage} damage!`);
         break;
         
       // Mage abilities
       case 'Fireball':
-        fireballMin = 20;
-        fireballMax = 30;
-        fireballDamage = Math.floor(Math.random() * (fireballMax - fireballMin + 1)) + fireballMin;
-        dealDamage(fireballDamage, opponent, setOpponent, addLogMessage, `${player.name} casts Fireball for ${fireballDamage} damage!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Fireball for ${damage} damage!`);
         break;
       case 'Arcane Shield':
-        applyShieldEffect(player, setPlayer, 100, effectDuration, addLogMessage, 
-          `${player.name} casts Arcane Shield, blocking attacks for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 20, addLogMessage, 
+          `${player.name} casts Arcane Shield, healing for 20 health!`);
         break;
       case 'Healing Potion':
         applyHeal(player, setPlayer, 20, addLogMessage, `${player.name} drinks a Healing Potion, restoring 20 health!`);
@@ -751,46 +743,44 @@ export const BattleArena = ({
 
       // Special abilities for other classes  
       case 'Soul Drain':
-        drainDamage = Math.floor(Math.random() * 6) + 10; // 10-15 damage
-        dealDamage(drainDamage, opponent, setOpponent, addLogMessage, `${player.name} drains ${drainDamage} health from ${opponent.name}!`);
-        applyHeal(player, setPlayer, drainDamage, addLogMessage, `${player.name} heals for ${drainDamage} health!`);
+        damage = Math.floor(Math.random() * 6) + 10; // 10-15 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} drains ${damage} health from ${opponent.name}!`);
+        applyHeal(player, setPlayer, damage, addLogMessage, `${player.name} heals for ${damage} health!`);
         break;
         
       case 'Summon Skeleton':
-        applySummonedCreature(player, setPlayer, 8, calculateEffectDuration(ability.cooldown), addLogMessage, 
-          `${player.name} summons a skeleton to fight for ${calculateEffectDuration(ability.cooldown)} turns!`);
+        damage = Math.floor(Math.random() * 11) + 12; // 12-22 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} summons a skeleton for ${damage} damage!`);
         break;
         
       case 'Entangling Roots':
-        applyStunEffect(opponent, setOpponent, addLogMessage, 
-          `${player.name} casts Entangling Roots, immobilizing ${opponent.name} for ${calculateEffectDuration(ability.cooldown)} turns!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} casts Entangling Roots for ${damage} damage!`);
         break;
         
       case 'Rejuvenation':
-        applyRegeneration(player, setPlayer, calculateEffectDuration(ability.cooldown), addLogMessage, 
-          `${player.name} casts Rejuvenation, healing over ${calculateEffectDuration(ability.cooldown)} turns!`);
+        applyHeal(player, setPlayer, 25, addLogMessage, `${player.name} casts Rejuvenation, healing for 25 health!`);
         break;
         
       // Barbarian abilities
       case 'Rage':
-        applyAttackBoost(player, setPlayer, 70, effectDuration, addLogMessage, 
-          `${player.name} enters a Rage, increasing attack by 70% for ${effectDuration} turns!`);
-        // Apply attack reduction to self (defense penalty)
-        applyAttackReduction(player, setPlayer, 30, effectDuration, addLogMessage, 
-          `${player.name} becomes reckless, reducing defense by 30%!`);
+        damage = Math.floor(Math.random() * 11) + 30; // 30-40 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} enters a Rage for ${damage} damage!`);
+        dealDamage(5, player, setPlayer, addLogMessage, 
+          `${player.name} takes 5 damage from rage!`);
         break;
       case 'Whirlwind':
-        // Deal two attacks at 80% damage each
-        const whirlwind1 = Math.floor(calculateAttackDamage(player.attackMin, player.attackMax) * 0.8);
-        const whirlwind2 = Math.floor(calculateAttackDamage(player.attackMin, player.attackMax) * 0.8);
-        const whirlwindTotal = whirlwind1 + whirlwind2;
-        
-        dealDamage(whirlwindTotal, opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Whirlwind, striking twice for ${whirlwindTotal} total damage!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Whirlwind for ${damage} damage!`);
         break;
       case 'Intimidate':
-        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
-          `${player.name} intimidates ${opponent.name}, reducing their attack by 40% for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} intimidates ${opponent.name} for ${damage} damage!`);
         break;
         
       // Paladin abilities
@@ -802,37 +792,42 @@ export const BattleArena = ({
         applyHeal(player, setPlayer, 25, addLogMessage, `${player.name} uses Lay on Hands, healing for 25 health!`);
         break;
       case 'Divine Shield':
-        applyShieldEffect(player, setPlayer, 75, effectDuration, addLogMessage, 
-          `${player.name} casts Divine Shield, reducing damage by 75% for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 30, addLogMessage, 
+          `${player.name} casts Divine Shield, healing for 30 health!`);
         break;
         
       // Sellsword abilities
       case 'Weapon Mastery':
-        applyAttackBoost(player, setPlayer, 40, effectDuration, addLogMessage, 
-          `${player.name} switches combat style, gaining 40% attack boost for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Weapon Mastery for ${damage} damage!`);
         break;
       case 'Parry':
-        applyShieldEffect(player, setPlayer, 100, 1, addLogMessage, 
-          `${player.name} prepares to Parry the next attack!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Parry for ${damage} damage!`);
+        break;
         break;
       case 'War Cry':
-        applyAttackReduction(opponent, setOpponent, 25, effectDuration, addLogMessage, 
-          `${player.name} lets out a War Cry, reducing ${opponent.name}'s attack by 25% for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} lets out a War Cry for ${damage} damage!`);
         break;
         
       // Warlord abilities
       case 'Command Strike':
         damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Command Strike for ${damage} damage!`);
-        applyAttackBoost(player, setPlayer, 20, 1, addLogMessage, `${player.name} gains tactical advantage for next turn!`);
+        applyHeal(player, setPlayer, 10, addLogMessage, `${player.name} gains tactical advantage and heals for 10 health!`);
         break;
       case 'Battle Tactics':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} studies the opponent, gaining 70% chance to dodge next attack!`);
+        damage = Math.floor(Math.random() * 11) + 22; // 22-32 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} studies the opponent for ${damage} damage!`);
         break;
       case 'Rally Troops':
         applyHeal(player, setPlayer, 20, addLogMessage, `${player.name} rallies troops, healing for 20 health!`);
-        applyAttackBoost(player, setPlayer, 10, 1, addLogMessage, `${player.name} gains +10 attack for next turn!`);
+        applyHeal(player, setPlayer, 10, addLogMessage, `${player.name} gains tactical advantage and heals for 10 health!`);
         break;
         
       // Gladiator abilities
@@ -841,29 +836,23 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} performs a Crowd Pleaser for ${damage} damage!`);
         break;
       case 'Net Throw':
-        applyStunEffect(opponent, setOpponent, addLogMessage, 
-          `${player.name} throws a net, immobilizing ${opponent.name} for next turn!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} throws a net for ${damage} damage!`);
         break;
       case 'Second Wind':
         applyHeal(player, setPlayer, 15, addLogMessage, `${player.name} catches a Second Wind, healing for 15 health!`);
-        // Clear negative effects (implemented as healing message)
-        addLogMessage(`${player.name} clears all negative effects!`);
         break;
         
       // Blademaster abilities
       case 'Blade Flurry':
-        // Deal three attacks at once
-        const bladeFlurry1 = Math.floor(Math.random() * 5) + 8; // 8-12 damage
-        const bladeFlurry2 = Math.floor(Math.random() * 5) + 8;
-        const bladeFlurry3 = Math.floor(Math.random() * 5) + 8;
-        const bladeFlurryTotal = bladeFlurry1 + bladeFlurry2 + bladeFlurry3;
-        
-        dealDamage(bladeFlurryTotal, opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Blade Flurry, striking three times for ${bladeFlurryTotal} total damage!`);
+        damage = Math.floor(Math.random() * 11) + 30; // 30-40 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Blade Flurry for ${damage} damage!`);
         break;
       case 'Perfect Stance':
-        applyShieldEffect(player, setPlayer, 40, 2, addLogMessage, 
-          `${player.name} enters Perfect Stance, reducing damage by 40% for 2 turns!`);
+        applyHeal(player, setPlayer, 25, addLogMessage, 
+          `${player.name} enters Perfect Stance, healing for 25 health!`);
         break;
       case 'Vital Strike':
         damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
@@ -876,25 +865,27 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Thrust for ${damage} damage!`);
         break;
       case 'Phalanx':
-        applyShieldEffect(player, setPlayer, 60, 1, addLogMessage, 
-          `${player.name} forms a Phalanx, reducing damage by 60% for 1 turn!`);
+        applyHeal(player, setPlayer, 20, addLogMessage, 
+          `${player.name} forms a Phalanx, healing for 20 health!`);
         break;
       case 'Spear Wall':
-        applyShieldEffect(player, setPlayer, 100, 1, addLogMessage, 
-          `${player.name} forms a Spear Wall, ready to counter the next attack!`);
+        applyHeal(player, setPlayer, 30, addLogMessage, 
+          `${player.name} forms a Spear Wall, healing for 30 health!`);
         break;
         
       // Duelist abilities
       case 'Riposte':
-        applyShieldEffect(player, setPlayer, 150, 1, addLogMessage, 
-          `${player.name} prepares to Riposte the next attack with 150% damage!`);
+        damage = Math.floor(Math.random() * 11) + 28; // 28-38 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Riposte for ${damage} damage!`);
         break;
       case 'Feint':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Feint, gaining 80% chance to dodge and counter!`);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Feint for ${damage} damage!`);
         break;
       case 'Precise Strike':
-        damage = calculateAttackDamage(player.attackMin, player.attackMax) * 2;
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Precise Strike for ${damage} damage!`);
         break;
         
@@ -904,13 +895,13 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires a Heavy Bolt for ${damage} damage!`);
         break;
       case 'Piercing Shot':
-        damage = calculateAttackDamage(player.attackMin, player.attackMax);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Piercing Shot for ${damage} damage!`);
-        addLogMessage(`${player.name}'s shot ignores 50% of enemy shield!`);
         break;
       case 'Rapid Reload':
-        reduceAllCooldowns(player, setPlayer, 1, addLogMessage, 
-          `${player.name} performs Rapid Reload, reducing all cooldowns by 1 turn!`);
+        damage = Math.floor(Math.random() * 11) + 12; // 12-22 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} performs Rapid Reload for ${damage} damage!`);
         break;
         
       // Falconer abilities
@@ -919,12 +910,14 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name}'s falcon strikes for ${damage} damage!`);
         break;
       case 'Hunting Tactics':
-        applyAttackBoost(player, setPlayer, 50, 1, addLogMessage, 
-          `${player.name} marks the target, gaining 50% attack for next turn!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} marks the target for ${damage} damage!`);
         break;
       case 'Nature\'s Eye':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Nature's Eye, gaining 80% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 22; // 22-32 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Nature's Eye for ${damage} damage!`);
         break;
         
       // Marksman abilities
@@ -933,12 +926,14 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} takes an Aimed Shot for ${damage} damage!`);
         break;
       case 'Crippling Shot':
-        applyAttackReduction(opponent, setOpponent, 30, 2, addLogMessage, 
-          `${player.name} uses Crippling Shot, reducing ${opponent.name}'s attack by 30% for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 12; // 12-22 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Crippling Shot for ${damage} damage!`);
         break;
       case 'Camouflage':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Camouflage, gaining 90% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Camouflage for ${damage} damage!`);
         break;
         
       // Sorcerer abilities
@@ -948,20 +943,12 @@ export const BattleArena = ({
         dealDamage(10, player, setPlayer, addLogMessage, `${player.name} takes 10 damage from the explosion!`);
         break;
       case 'Arcane Missiles':
-        damage = Math.floor(Math.random() * 4) + 7; // 7-10 damage
-        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires an Arcane Missile for ${damage} damage!`);
-        setTimeout(() => {
-          const damage2 = Math.floor(Math.random() * 4) + 7;
-          dealDamage(damage2, opponent, setOpponent, addLogMessage, `${player.name} fires a second Arcane Missile for ${damage2} damage!`);
-        }, 200);
-        setTimeout(() => {
-          const damage3 = Math.floor(Math.random() * 4) + 7;
-          dealDamage(damage3, opponent, setOpponent, addLogMessage, `${player.name} fires a third Arcane Missile for ${damage3} damage!`);
-        }, 400);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires Arcane Missiles for ${damage} damage!`);
         break;
       case 'Mana Shield':
-        applyShieldEffect(player, setPlayer, 50, effectDuration, addLogMessage, 
-          `${player.name} casts Mana Shield, converting 50% of damage to mana drain for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 25, addLogMessage, 
+          `${player.name} casts Mana Shield, healing for 25 health!`);
         break;
         
       // Cleric abilities
@@ -973,8 +960,8 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Holy Smite for ${damage} damage!`);
         break;
       case 'Blessed Armor':
-        applyShieldEffect(player, setPlayer, 65, 2, addLogMessage, 
-          `${player.name} casts Blessed Armor, reducing damage by 65% for 2 turns!`);
+        applyHeal(player, setPlayer, 35, addLogMessage, 
+          `${player.name} casts Blessed Armor, healing for 35 health!`);
         break;
         
       // Warlock abilities
@@ -987,8 +974,9 @@ export const BattleArena = ({
           `${player.name} sacrifices 10 health to gain 25 mana!`);
         break;
       case 'Summon Imp':
-        applySummonedCreature(player, setPlayer, 8, calculateEffectDuration(ability.cooldown), addLogMessage, 
-          `${player.name} summons an imp to fight for ${calculateEffectDuration(ability.cooldown)} turns!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} summons an imp for ${damage} damage!`);
         break;
         
       // Battlemage abilities
@@ -997,45 +985,43 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Spell Blade for ${damage} damage!`);
         break;
       case 'Mana Surge':
-        applyAttackBoost(player, setPlayer, 70, 1, addLogMessage, 
-          `${player.name} channels Mana Surge, increasing attack by 70% for next turn!`);
+        damage = Math.floor(Math.random() * 11) + 35; // 35-45 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} channels Mana Surge for ${damage} damage!`);
         break;
       case 'Arcane Armor':
-        applyShieldEffect(player, setPlayer, 60, 2, addLogMessage, 
-          `${player.name} casts Arcane Armor, reducing damage by 60% for 2 turns!`);
+        applyHeal(player, setPlayer, 30, addLogMessage, 
+          `${player.name} casts Arcane Armor, healing for 30 health!`);
         break;
         
       // Templar abilities
       case 'Holy Strike':
-        damage = 15;
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Holy Strike for ${damage} damage!`);
-        // Stun chance would need special implementation
-        if (Math.random() < 0.3) {
-          applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name}'s Holy Strike stuns ${opponent.name}!`);
-        }
         break;
       case 'Sacred Barrier':
-        applyShieldEffect(player, setPlayer, 75, 1, addLogMessage, 
-          `${player.name} casts Sacred Barrier, reducing damage by 75% for 1 turn!`);
+        applyHeal(player, setPlayer, 40, addLogMessage, 
+          `${player.name} casts Sacred Barrier, healing for 40 health!`);
         break;
       case 'Righteous Fury':
-        applyAttackBoost(player, setPlayer, 40, 3, addLogMessage, 
-          `${player.name} channels Righteous Fury, increasing attack by 40% for 3 turns!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} channels Righteous Fury for ${damage} damage!`);
         break;
         
       // Alchemist abilities
       case 'Poison Brew':
         damage = Math.floor(Math.random() * 6) + 8; // 8-13 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} throws Poison Brew for ${damage} damage!`);
-        applyPoison(opponent, setOpponent, 3, addLogMessage, `${player.name}'s poison deals damage over 3 turns!`);
         break;
       case 'Healing Elixir':
         damage = Math.floor(Math.random() * 11) + 20; // 20-30 healing
         applyHeal(player, setPlayer, damage, addLogMessage, `${player.name} drinks Healing Elixir, restoring ${damage} health!`);
         break;
       case 'Smoke Bomb':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} throws a Smoke Bomb, gaining 70% evasion for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} throws a Smoke Bomb for ${damage} damage!`);
         break;
         
       // Assassin abilities
@@ -1044,12 +1030,13 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Backstab for ${damage} damage!`);
         break;
       case 'Poison Blade':
-        applyPoison(opponent, setOpponent, 3, addLogMessage, 
-          `${player.name} applies Poison Blade, dealing damage over 3 turns!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Poison Blade for ${damage} damage!`);
         break;
       case 'Smoke Bomb':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Smoke Bomb, gaining 75% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Smoke Bomb for ${damage} damage!`);
         break;
         
       // Berserker abilities
@@ -1059,13 +1046,14 @@ export const BattleArena = ({
         dealDamage(5, player, setPlayer, addLogMessage, `${player.name} takes 5 damage from the reckless attack!`);
         break;
       case 'Battle Roar':
-        applyAttackBoost(player, setPlayer, 50, 2, addLogMessage, 
-          `${player.name} lets out a Battle Roar, increasing attack by 50% for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} lets out a Battle Roar for ${damage} damage!`);
         break;
       case 'Bloodlust':
         damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Bloodlust for ${damage} damage!`);
-        applyRegeneration(player, setPlayer, 2, addLogMessage, `${player.name} gains regeneration for 2 turns!`);
+        applyHeal(player, setPlayer, 10, addLogMessage, `${player.name} heals for 10 health!`);
         break;
         
       // Soulfire Warlock abilities
@@ -1079,8 +1067,8 @@ export const BattleArena = ({
           `${player.name} sacrifices 15 health to gain 35 mana!`);
         break;
       case 'Eternal Flames':
-        applyPoison(opponent, setOpponent, 3, addLogMessage, 
-          `${player.name} sets ${opponent.name} ablaze with Eternal Flames for 3 turns!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Eternal Flames for ${damage} damage!`);
         break;
         
       // Shadowblade abilities
@@ -1089,12 +1077,14 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Shadow Step for ${damage} damage!`);
         break;
       case 'Death Mark':
-        applyMarkTarget(opponent, setOpponent, 50, 2, addLogMessage, 
-          `${player.name} marks the target for 50% increased damage for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} marks the target for ${damage} damage!`);
         break;
       case 'Vanish':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} vanishes, gaining 90% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 22; // 22-32 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} vanishes for ${damage} damage!`);
         break;
         
       // Thief abilities
@@ -1105,29 +1095,25 @@ export const BattleArena = ({
           `${player.name} gains 15 mana!`);
         break;
       case 'Disable Trap':
-        removeAllNegativeEffects(player, setPlayer, addLogMessage, 
-          `${player.name} removes all negative effects!`);
+        applyHeal(player, setPlayer, 20, addLogMessage, 
+          `${player.name} removes negative effects and heals for 20 health!`);
         break;
       case 'Smoke Screen':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} creates a smoke screen, gaining 80% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} creates a smoke screen for ${damage} damage!`);
         break;
         
       // Ninja abilities
       case 'Shuriken Storm':
-        // Throw 4 shurikens at once
-        const damage1 = Math.floor(Math.random() * 3) + 6; // 6-8 damage
-        const damage2 = Math.floor(Math.random() * 3) + 6;
-        const damage3 = Math.floor(Math.random() * 3) + 6;
-        const damage4 = Math.floor(Math.random() * 3) + 6;
-        const totalDamage = damage1 + damage2 + damage3 + damage4;
-        
-        dealDamage(totalDamage, opponent, setOpponent, addLogMessage, 
-          `${player.name} throws 4 shurikens for ${totalDamage} total damage!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} throws shurikens for ${damage} damage!`);
         break;
       case 'Stealth':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} becomes invisible, gaining 90% evasion for next attack!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} becomes invisible for ${damage} damage!`);
         break;
       case 'Assassinate':
         if (opponent.health < opponent.maxHealth * 0.5) {
@@ -1142,81 +1128,84 @@ export const BattleArena = ({
       case 'Cheap Shot':
         damage = Math.floor(Math.random() * 6) + 15; // 15-20 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Cheap Shot for ${damage} damage!`);
-        applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name} stuns ${opponent.name} for 1 turn!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} stuns ${opponent.name} for ${damage} damage!`);
         break;
       case 'Dirty Fighting':
-        applyAttackReduction(opponent, setOpponent, 35, 2, addLogMessage, 
-          `${player.name} uses Dirty Fighting, reducing ${opponent.name}'s attack by 35% for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Dirty Fighting for ${damage} damage!`);
         break;
       case 'Escape Artist':
-        removeAllNegativeEffects(player, setPlayer, addLogMessage, 
-          `${player.name} removes all negative effects!`);
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} gains 50% evasion!`);
+        applyHeal(player, setPlayer, 20, addLogMessage, 
+          `${player.name} removes negative effects and heals for 20 health!`);
         break;
         
       // Guardian abilities
       case 'Guardian\'s Shield':
-        applyShieldEffect(player, setPlayer, 80, 2, addLogMessage, 
-          `${player.name} uses Guardian's Shield, reducing damage by 80% for 2 turns!`);
+        applyHeal(player, setPlayer, 40, addLogMessage, 
+          `${player.name} uses Guardian's Shield, healing for 40 health!`);
         break;
       case 'Taunt':
-        applyAttackReduction(opponent, setOpponent, 25, 1, addLogMessage, 
-          `${player.name} taunts ${opponent.name}, reducing their attack by 25% for 1 turn!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} taunts ${opponent.name} for ${damage} damage!`);
         break;
       case 'Last Stand':
         if (player.health < player.maxHealth * 0.25) {
-          applyAttackBoost(player, setPlayer, 100, 1, addLogMessage, 
-            `${player.name} enters Last Stand, gaining 100% attack boost!`);
+          damage = Math.floor(Math.random() * 11) + 50; // 50-60 damage
+          dealDamage(damage, opponent, setOpponent, addLogMessage, 
+            `${player.name} enters Last Stand for ${damage} damage!`);
         }
         break;
         
       // Sentinel abilities
       case 'Counter Strike':
-        applyShieldEffect(player, setPlayer, 100, 1, addLogMessage, 
-          `${player.name} prepares to Counter Strike the next attack!`);
+        damage = Math.floor(Math.random() * 11) + 28; // 28-38 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Counter Strike for ${damage} damage!`);
         break;
       case 'Defensive Stance':
-        applyShieldEffect(player, setPlayer, 60, effectDuration, addLogMessage, 
-          `${player.name} enters Defensive Stance, reducing damage by 60% for ${effectDuration} turns!`);
-        applyAttackBoost(player, setPlayer, 30, effectDuration, addLogMessage, 
-          `${player.name} gains 30% attack boost for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 30, addLogMessage, 
+          `${player.name} enters Defensive Stance, healing for 30 health!`);
         break;
       case 'Protect Ally':
         applyHeal(player, setPlayer, 15, addLogMessage, `${player.name} protects ally and heals for 15 health!`);
-        applyShieldEffect(player, setPlayer, 50, 1, addLogMessage, 
-          `${player.name} gains 50% shield for 1 turn!`);
+        applyHeal(player, setPlayer, 25, addLogMessage, 
+          `${player.name} gains additional protection and heals for 25 health!`);
         break;
         
       // Ironclad abilities
       case 'Iron Will':
-        applyShieldEffect(player, setPlayer, 100, 1, addLogMessage, 
-          `${player.name} uses Iron Will, becoming immune to all damage for 1 turn!`);
+        applyHeal(player, setPlayer, 50, addLogMessage, 
+          `${player.name} uses Iron Will, healing for 50 health!`);
         break;
       case 'Heavy Armor':
-        applyShieldEffect(player, setPlayer, 70, 3, addLogMessage, 
-          `${player.name} dons Heavy Armor, reducing damage by 70% for 3 turns!`);
+        applyHeal(player, setPlayer, 35, addLogMessage, 
+          `${player.name} dons Heavy Armor, healing for 35 health!`);
         break;
       case 'Unbreakable':
         applyHeal(player, setPlayer, 25, addLogMessage, `${player.name} becomes Unbreakable, healing for 25 health!`);
-        removeAllNegativeEffects(player, setPlayer, addLogMessage, 
-          `${player.name} clears all negative effects!`);
         break;
         
       // Ranger abilities
       case 'Call Wolf':
-        applySummonedCreature(player, setPlayer, 10, 3, addLogMessage, 
-          `${player.name} calls a wolf to fight for 3 turns!`);
+        damage = Math.floor(Math.random() * 11) + 18; // 18-28 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} calls a wolf for ${damage} damage!`);
         break;
       case 'Tracking Shot':
         damage = Math.floor(Math.random() * 8) + 18; // 18-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Tracking Shot for ${damage} damage!`);
-        applyMarkTarget(opponent, setOpponent, 30, 1, addLogMessage, `${player.name} marks the target for 30% increased damage!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} marks the target for ${damage} damage!`);
         break;
       case 'Survival Instincts':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} uses Survival Instincts, gaining 60% evasion for next attack!`);
-        applyAttackBoost(player, setPlayer, 20, 2, addLogMessage, `${player.name} gains 20% attack boost for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Survival Instincts for ${damage} damage!`);
         break;
         
       // Sniper abilities
@@ -1225,8 +1214,9 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} takes a Precision Shot for ${damage} damage!`);
         break;
       case 'Overwatch':
-        applyAttackBoost(player, setPlayer, 100, 2, addLogMessage, 
-          `${player.name} sets up Overwatch, gaining 100% attack boost for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 50; // 50-60 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} sets up Overwatch for ${damage} damage!`);
         break;
       case 'Kill Shot':
         if (opponent.health < opponent.maxHealth * 0.3) {
@@ -1239,27 +1229,29 @@ export const BattleArena = ({
         
       // Beastmaster abilities
       case 'Summon Bear':
-        applySummonedCreature(player, setPlayer, 15, 3, addLogMessage, 
-          `${player.name} summons a bear to fight for 3 turns!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} summons a bear for ${damage} damage!`);
         break;
       case 'Pack Tactics':
-        applyAttackBoost(player, setPlayer, 50, 2, addLogMessage, 
-          `${player.name} uses Pack Tactics, gaining 50% attack boost for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Pack Tactics for ${damage} damage!`);
         break;
       case 'Wild Command':
-        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
-          `${player.name} uses Wild Command, intimidating ${opponent.name} and reducing their attack by 40% for ${effectDuration} turns!`);
+        damage = Math.floor(Math.random() * 11) + 12; // 12-22 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Wild Command for ${damage} damage!`);
         break;
         
       // Pyromancer abilities
       case 'Inferno':
         damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Inferno for ${damage} damage!`);
-        applyPoison(opponent, setOpponent, 3, addLogMessage, `${player.name}'s fire burns for 5 damage per turn!`);
         break;
       case 'Fire Shield':
-        applyShieldEffect(player, setPlayer, 100, effectDuration, addLogMessage, 
-          `${player.name} creates a Fire Shield that deals 10 damage to attackers for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 50, addLogMessage, 
+          `${player.name} creates a Fire Shield, healing for 50 health!`);
         break;
       case 'Meteor Strike':
         damage = Math.floor(Math.random() * 11) + 35; // 35-45 damage
@@ -1270,43 +1262,52 @@ export const BattleArena = ({
       case 'Frost Bolt':
         damage = Math.floor(Math.random() * 6) + 15; // 15-20 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Frost Bolt for ${damage} damage!`);
-        applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name} freezes ${opponent.name} for 1 turn!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} freezes ${opponent.name} for ${damage} damage!`);
         break;
       case 'Ice Armor':
-        applyShieldEffect(player, setPlayer, 65, 2, addLogMessage, 
-          `${player.name} creates Ice Armor, reducing damage by 65% for 2 turns!`);
+        applyHeal(player, setPlayer, 30, addLogMessage, 
+          `${player.name} creates Ice Armor, healing for 30 health!`);
         break;
       case 'Blizzard':
         damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Blizzard for ${damage} damage!`);
-        applySlow(opponent, setOpponent, 2, addLogMessage, `${player.name} slows ${opponent.name} for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} slows ${opponent.name} for ${damage} damage!`);
         break;
         
       // Stormcaller abilities
       case 'Lightning Bolt':
-        applyChainLightning(opponent, setOpponent, Math.floor(Math.random() * 6) + 20, 0.3, addLogMessage, 
-          `${player.name} casts Lightning Bolt!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Lightning Bolt for ${damage} damage!`);
         break;
       case 'Thunder Clap':
-        damage = 15;
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Thunder Clap for ${damage} damage!`);
-        applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name} stuns ${opponent.name} for 1 turn!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} stuns ${opponent.name} for ${damage} damage!`);
         break;
       case 'Storm Surge':
-        applyAttackBoost(player, setPlayer, 100, 2, addLogMessage, 
-          `${player.name} channels Storm Surge, increasing attack by 100% for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 50; // 50-60 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} channels Storm Surge for ${damage} damage!`);
         break;
         
       // Earthshaker abilities
       case 'Earthquake':
         damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} causes an Earthquake for ${damage} damage!`);
-        applyAttackReduction(opponent, setOpponent, 30, 2, addLogMessage, 
-          `${player.name} reduces ${opponent.name}'s attack by 30% for 2 turns!`);
+        damage = Math.floor(Math.random() * 11) + 8; // 8-18 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} reduces ${opponent.name}'s attack for ${damage} damage!`);
         break;
       case 'Stone Skin':
-        applyShieldEffect(player, setPlayer, 75, effectDuration, addLogMessage, 
-          `${player.name} transforms skin to stone, reducing damage by 75% for ${effectDuration} turns!`);
+        applyHeal(player, setPlayer, 40, addLogMessage, 
+          `${player.name} transforms skin to stone, healing for 40 health!`);
+        break;
         break;
       case 'Rock Throw':
         damage = Math.floor(Math.random() * 11) + 30; // 30-40 damage
@@ -1319,8 +1320,8 @@ export const BattleArena = ({
         applyAttackBoost(player, setPlayer, 30, 2, addLogMessage, `${player.name} gains 30% attack boost for 2 turns!`);
         break;
       case 'Lullaby':
-        applySleep(opponent, setOpponent, 1, addLogMessage, 
-          `${player.name} sings a Lullaby, putting ${opponent.name} to sleep for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 50, effectDuration, addLogMessage, 
+          `${player.name} sings a Lullaby, reducing ${opponent.name}'s attack by 50% for ${effectDuration} turns!`);
         break;
       case 'Battle Song':
         applyAttackBoost(player, setPlayer, 25, 2, addLogMessage, 
@@ -1329,16 +1330,16 @@ export const BattleArena = ({
         
       // Enchanter abilities
       case 'Charm':
-        applyConfusion(opponent, setOpponent, 1, addLogMessage, 
-          `${player.name} charms ${opponent.name}, confusing them for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
+          `${player.name} charms ${opponent.name}, reducing their attack by 40% for ${effectDuration} turns!`);
         break;
       case 'Magic Weapon':
         applyAttackBoost(player, setPlayer, 50, 2, addLogMessage, 
           `${player.name} enchants weapon for 50% increased attack for 2 turns!`);
         break;
       case 'Mirror Image':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} creates a Mirror Image, gaining 100% evasion for next attack!`);
+        applyAttackBoost(player, setPlayer, 45, effectDuration, addLogMessage, 
+          `${player.name} creates a Mirror Image, gaining 45% attack boost for ${effectDuration} turns!`);
         break;
         
       // Illusionist abilities
@@ -1347,19 +1348,18 @@ export const BattleArena = ({
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Phantom Strike for ${damage} damage!`);
         break;
       case 'Confuse':
-        applyConfusion(opponent, setOpponent, 2, addLogMessage, 
-          `${player.name} confuses ${opponent.name}, 50% chance they attack themselves!`);
+        applyAttackReduction(opponent, setOpponent, 45, effectDuration, addLogMessage, 
+          `${player.name} confuses ${opponent.name}, reducing their attack by 45% for ${effectDuration} turns!`);
         break;
       case 'Invisibility':
-        applyEvasion(player, setPlayer, addLogMessage, 
-          `${player.name} becomes invisible, guaranteed dodge for 2 turns!`);
+        applyAttackBoost(player, setPlayer, 50, effectDuration, addLogMessage, 
+          `${player.name} becomes invisible, gaining 50% attack boost for ${effectDuration} turns!`);
         break;
         
       // Axemaster abilities
       case 'Cleave':
         damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Cleave for ${damage} damage!`);
-        applyPoison(opponent, setOpponent, 3, addLogMessage, `${player.name}'s attack causes bleeding for 5 damage per turn!`);
         break;
       case 'Berserker Rage':
         applyAttackBoost(player, setPlayer, 80, effectDuration, addLogMessage, 
@@ -1380,7 +1380,8 @@ export const BattleArena = ({
       case 'Crushing Blow':
         damage = Math.floor(Math.random() * 11) + 30; // 30-40 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Crushing Blow for ${damage} damage!`);
-        applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name} stuns ${opponent.name} for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
+          `${player.name} stuns ${opponent.name}, reducing their attack by 40% for ${effectDuration} turns!`);
         break;
       case 'Ground Slam':
         damage = Math.floor(Math.random() * 6) + 20; // 20-25 damage
@@ -1394,18 +1395,13 @@ export const BattleArena = ({
         
       // Swordsman abilities
       case 'Swift Strike':
-        // Deal two attacks at once
-        const swiftStrike1 = Math.floor(Math.random() * 5) + 8; // 8-12 damage
-        const swiftStrike2 = Math.floor(Math.random() * 5) + 8;
-        const swiftStrikeTotal = swiftStrike1 + swiftStrike2;
-        
-        dealDamage(swiftStrikeTotal, opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Swift Strike, hitting twice for ${swiftStrikeTotal} total damage!`);
+        damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, 
+          `${player.name} uses Swift Strike for ${damage} damage!`);
         break;
       case 'Defensive Stance':
         applyShieldEffect(player, setPlayer, 50, effectDuration, addLogMessage, 
           `${player.name} enters Defensive Stance, reducing damage by 50% for ${effectDuration} turns!`);
-        addLogMessage(`${player.name} prepares to counter for 15 damage!`);
         break;
       case 'Perfect Form':
         damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
@@ -1434,7 +1430,8 @@ export const BattleArena = ({
         break;
       case 'Victory Pose':
         applyHeal(player, setPlayer, 15, addLogMessage, `${player.name} strikes a Victory Pose, healing for 15 health!`);
-        applyEvasion(player, setPlayer, addLogMessage, `${player.name} gains 30% evasion for next attack!`);
+        applyAttackBoost(player, setPlayer, 30, effectDuration, addLogMessage, 
+          `${player.name} gains 30% attack boost for ${effectDuration} turns!`);
         break;
       case 'Glory Seeker':
         if (player.health < player.maxHealth * 0.5) {
@@ -1461,14 +1458,12 @@ export const BattleArena = ({
         
       // Timekeeper abilities
       case 'Time Warp':
-        skipNextTurn(opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Time Warp, skipping ${opponent.name}'s next turn!`);
+        applyAttackReduction(opponent, setOpponent, 60, effectDuration, addLogMessage, 
+          `${player.name} uses Time Warp, reducing ${opponent.name}'s attack by 60% for ${effectDuration} turns!`);
         break;
       case 'Haste':
-        // This would need special implementation for double turns
-        addLogMessage(`${player.name} uses Haste, gaining extra speed!`);
         applyAttackBoost(player, setPlayer, 30, 2, addLogMessage, 
-          `${player.name} gains 30% attack boost for 2 turns!`);
+          `${player.name} uses Haste, gaining 30% attack boost for 2 turns!`);
         break;
       case 'Temporal Shield':
         applyShieldEffect(player, setPlayer, 100, 1, addLogMessage, 
@@ -1479,64 +1474,59 @@ export const BattleArena = ({
       case 'Void Strike':
         damage = Math.floor(Math.random() * 6) + 20; // 20-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses Void Strike for ${damage} damage!`);
-        addLogMessage(`${player.name} teleports behind ${opponent.name}!`);
         break;
       case 'Void Shield':
         applyShieldEffect(player, setPlayer, 50, effectDuration, addLogMessage, 
           `${player.name} creates a Void Shield that absorbs 50% of damage for ${effectDuration} turns!`);
         break;
       case 'Dimensional Rift':
-        skipNextTurn(opponent, setOpponent, addLogMessage, 
-          `${player.name} opens a Dimensional Rift, banishing ${opponent.name} for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 70, effectDuration, addLogMessage, 
+          `${player.name} opens a Dimensional Rift, reducing ${opponent.name}'s attack by 70% for ${effectDuration} turns!`);
         break;
         
       // Chaosweaver abilities
       case 'Chaos Bolt':
         damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Chaos Bolt for ${damage} damage!`);
-        addLogMessage(`${player.name}'s Chaos Bolt has random additional effects!`);
         break;
       case 'Reality Warp':
-        swapStats(player, setPlayer, opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Reality Warp, swapping stats with ${opponent.name}!`);
+        convertHealthToMana(player, setPlayer, 15, 30, addLogMessage, 
+          `${player.name} uses Reality Warp, converting 15 health to 30 mana!`);
         break;
       case 'Entropy Field':
-        addLogMessage(`${player.name} creates an Entropy Field that deals 10 damage per turn to both players!`);
-        dealDamage(10, player, setPlayer, addLogMessage, `${player.name} takes 10 damage from entropy!`);
-        dealDamage(10, opponent, setOpponent, addLogMessage, `${opponent.name} takes 10 damage from entropy!`);
+        damage = Math.floor(Math.random() * 11) + 10; // 10-20 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} creates an Entropy Field for ${damage} damage!`);
         break;
         
       // Dreamweaver abilities
       case 'Nightmare':
-        applyStunEffect(opponent, setOpponent, addLogMessage, 
-          `${player.name} casts Nightmare, putting ${opponent.name} to sleep!`);
-        applyPoison(opponent, setOpponent, 3, addLogMessage, `${player.name}'s nightmare deals 15 damage per turn!`);
+        damage = Math.floor(Math.random() * 11) + 15; // 15-25 damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} casts Nightmare for ${damage} damage!`);
+        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
+          `${player.name} puts ${opponent.name} to sleep, reducing their attack by 40% for ${effectDuration} turns!`);
         break;
       case 'Dream Shield':
-        applyReflectDamage(player, setPlayer, 50, effectDuration, addLogMessage, 
-          `${player.name} creates a Dream Shield that reflects 50% of damage for ${effectDuration} turns!`);
+        applyShieldEffect(player, setPlayer, 50, effectDuration, addLogMessage, 
+          `${player.name} creates a Dream Shield, reducing damage by 50% for ${effectDuration} turns!`);
         break;
       case 'Lucid Dreaming':
-        applyConfusion(opponent, setOpponent, 1, addLogMessage, 
-          `${player.name} uses Lucid Dreaming, confusing ${opponent.name} for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 35, effectDuration, addLogMessage, 
+          `${player.name} uses Lucid Dreaming, confusing ${opponent.name} and reducing their attack by 35% for ${effectDuration} turns!`);
         break;
         
       // Jester abilities
       case 'Juggle':
-        applyConfusion(opponent, setOpponent, 1, addLogMessage, 
-          `${player.name} juggles, confusing ${opponent.name} for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 30, effectDuration, addLogMessage, 
+          `${player.name} juggles, confusing ${opponent.name} and reducing their attack by 30% for ${effectDuration} turns!`);
         break;
       case 'Comedy':
         applyHeal(player, setPlayer, 15, addLogMessage, `${player.name} performs comedy, healing for 15 health!`);
-        applyConfusion(opponent, setOpponent, 1, addLogMessage, 
-          `${player.name} confuses ${opponent.name} for 1 turn!`);
+        applyAttackReduction(opponent, setOpponent, 25, effectDuration, addLogMessage, 
+          `${player.name} confuses ${opponent.name}, reducing their attack by 25% for ${effectDuration} turns!`);
         break;
       case 'Final Act':
         damage = Math.floor(Math.random() * 11) + 20; // 20-30 damage
         dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} performs Final Act for ${damage} damage!`);
-        if (Math.random() < 0.5) {
-          applyStunEffect(opponent, setOpponent, addLogMessage, `${player.name}'s Final Act stuns ${opponent.name}!`);
-        }
         break;
         
       // Dancer abilities
@@ -1560,12 +1550,10 @@ export const BattleArena = ({
         break;
       case 'Healing Melody':
         applyHeal(player, setPlayer, 20, addLogMessage, `${player.name} plays a Healing Melody, restoring 20 health!`);
-        removeAllNegativeEffects(player, setPlayer, addLogMessage, 
-          `${player.name} removes all negative effects!`);
         break;
       case 'Battle Anthem':
-        applyDamageBoost(player, setPlayer, 30, 3, addLogMessage, 
-          `${player.name} plays a Battle Anthem, increasing all stats by 30% for 3 turns!`);
+        applyAttackBoost(player, setPlayer, 30, 3, addLogMessage, 
+          `${player.name} plays a Battle Anthem, increasing attack by 30% for 3 turns!`);
         break;
         
       // Blacksmith abilities
@@ -1584,31 +1572,29 @@ export const BattleArena = ({
         
       // Artificer abilities
       case 'Magical Device':
-        applySummonedCreature(player, setPlayer, 15, 2, addLogMessage, 
-          `${player.name} deploys a Magical Device that attacks for 2 turns!`);
+        applyAttackBoost(player, setPlayer, 35, effectDuration, addLogMessage, 
+          `${player.name} deploys a Magical Device, gaining 35% attack for ${effectDuration} turns!`);
         break;
       case 'Enchant Weapon':
-        applyDamageBoost(player, setPlayer, 50, 3, addLogMessage, 
-          `${player.name} enchants weapon for 50% increased damage for 3 turns!`);
+        applyAttackBoost(player, setPlayer, 50, 3, addLogMessage, 
+          `${player.name} enchants weapon for 50% increased attack for 3 turns!`);
         break;
       case 'Disenchant':
-        removeAllPositiveEffects(opponent, setOpponent, addLogMessage, 
-          `${player.name} uses Disenchant, removing all positive effects from ${opponent.name}!`);
+        applyAttackReduction(opponent, setOpponent, 40, effectDuration, addLogMessage, 
+          `${player.name} uses Disenchant, reducing ${opponent.name}'s attack by 40% for ${effectDuration} turns!`);
         break;
         
       // Tinkerer abilities
       case 'Clockwork Device':
-        applySummonedCreature(player, setPlayer, 10, 3, addLogMessage, 
-          `${player.name} deploys a Clockwork Device that attacks for 3 turns!`);
+        applyAttackBoost(player, setPlayer, 30, effectDuration, addLogMessage, 
+          `${player.name} deploys a Clockwork Device, gaining 30% attack for ${effectDuration} turns!`);
         break;
       case 'Repair':
         applyHeal(player, setPlayer, 20, addLogMessage, `${player.name} repairs, healing for 20 health!`);
-        reduceAllCooldowns(player, setPlayer, 1, addLogMessage, 
-          `${player.name} reduces all cooldowns by 1 turn!`);
         break;
       case 'Overcharge':
-        applyDamageBoost(player, setPlayer, 100, effectDuration, addLogMessage, 
-          `${player.name} overcharges, increasing damage by 100% for ${effectDuration} turns!`);
+        applyAttackBoost(player, setPlayer, 100, effectDuration, addLogMessage, 
+          `${player.name} overcharges, increasing attack by 100% for ${effectDuration} turns!`);
         dealDamage(10, player, setPlayer, addLogMessage, `${player.name} takes 10 damage from overcharge!`);
         break;
         

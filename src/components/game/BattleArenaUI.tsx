@@ -153,7 +153,7 @@ export const BattleArenaUI = ({
             </div>
             
             {/* Status effects */}
-            {(player.effects.shield > 0 || player.effects.attackBoost > 0 || 
+            {(player.effects.shield > 0 || player.effects.damageBoost > 0 || 
               player.effects.poisoned > 0 || player.effects.evading || 
               player.effects.stunned || player.effects.bleeding > 0 || 
               player.effects.regeneration > 0 || player.effects.attackReduction > 0 ||
@@ -165,10 +165,10 @@ export const BattleArenaUI = ({
                     Shield {player.effects.shield}%
                   </Badge>
                 )}
-                {player.effects.attackBoost > 0 && (
+                {player.effects.damageBoost > 0 && (
                   <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700 py-1">
                     <Sword className="h-3 w-3 mr-1" />
-                    +{player.effects.attackBoost}% DMG
+                    +{player.effects.damageBoost}% DMG
                   </Badge>
                 )}
                 {player.effects.poisoned > 0 && (
@@ -296,8 +296,8 @@ export const BattleArenaUI = ({
 
   // Render log entry with animation
   const renderLogEntry = (log: string, index: number) => {
-    // Determine if the log contains attack, healing, or other effects
-    const isattack = log.includes('attack');
+    // Determine if the log contains damage, healing, or other effects
+    const isDamage = log.includes('damage');
     const isHealing = log.includes('heal');
     const isEffect = log.includes('effect') || log.includes('poison') || log.includes('shield') || log.includes('stun');
     
@@ -308,7 +308,7 @@ export const BattleArenaUI = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className={`text-sm rounded-md px-3 py-2 my-1 ${
-          isattack 
+          isDamage 
             ? 'bg-red-900/30 text-red-200 border-l-2 border-red-700' 
             : isHealing 
               ? 'bg-green-900/30 text-green-200 border-l-2 border-green-700' 

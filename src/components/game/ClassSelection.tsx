@@ -48,21 +48,8 @@ export const CLASS_CATEGORIES = {
   "🗡️ Assassin & Rogue": [
     "Shadowblade", "Thief", "Ninja", "Rogue"
   ],
-  "🎭 Support & Utility": [
-    "Bard", "Enchanter", "Illusionist"
-  ],
-  "🌟 Unique & Special": [
-    "Timekeeper", "Voidwalker", "Chaosweaver", "Dreamweaver"
-  ],
-  "🎯 Precision & Specialist": [
-    "Sharpshooter", "Trapper", "Scout"
-  ],
-  "🎭 Performance & Art": [
-    "Jester", "Dancer", "Musician"
-  ],
-  "🏺 Crafting & Artisan": [
-    "Blacksmith", "Artificer", "Tinkerer"
-  ]
+
+
 };
 
 // For animation variants
