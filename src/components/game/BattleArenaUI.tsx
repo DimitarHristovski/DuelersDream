@@ -1,4 +1,4 @@
-import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy } from 'lucide-react';
+import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy, Droplet } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -172,8 +172,8 @@ export const BattleArenaUI = ({
                   </Badge>
                 )}
                 {player.effects.poisoned > 0 && (
-                  <Badge variant="outline" className="bg-green-900/30 text-green-300 border-green-700 py-1">
-                    Poisoned ({player.effects.poisoned})
+                  <Badge variant="outline" className="bg-green-900/30 text-green-300 border-green-700 py-1 flex items-center gap-1">
+                    <Droplet className="h-3 w-3" /> Poisoned ({player.effects.poisoned})
                   </Badge>
                 )}
                 {player.effects.bleeding > 0 && (

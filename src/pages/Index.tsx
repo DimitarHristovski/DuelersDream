@@ -14,7 +14,7 @@ export default function GamePage() {
   const [winner, setWinner] = useState<Player | null>(null);
   
   // Player selections
-  const [player1Class, setPlayer1Class] = useState<keyof typeof PLAYER_CLASSES>("Knight");
+  const [player1Class, setPlayer1Class] = useState<keyof typeof PLAYER_CLASSES>("Warrior");
   const [player2Class, setPlayer2Class] = useState<keyof typeof PLAYER_CLASSES>("Mage");
   const [player1Name, setPlayer1Name] = useState<string>("Player 1");
   const [player2Name, setPlayer2Name] = useState<string>("Player 2");

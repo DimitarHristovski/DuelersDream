@@ -31,25 +31,19 @@ interface ClassSelectionProps {
 
 // Define class categories
 export const CLASS_CATEGORIES = {
-  "⚔️ Melee & Warrior": [
-    "Knight", "Barbarian", "Paladin", "Sellsword", "Warlord", "Gladiator", "Blademaster", "Spearman", "Duelist",
-    "Axemaster", "Hammerlord", "Swordsman", "Guardian", "Sentinel", "Ironclad", "Noble", "Champion", "KnightCommander"
+  "Tier 1": [
+    "Warrior", "Mage", "Rogue", "Archer", "Healer", "Ranger", "Slayer", "Cleric", "Oracle", "Monk"
   ],
-  "🏹 Ranged & Hunter": [
-    "Archer", "Crossbowman", "Falconer", "Marksman", "Ranger", "Sniper", "Beastmaster", "Sharpshooter", "Trapper", "Scout"
-  ],
-  "🧙 Magic & Elemental": [
-    "Mage", "Necromancer", "Druid", "Sorcerer", "Cleric", "Warlock", "Pyromancer", "Cryomancer", "Stormcaller", "Earthshaker",
-    "Firebender", "Icebender", "Earthbender"
-  ],
-  "🛡 Hybrid & Battle": [
-    "Battlemage", "Templar", "Alchemist", "Assassin", "Berserker", "SoulfireWarlock"
-  ],
-  "🗡️ Assassin & Rogue": [
-    "Shadowblade", "Thief", "Ninja", "Rogue"
-  ],
-
-
+  "Tier 2": [
+    "Battlemage", "Warlord", "Marksman Knight", "Paladin", "Beastguard", "Berserker", "Crusader", "Templar Seer", "Fistblade Knight",
+    "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock", "Lightbinder", "Sage", "Mystic Monk",
+    "Sniper", "Shadow Priest", "Pathfinder", "Shadowblade", "Inquisitor", "Nightseer", "Shadow Monk",
+    "Lightshot", "Hawkeye", "Hunter", "Holy Marksman", "Starshot Seer", "Zen Archer",
+    "Beastwarden", "Exorcist", "High Priest", "Prophet", "Peacebringer",
+    "Stalker", "Wild Chaplain", "Spirit Tracker", "Wayfarer",
+    "Doomblade Priest", "Fatekiller", "Blood Monk",
+    "Divine Seer", "Ascetic Priest", "Enlightened Master"
+  ]
 };
 
 // For animation variants
@@ -82,7 +76,7 @@ export const ClassSelection = ({
   startGame
 }: ClassSelectionProps) => {
   const [selectedTab, setSelectedTab] = useState("player1");
-  const [selectedCategory, setSelectedCategory] = useState<string>("⚔️ Melee & Warrior");
+  const [selectedCategory, setSelectedCategory] = useState<string>("Tier 1");
   const [showVersus, setShowVersus] = useState<boolean>(false);
   
   // Handle versus screen display
