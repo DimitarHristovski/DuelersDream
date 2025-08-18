@@ -246,32 +246,60 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     description: "Tier 1 ranged fighter",
     abilities: [
       {
-        name: "Quick Shot",
+        name: "Rapid Fire",
         iconName: "Target",
-        description: "Fire two quick shots (80% damage each)",
-        cooldown: 3,
-        manaCost: 20
-      },
-      {
-        name: "Mark Target",
-        iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 2 turns",
+        description: "Deal 20 damage and gain 30% attack boost for 3 turns",
         cooldown: 4,
         manaCost: 25
       },
       {
-        name: "Aimed Shot",
+        name: "Power Shot",
         iconName: "Target",
-        description: "Deal 25-35 damage",
+        description: "Deal 28 damage with 40% attack boost",
         cooldown: 5,
+        manaCost: 30
+      },
+      {
+        name: "Explosive Barrage",
+        iconName: "Zap",
+        description: "Deal 22 damage and increase attack by 25% for 2 turns",
+        cooldown: 5,
+        manaCost: 28
+      },
+      {
+        name: "Focused Strike",
+        iconName: "ArrowRight",
+        description: "Deal 25 damage with 50% attack increase",
+        cooldown: 4,
+        manaCost: 26
+      },
+      {
+        name: "Venomous Assault",
+        iconName: "Droplets",
+        description: "Deal 18 damage, apply 8 poison, gain 20% attack for 2 turns",
+        cooldown: 5,
+        manaCost: 28
+      },
+      {
+        name: "Battle Fury",
+        iconName: "Crosshair",
+        description: "Increase attack by 60% for 4 turns",
+        cooldown: 7,
         manaCost: 35
+      },
+      {
+        name: "Berserker Shot",
+        iconName: "Eye",
+        description: "Deal 30 damage and gain 45% attack boost for 2 turns",
+        cooldown: 6,
+        manaCost: 32
       },
       {
         name: "Camouflage",
         iconName: "Leaf",
-        description: "Gain 90% evasion for next attack",
-        cooldown: 6,
-        manaCost: 30
+        description: "Gain 100% evasion for 2 turns",
+        cooldown: 8,
+        manaCost: 40
       }
     ]
   },

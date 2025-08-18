@@ -84,9 +84,47 @@ export const BattleArena = ({
       return;
     }
 
+    // Check for evasion
+    if (defender.effects.evasion > 0) {
+      const evasionRoll = Math.random() * 100;
+      if (evasionRoll < defender.effects.evasion) {
+        addLogMessage(`${defender.name} evades ${attacker.name}'s attack!`);
+        
+        // Reduce evasion duration
+        setDefender(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            evasionDuration: Math.max(0, prev.effects.evasionDuration - 1),
+            evasion: prev.effects.evasionDuration <= 1 ? 0 : prev.effects.evasion
+          }
+        }));
+        
+        endOfAction(true);
+        return;
+      }
+    }
+
     const boost = attacker.effects.attackBoost || 0;
     const reduction = defender.effects.attackReduction || 0;
     let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, boost, reduction);
+    
+    // Apply next hit bonus
+    if (attacker.effects.nextHitBonus > 0) {
+      const bonusDamage = Math.floor(damage * (attacker.effects.nextHitBonus / 100));
+      damage += bonusDamage;
+      addLogMessage(`${attacker.name} deals ${bonusDamage} bonus damage from enhanced focus!`);
+      
+      // Remove next hit bonus
+      setAttacker(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          nextHitBonus: 0,
+          nextHitBonusDuration: 0
+        }
+      }));
+    }
     
     // Apply marked target bonus damage
     if (defender.effects.marked && defender.effects.markDamageIncrease > 0) {
@@ -155,6 +193,15 @@ export const BattleArena = ({
         if (updatedEffects.shieldDuration === 0) {
           updatedEffects.shield = 0;
           addLogMessage(`${prev.name}'s shield has worn off.`);
+        }
+      }
+
+      // expire evasion effect
+      if (updatedEffects.evasionDuration > 0) {
+        updatedEffects.evasionDuration = Math.max(0, updatedEffects.evasionDuration - 1);
+        if (updatedEffects.evasionDuration === 0) {
+          updatedEffects.evasion = 0;
+          addLogMessage(`${prev.name}'s evasion has worn off.`);
         }
       }
 
@@ -277,6 +324,15 @@ export const BattleArena = ({
         if (updatedEffects.shieldDuration === 0) {
           updatedEffects.shield = 0;
           addLogMessage(`${prev.name}'s shield has worn off.`);
+        }
+      }
+
+      // expire evasion effect
+      if (updatedEffects.evasionDuration > 0) {
+        updatedEffects.evasionDuration = Math.max(0, updatedEffects.evasionDuration - 1);
+        if (updatedEffects.evasionDuration === 0) {
+          updatedEffects.evasion = 0;
+          addLogMessage(`${prev.name}'s evasion has worn off.`);
         }
       }
 
@@ -660,6 +716,341 @@ export const BattleArena = ({
         }
       }
       return true;
+    }
+
+    // Quick Shot - Fire two shots with reduced damage
+    if (description.includes('quick shot') || description.includes('two quick shots')) {
+      const percentMatch = description.match(/(\d+)%/);
+      if (percentMatch) {
+        const damagePercent = parseInt(percentMatch[1]);
+        const baseDamage = Math.floor(Math.random() * (player.attackMax - player.attackMin + 1)) + player.attackMin;
+        const shotDamage = Math.floor(baseDamage * (damagePercent / 100));
+        
+        dealDamage(shotDamage, opponent, setOpponent, addLogMessage, `${player.name} fires first quick shot for ${shotDamage} damage!`);
+        if (opponent.health > 0) {
+          dealDamage(shotDamage, opponent, setOpponent, addLogMessage, `${player.name} fires second quick shot for ${shotDamage} damage!`);
+        }
+      }
+      return opponent.health > 0;
+    }
+
+    // Aimed Shot - Deal high damage
+    if (description.includes('aimed shot') && description.includes('25-35 damage')) {
+      const damage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+      dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} takes careful aim and deals ${damage} damage!`);
+      return opponent.health > 0;
+    }
+
+    // Explosive Arrow - Deal area damage
+    if (description.includes('explosive arrow')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      const splashMatch = description.match(/(\d+) splash/);
+      if (damageMatch && splashMatch) {
+        const mainDamage = parseInt(damageMatch[1]);
+        const splashDamage = parseInt(splashMatch[1]);
+        dealDamage(mainDamage, opponent, setOpponent, addLogMessage, `${player.name} fires an explosive arrow for ${mainDamage} damage!`);
+        if (opponent.health > 0) {
+          dealDamage(splashDamage, opponent, setOpponent, addLogMessage, `The explosion deals ${splashDamage} additional splash damage!`);
+        }
+      }
+      return opponent.health > 0;
+    }
+
+    // Piercing Shot - Deal damage and ignore armor
+    if (description.includes('piercing shot')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      if (damageMatch) {
+        const damage = parseInt(damageMatch[1]);
+        // Ignore any damage reduction effects
+        const newHealth = Math.max(0, opponent.health - damage);
+        setOpponent(prev => ({ ...prev, health: newHealth }));
+        addLogMessage(`${player.name} fires a piercing shot that ignores armor for ${damage} damage!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Multi Shot - Deal damage to opponent multiple times
+    if (description.includes('multi shot')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      const shotsMatch = description.match(/(\d+) arrows/);
+      if (damageMatch && shotsMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const shots = parseInt(shotsMatch[1]);
+        
+        for (let i = 0; i < shots && opponent.health > 0; i++) {
+          dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires arrow ${i + 1} for ${damage} damage!`);
+        }
+      }
+      return opponent.health > 0;
+    }
+
+    // Poison Arrow - Deal damage and apply poison
+    if (description.includes('poison arrow')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      const poisonMatch = description.match(/(\d+) poison/);
+      if (damageMatch && poisonMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const poisonDamage = parseInt(poisonMatch[1]);
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires a poison arrow for ${damage} damage!`);
+        applyPoison(opponent, setOpponent, 3, addLogMessage, `${opponent.name} is poisoned for ${poisonDamage} damage per turn!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Hunter's Mark - Mark target and gain attack boost
+    if (description.includes('hunter\'s mark') || description.includes('hunters mark')) {
+      const markMatch = description.match(/(\d+)% more damage/);
+      const boostMatch = description.match(/(\d+)% attack/);
+      if (markMatch && boostMatch) {
+        const markDamage = parseInt(markMatch[1]);
+        const attackBoost = parseInt(boostMatch[1]);
+        
+        // Mark the opponent
+        setOpponent(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            marked: true,
+            markDamageIncrease: markDamage,
+            markDuration: 3
+          }
+        }));
+        
+        // Boost own attack
+        applyAttackBoost(player, setPlayer, attackBoost, 2, addLogMessage, `${player.name} marks ${opponent.name} and gains ${attackBoost}% attack boost!`);
+        addLogMessage(`${opponent.name} will take ${markDamage}% more damage for 3 turns!`);
+      }
+      return true;
+    }
+
+    // Rain of Arrows - Deal damage over multiple turns
+    if (description.includes('rain of arrows')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      const turnsMatch = description.match(/(\d+) turns/);
+      if (damageMatch && turnsMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const turns = parseInt(turnsMatch[1]);
+        
+        // Apply immediate damage
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} calls down a rain of arrows for ${damage} damage!`);
+        
+        // Set up damage over time effect (using bleeding mechanism)
+        setOpponent(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            bleeding: damage,
+            bleedDamage: Math.floor(damage / 2),
+            bleedDuration: turns - 1
+          }
+        }));
+        
+        addLogMessage(`Arrows will continue falling for ${turns - 1} more turns!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Eagle Eye - Increase critical hit chance and damage
+    if (description.includes('eagle eye')) {
+      const critMatch = description.match(/(\d+)% critical/);
+      const damageMatch = description.match(/(\d+)% damage/);
+      if (critMatch && damageMatch) {
+        const critChance = parseInt(critMatch[1]);
+        const bonusDamage = parseInt(damageMatch[1]);
+        
+        // Apply next hit bonus
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            nextHitBonus: bonusDamage,
+            nextHitBonusDuration: 1
+          }
+        }));
+        
+        addLogMessage(`${player.name} focuses with eagle eye, next attack has ${critChance}% critical chance and ${bonusDamage}% bonus damage!`);
+      }
+      return true;
+    }
+
+    // Wind Arrow - Deal damage and reduce opponent's next attack
+    if (description.includes('wind arrow')) {
+      const damageMatch = description.match(/(\d+) damage/);
+      const reductionMatch = description.match(/(\d+)% next attack/);
+      if (damageMatch && reductionMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const reduction = parseInt(reductionMatch[1]);
+        
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires a wind arrow for ${damage} damage!`);
+        
+        // Reduce opponent's next attack
+        setOpponent(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            attackReduction: reduction,
+            attackReductionDuration: 1
+          }
+        }));
+        
+        addLogMessage(`${opponent.name}'s next attack is reduced by ${reduction}%!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Mark Target - Mark opponent for increased damage
+    if (description.includes('marked target takes') && description.includes('more damage')) {
+      const damageMatch = description.match(/(\d+)% more damage/);
+      const turnsMatch = description.match(/(\d+) turns/);
+      if (damageMatch && turnsMatch) {
+        const damageIncrease = parseInt(damageMatch[1]);
+        const duration = parseInt(turnsMatch[1]);
+        
+        setOpponent(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            marked: true,
+            markDamageIncrease: damageIncrease,
+            markDuration: duration
+          }
+        }));
+        
+        addLogMessage(`${player.name} marks ${opponent.name}! They will take ${damageIncrease}% more damage for ${duration} turns!`);
+      }
+      return true;
+    }
+
+    // Camouflage - Gain evasion for multiple turns
+    if (description.includes('evasion for 2 turns')) {
+      const evasionMatch = description.match(/(\d+)% evasion/);
+      if (evasionMatch) {
+        const evasionChance = parseInt(evasionMatch[1]);
+        
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            evasion: evasionChance,
+            evasionDuration: 2
+          }
+        }));
+        
+        addLogMessage(`${player.name} camouflages and gains ${evasionChance}% evasion for 2 turns!`);
+      }
+      return true;
+    }
+
+    // Rapid Fire - Deal damage and gain attack boost
+    if (description.includes('deal') && description.includes('damage and gain') && description.includes('attack boost')) {
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const boostMatch = description.match(/(\d+)% attack boost/);
+      const turnsMatch = description.match(/for (\d+) turns/);
+      if (damageMatch && boostMatch && turnsMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const boostValue = parseInt(boostMatch[1]);
+        const duration = parseInt(turnsMatch[1]);
+        
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} rapidly fires for ${damage} damage!`);
+        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Power Shot / Focused Strike - Deal damage with attack boost
+    if (description.includes('damage with') && description.includes('attack')) {
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const boostMatch = description.match(/(\d+)% attack/);
+      if (damageMatch && boostMatch) {
+        const baseDamage = parseInt(damageMatch[1]);
+        const boostPercent = parseInt(boostMatch[1]);
+        const boostedDamage = Math.floor(baseDamage * (1 + boostPercent / 100));
+        
+        dealDamage(boostedDamage, opponent, setOpponent, addLogMessage, `${player.name} fires with enhanced power for ${boostedDamage} damage!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Explosive Barrage - Deal damage and increase attack
+    if (description.includes('deal') && description.includes('damage and increase attack')) {
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const boostMatch = description.match(/increase attack by (\d+)%/);
+      const turnsMatch = description.match(/for (\d+) turns/);
+      if (damageMatch && boostMatch && turnsMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const boostValue = parseInt(boostMatch[1]);
+        const duration = parseInt(turnsMatch[1]);
+        
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} unleashes an explosive barrage for ${damage} damage!`);
+        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Venomous Assault - Deal damage, apply poison, and gain attack boost
+    if (description.includes('apply') && description.includes('poison') && description.includes('gain') && description.includes('attack')) {
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const poisonMatch = description.match(/apply (\d+) poison/);
+      const boostMatch = description.match(/(\d+)% attack/);
+      const turnsMatch = description.match(/for (\d+) turns/);
+      if (damageMatch && poisonMatch && boostMatch && turnsMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const poisonDamage = parseInt(poisonMatch[1]);
+        const boostValue = parseInt(boostMatch[1]);
+        const duration = parseInt(turnsMatch[1]);
+        
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} strikes with venomous assault for ${damage} damage!`);
+        applyPoison(opponent, setOpponent, 3, addLogMessage, `${opponent.name} is poisoned for ${poisonDamage} damage per turn!`);
+        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Battle Fury - Pure attack boost
+    if (description.includes('increase attack by') && description.includes('for 4 turns')) {
+      const boostMatch = description.match(/increase attack by (\d+)%/);
+      if (boostMatch) {
+        const boostValue = parseInt(boostMatch[1]);
+        applyAttackBoost(player, setPlayer, boostValue, 4, addLogMessage, `${player.name} enters battle fury, gaining ${boostValue}% attack boost for 4 turns!`);
+      }
+      return true;
+    }
+
+    // Berserker Shot - Deal damage and gain attack boost
+    if (description.includes('deal') && description.includes('damage and gain') && description.includes('attack boost for 2 turns')) {
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const boostMatch = description.match(/(\d+)% attack boost/);
+      if (damageMatch && boostMatch) {
+        const damage = parseInt(damageMatch[1]);
+        const boostValue = parseInt(boostMatch[1]);
+        
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires a berserker shot for ${damage} damage!`);
+        applyAttackBoost(player, setPlayer, boostValue, 2, addLogMessage, `${player.name} gains ${boostValue}% attack boost for 2 turns!`);
+      }
+      return opponent.health > 0;
+    }
+
+    // Volley - Alternative quick shot with different percentage
+    if (description.includes('volley') || (description.includes('fire two quick shots') && description.includes('85%'))) {
+      const percentMatch = description.match(/(\d+)%/);
+      if (percentMatch) {
+        const damagePercent = parseInt(percentMatch[1]);
+        const baseDamage = Math.floor(Math.random() * (player.attackMax - player.attackMin + 1)) + player.attackMin;
+        const shotDamage = Math.floor(baseDamage * (damagePercent / 100));
+        
+        dealDamage(shotDamage, opponent, setOpponent, addLogMessage, `${player.name} fires first volley shot for ${shotDamage} damage!`);
+        if (opponent.health > 0) {
+          dealDamage(shotDamage, opponent, setOpponent, addLogMessage, `${player.name} fires second volley shot for ${shotDamage} damage!`);
+        }
+      }
+      return opponent.health > 0;
+    }
+
+    // Headshot - High damage aimed shot with different range
+    if (description.includes('headshot') || (description.includes('aimed shot') && description.includes('28-38'))) {
+      const damage = Math.floor(Math.random() * 11) + 28; // 28-38 damage
+      dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} aims for the head and deals ${damage} critical damage!`);
+      return opponent.health > 0;
     }
 
     // Default case - just log the ability use

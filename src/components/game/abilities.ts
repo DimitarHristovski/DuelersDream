@@ -63,6 +63,8 @@ export interface Player {
     weaponEnhancement: number;
     weaponEnhancementElement: string;
     weaponEnhancementDuration: number;
+    evasion: number;
+    evasionDuration: number;
   };
   isComputer?: boolean;
 }
@@ -109,7 +111,9 @@ export const createDefaultEffects = () => ({
   nextHitBonusDuration: 0,
   weaponEnhancement: 0,
   weaponEnhancementElement: '',
-  weaponEnhancementDuration: 0
+  weaponEnhancementDuration: 0,
+  evasion: 0,
+  evasionDuration: 0
 });
 
 // Ability utilities
