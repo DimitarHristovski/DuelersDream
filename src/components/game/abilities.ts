@@ -50,6 +50,19 @@ export interface Player {
     marked: boolean;
     markDamageIncrease: number;
     markDuration: number;
+    // Additional effects for new abilities
+    stunDuration: number;
+    bleedDuration: number;
+    bleedDamage: number;
+    spellDamageBoost: number;
+    spellDamageBoostDuration: number;
+    damageReduction: number;
+    damageReductionDuration: number;
+    nextHitBonus: number;
+    nextHitBonusDuration: number;
+    weaponEnhancement: number;
+    weaponEnhancementElement: string;
+    weaponEnhancementDuration: number;
   };
   isComputer?: boolean;
 }
@@ -83,7 +96,20 @@ export const createDefaultEffects = () => ({
   counterAttack: 0,
   marked: false,
   markDamageIncrease: 0,
-  markDuration: 0
+  markDuration: 0,
+  // Additional effects for new abilities
+  stunDuration: 0,
+  bleedDuration: 0,
+  bleedDamage: 0,
+  spellDamageBoost: 0,
+  spellDamageBoostDuration: 0,
+  damageReduction: 0,
+  damageReductionDuration: 0,
+  nextHitBonus: 0,
+  nextHitBonusDuration: 0,
+  weaponEnhancement: 0,
+  weaponEnhancementElement: '',
+  weaponEnhancementDuration: 0
 });
 
 // Ability utilities
@@ -592,14 +618,45 @@ export const dealDamage = (
   addLogMessage: (message: string) => void,
   logMessage: string
 ) => {
-  const newHealth = Math.max(0, target.health - damage);
+  let actualDamage = damage;
+  
+  // Check if target has shield
+  if (target.effects.shield > 0) {
+    if (target.effects.shield >= damage) {
+      // Shield completely blocks the damage
+      actualDamage = 0;
+      setTarget(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          shield: prev.effects.shield - damage
+        }
+      }));
+      addLogMessage(`${target.name}'s shield blocks ${damage} damage!`);
+    } else {
+      // Shield partially blocks the damage
+      actualDamage = damage - target.effects.shield;
+      setTarget(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          shield: 0
+        }
+      }));
+      addLogMessage(`${target.name}'s shield blocks ${target.effects.shield} damage!`);
+    }
+  }
+  
+  const newHealth = Math.max(0, target.health - actualDamage);
   
   setTarget(prev => ({
     ...prev,
     health: newHealth
   }));
   
-  addLogMessage(logMessage);
+  if (actualDamage > 0) {
+    addLogMessage(logMessage);
+  }
   
   return newHealth;
 };

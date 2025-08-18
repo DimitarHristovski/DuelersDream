@@ -31,20 +31,34 @@ interface ClassSelectionProps {
 
 // Define class categories
 export const CLASS_CATEGORIES = {
-  "Tier 1": [
-    "Warrior", "Mage", "Rogue", "Archer", "Healer", "Ranger", "Slayer", "Cleric", "Oracle", "Monk"
-  ],
-  "Tier 2": [
-    "Battlemage", "Warlord", "Marksman Knight", "Paladin", "Beastguard", "Berserker", "Crusader", "Templar Seer", "Fistblade Knight",
-    "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock", "Lightbinder", "Sage", "Mystic Monk",
-    "Sniper", "Shadow Priest", "Pathfinder", "Shadowblade", "Inquisitor", "Nightseer", "Shadow Monk",
-    "Lightshot", "Hawkeye", "Hunter", "Holy Marksman", "Starshot Seer", "Zen Archer",
-    "Beastwarden", "Exorcist", "High Priest", "Prophet", "Peacebringer",
-    "Stalker", "Wild Chaplain", "Spirit Tracker", "Wayfarer",
-    "Doomblade Priest", "Fatekiller", "Blood Monk",
-    "Divine Seer", "Ascetic Priest", "Enlightened Master"
-  ]
-};
+  "Tier 1": {
+    "Melee": ["Warrior", "Slayer", "Rogue","Monk"],
+    "Ranged": ["Archer", "Ranger"],
+    "Caster": ["Mage", "Cleric", "Oracle",  "Healer"]
+  },
+  "Tier 2": {
+    "Melee": [
+      "Warlord", "Berserker", "Crusader", "Fistblade Knight", "Paladin", "Beastguard",
+      "Shadowblade", "Stalker", "Doomblade Priest", "Blood Monk","Templar Seer",
+    ],
+    "Ranged": [
+      "Marksman Knight", "Sniper", "Hawkeye", "Hunter", "Pathfinder", "Lightshot",
+      "Holy Marksman", "Starshot Seer", "Zen Archer", "Spirit Tracker", "Wayfarer"
+    ],
+    "Caster": [
+      "Battlemage", "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock",
+      "Lightbinder", "Sage", "Mystic Monk", "Shadow Priest", "Inquisitor", "Nightseer",
+      "Shadow Monk", "Beastwarden", "Exorcist", "High Priest", "Prophet", "Peacebringer",
+      "Wild Chaplain", "Fatekiller", "Divine Seer", "Ascetic Priest", "Enlightened Master"
+    ]
+  }
+} as const;
+  
+  
+
+
+type CategoryKey = keyof typeof CLASS_CATEGORIES;
+type SubcategoryKey = keyof typeof CLASS_CATEGORIES[CategoryKey];
 
 // For animation variants
 const containerVariants = {
@@ -77,6 +91,7 @@ export const ClassSelection = ({
 }: ClassSelectionProps) => {
   const [selectedTab, setSelectedTab] = useState("player1");
   const [selectedCategory, setSelectedCategory] = useState<string>("Tier 1");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("Melee");
   const [showVersus, setShowVersus] = useState<boolean>(false);
   
   // Handle versus screen display
@@ -341,14 +356,39 @@ export const ClassSelection = ({
                           ? "bg-amber-700/80 text-amber-100 font-medium" 
                           : "hover:bg-amber-800/40 text-amber-200/70"
                       }`}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setSelectedSubcategory("Melee"); // Reset to first subcategory
+                      }}
                     >
                       <span className="mr-2">{category.split(" ")[0]}</span>
                       <span>{category.split(" ").slice(1).join(" ")}</span>
                       <span className="ml-auto bg-amber-900/70 text-amber-100 text-xs px-2 py-0.5 rounded-full">
-                        {CLASS_CATEGORIES[category as keyof typeof CLASS_CATEGORIES].length}
+                        {Object.values(CLASS_CATEGORIES[category as CategoryKey]).flat().length}
                       </span>
                     </button>
+                    
+                    {/* Show subcategories when this category is selected */}
+                    {selectedCategory === category && (
+                      <div className="ml-4 mt-2 space-y-1">
+                        {Object.keys(CLASS_CATEGORIES[category as CategoryKey]).map((subcategory) => (
+                          <button
+                            key={subcategory}
+                            className={`w-full text-left p-1.5 rounded text-xs transition-colors ${
+                              selectedSubcategory === subcategory
+                                ? "bg-amber-600/60 text-amber-100"
+                                : "hover:bg-amber-800/30 text-amber-200/80"
+                            }`}
+                            onClick={() => setSelectedSubcategory(subcategory)}
+                          >
+                            {subcategory}
+                            <span className="ml-auto bg-amber-800/50 text-amber-100 text-xs px-1.5 py-0.5 rounded-full">
+                              {CLASS_CATEGORIES[category as CategoryKey][subcategory as SubcategoryKey].length}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </ScrollArea>
@@ -358,7 +398,7 @@ export const ClassSelection = ({
             <div className="flex-1 overflow-hidden pl-4 pt-2">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-amber-200 font-bold">
-                  {selectedCategory.split(" ").slice(1).join(" ")} Classes
+                  {selectedCategory.split(" ").slice(1).join(" ")} - {selectedSubcategory} Classes
                 </h3>
                 <span className="text-amber-300 text-sm">
                   Selected: <span className="font-bold text-amber-100">{player1Class}</span>
@@ -371,7 +411,7 @@ export const ClassSelection = ({
                   animate="visible"
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-4"
                 >
-                  {CLASS_CATEGORIES[selectedCategory as keyof typeof CLASS_CATEGORIES]
+                  {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]
                     .filter(className => PLAYER_CLASSES[className as keyof typeof PLAYER_CLASSES])
                     .map(className => renderClassCard(
                       className as keyof typeof PLAYER_CLASSES,
@@ -441,9 +481,31 @@ export const ClassSelection = ({
                       <span className="mr-2">{category.split(" ")[0]}</span>
                       <span>{category.split(" ").slice(1).join(" ")}</span>
                       <span className="ml-auto bg-amber-900/70 text-amber-100 text-xs px-2 py-0.5 rounded-full">
-                        {CLASS_CATEGORIES[category as keyof typeof CLASS_CATEGORIES].length}
+                        {Object.values(CLASS_CATEGORIES[category as CategoryKey]).flat().length}
                       </span>
                     </button>
+                    
+                    {/* Show subcategories when this category is selected */}
+                    {selectedCategory === category && (
+                      <div className="ml-4 mt-2 space-y-1">
+                        {Object.keys(CLASS_CATEGORIES[category as CategoryKey]).map((subcategory) => (
+                          <button
+                            key={subcategory}
+                            className={`w-full text-left p-1.5 rounded text-xs transition-colors ${
+                              selectedSubcategory === subcategory
+                                ? "bg-amber-600/60 text-amber-100"
+                                : "hover:bg-amber-800/30 text-amber-200/80"
+                            }`}
+                            onClick={() => setSelectedSubcategory(subcategory)}
+                          >
+                            {subcategory}
+                            <span className="ml-auto bg-amber-800/50 text-amber-100 text-xs px-1.5 py-0.5 rounded-full">
+                              {CLASS_CATEGORIES[category as CategoryKey][subcategory as SubcategoryKey].length}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </ScrollArea>
@@ -453,7 +515,7 @@ export const ClassSelection = ({
             <div className="flex-1 overflow-hidden pl-4 pt-2">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-amber-200 font-bold">
-                  {selectedCategory.split(" ").slice(1).join(" ")} Classes
+                  {selectedCategory.split(" ").slice(1).join(" ")} - {selectedSubcategory} Classes
                 </h3>
                 <span className="text-amber-300 text-sm">
                   Selected: <span className="font-bold text-amber-100">{player2Class}</span>
@@ -466,7 +528,7 @@ export const ClassSelection = ({
                   animate="visible"
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-4"
                 >
-                  {CLASS_CATEGORIES[selectedCategory as keyof typeof CLASS_CATEGORIES]
+                  {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]
                     .filter(className => PLAYER_CLASSES[className as keyof typeof PLAYER_CLASSES])
                     .map(className => renderClassCard(
                       className as keyof typeof PLAYER_CLASSES,
