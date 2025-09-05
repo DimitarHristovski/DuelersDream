@@ -126,6 +126,18 @@ export default function GamePage() {
     setGameOver(false);
     setWinner(null);
   };
+
+  // Reset game statistics
+  const resetStats = () => {
+    const defaultStats = {
+      wins: 0,
+      losses: 0,
+      gamesPlayed: 0,
+      lastGameResult: ""
+    };
+    setGameStats(defaultStats);
+    localStorage.setItem('duelGameStats', JSON.stringify(defaultStats));
+  };
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-fixed relative overflow-hidden"
@@ -157,6 +169,14 @@ export default function GamePage() {
                 <div>
                   <span className="text-amber-300 font-medium">{gameStats.gamesPlayed} Games Played</span>
                 </div>
+                <Button
+                  onClick={resetStats}
+                  variant="outline"
+                  size="sm"
+                  className="ml-4 bg-red-900/70 text-red-200 hover:bg-red-800 hover:text-white border-red-700/50"
+                >
+                  Reset Scores
+                </Button>
               </div>
             )}
           </div>

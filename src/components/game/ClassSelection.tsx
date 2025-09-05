@@ -32,24 +32,22 @@ interface ClassSelectionProps {
 // Define class categories
 export const CLASS_CATEGORIES = {
   "Tier 1": {
-    "Melee": ["Warrior", "Slayer", "Rogue","Monk"],
+    "Melee": ["Warrior", "Slayer", "Rogue"],
     "Ranged": ["Archer", "Ranger"],
-    "Caster": ["Mage", "Cleric", "Oracle",  "Healer"]
+    "Caster": ["Mage", "Oracle", "Healer"]
   },
   "Tier 2": {
     "Melee": [
-      "Warlord", "Berserker", "Crusader", "Fistblade Knight", "Paladin", "Beastguard",
-      "Shadowblade", "Stalker", "Doomblade Priest", "Blood Monk","Templar Seer",
+      "Warlord", "Berserker", "Paladin", "Beastguard",
+      "Shadowblade", "Stalker", "Doomblade Priest", "Templar Seer"
     ],
     "Ranged": [
       "Marksman Knight", "Sniper", "Hawkeye", "Hunter", "Pathfinder", "Lightshot",
-      "Holy Marksman", "Starshot Seer", "Zen Archer", "Spirit Tracker", "Wayfarer"
+      "Starshot Seer", "Spirit Tracker"
     ],
     "Caster": [
       "Battlemage", "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock",
-      "Lightbinder", "Sage", "Mystic Monk", "Shadow Priest", "Inquisitor", "Nightseer",
-      "Shadow Monk", "Beastwarden", "Exorcist", "High Priest", "Prophet", "Peacebringer",
-      "Wild Chaplain", "Fatekiller", "Divine Seer", "Ascetic Priest", "Enlightened Master"
+      "Sage", "Shadow Priest", "Nightseer", "Beastwarden", "Exorcist", "Prophet", "Fatekiller"
     ]
   }
 } as const;
@@ -317,7 +315,29 @@ export const ClassSelection = ({
   return (
     <div className="max-w-7xl w-full space-y-4 bg-black/80 rounded-lg p-6 overflow-hidden max-h-[85vh] backdrop-blur-sm border border-amber-800/30">
       <h2 className="text-3xl font-bold text-center text-amber-100 mb-4">Choose Your Champion</h2>
-      
+       {/* Battle preview */}
+       <div className="flex flex-col sm:flex-row justify-between items-center pt-4 bg-gradient-to-r from-amber-900/30 to-amber-700/20 p-4 rounded-lg">
+        <div className="flex items-center mb-4 sm:mb-0">
+          <div className="flex flex-col items-center mr-6">
+            <div className="text-amber-100 font-bold">{player1Name}</div>
+            <div className="text-amber-300">{player1Class}</div>
+          </div>
+          <div className="text-amber-600 font-bold text-xl mx-4">VS</div>
+          <div className="flex flex-col items-center ml-6">
+            <div className="text-amber-100 font-bold">{isPlayer2Computer ? `${player2Class} AI` : player2Name}</div>
+            <div className="text-amber-300">{player2Class}</div>
+          </div>
+        </div>
+        
+        <Button 
+          size="lg" 
+          onClick={handleBattleStart}
+          className="bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 
+                   text-white font-bold shadow-lg shadow-amber-900/50 flex items-center px-6"
+        >
+          Start Battle <ChevronRight className="ml-2 h-5 w-5" />
+        </Button>
+      </div>
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-amber-900/50">
           <TabsTrigger value="player1" className="data-[state=active]:bg-amber-600">
@@ -543,29 +563,7 @@ export const ClassSelection = ({
         </TabsContent>
       </Tabs>
       
-      {/* Battle preview */}
-      <div className="flex flex-col sm:flex-row justify-between items-center pt-4 bg-gradient-to-r from-amber-900/30 to-amber-700/20 p-4 rounded-lg">
-        <div className="flex items-center mb-4 sm:mb-0">
-          <div className="flex flex-col items-center mr-6">
-            <div className="text-amber-100 font-bold">{player1Name}</div>
-            <div className="text-amber-300">{player1Class}</div>
-          </div>
-          <div className="text-amber-600 font-bold text-xl mx-4">VS</div>
-          <div className="flex flex-col items-center ml-6">
-            <div className="text-amber-100 font-bold">{isPlayer2Computer ? `${player2Class} AI` : player2Name}</div>
-            <div className="text-amber-300">{player2Class}</div>
-          </div>
-        </div>
-        
-        <Button 
-          size="lg" 
-          onClick={handleBattleStart}
-          className="bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 
-                   text-white font-bold shadow-lg shadow-amber-900/50 flex items-center px-6"
-        >
-          Start Battle <ChevronRight className="ml-2 h-5 w-5" />
-        </Button>
-      </div>
+     
     </div>
   );
 };

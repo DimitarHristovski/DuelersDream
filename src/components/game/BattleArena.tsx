@@ -107,6 +107,14 @@ export const BattleArena = ({
 
     const boost = attacker.effects.attackBoost || 0;
     const reduction = defender.effects.attackReduction || 0;
+    console.log('Attack calculation:', {
+      playerName: attacker.name,
+      attackMin: attacker.attackMin,
+      attackMax: attacker.attackMax,
+      attackBoost: boost,
+      attackReduction: reduction,
+      effects: attacker.effects
+    });
     let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, boost, reduction);
     
     // Apply next hit bonus
@@ -547,6 +555,57 @@ export const BattleArena = ({
   const applyAbilityByDescription = (player: Player, opponent: Player, setPlayer: Dispatch<SetStateAction<Player>>, setOpponent: Dispatch<SetStateAction<Player>>, ability: Ability): boolean => {
     const description = ability.description.toLowerCase();
     
+    console.log('Ability used:', ability.name, 'Description:', description);
+    
+    // Universal attack boost parser - handles all attack boost abilities
+    if (description.includes('attack boost') || description.includes('increase attack') || (description.includes('gain') && description.includes('attack'))) {
+      console.log('Attack boost ability detected:', description);
+      
+      // Extract damage if present
+      const damageMatch = description.match(/deal (\d+) damage/);
+      if (damageMatch) {
+        const damage = parseInt(damageMatch[1]);
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} deals ${damage} damage!`);
+      }
+      
+      // Extract attack boost value
+      const boostMatch = description.match(/(\d+)% attack boost/) || 
+                        description.match(/increase attack by (\d+)%/) ||
+                        description.match(/gain (\d+)% attack/);
+      
+      // Extract duration
+      const turnsMatch = description.match(/for (\d+) turns?/);
+      
+      if (boostMatch) {
+        const boostValue = parseInt(boostMatch[1]);
+        const duration = turnsMatch ? parseInt(turnsMatch[1]) : 2; // Default to 2 turns
+        
+        console.log('Attack boost values:', { boostValue, duration });
+        
+        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turn${duration > 1 ? 's' : ''}!`);
+        
+        // Handle special cases
+        if (description.includes('poison')) {
+          const poisonMatch = description.match(/apply (\d+) poison/);
+          if (poisonMatch) {
+            const poisonDamage = parseInt(poisonMatch[1]);
+            applyPoison(opponent, setOpponent, 3, addLogMessage, `${opponent.name} is poisoned for ${poisonDamage} damage per turn!`);
+          }
+        }
+        
+        if (description.includes('berserker rage')) {
+          const selfDamage = 10;
+          setPlayer(prev => ({
+            ...prev,
+            health: Math.max(1, prev.health - selfDamage)
+          }));
+          addLogMessage(`${player.name} takes ${selfDamage} damage from berserker rage!`);
+        }
+        
+        return opponent.health > 0;
+      }
+    }
+    
     // Shield Bash - Deal 12-18 damage
     if (description.includes('deal 12-18 damage')) {
       const damage = Math.floor(Math.random() * 7) + 12; // 12-18 damage
@@ -561,15 +620,7 @@ export const BattleArena = ({
       return true;
     }
     
-    // Battle Shout - Increase attack by percentage
-    if (description.includes('increase attack by')) {
-      const boostMatch = description.match(/increase attack by (\d+)%/);
-      if (boostMatch) {
-        const boostValue = parseInt(boostMatch[1]);
-        applyAttackBoost(player, setPlayer, boostValue, 1, addLogMessage, `${player.name} uses ${ability.name} and gains ${boostValue}% attack boost!`);
-      }
-      return true;
-    }
+
     
     // Intimidate - Reduce opponent's attack by percentage
     if (description.includes('reduce opponent') && description.includes('attack by')) {
@@ -601,20 +652,7 @@ export const BattleArena = ({
       return true;
     }
 
-    // Berserker Rage - Increase attack and take damage
-    if (description.includes('berserker rage')) {
-      const boostMatch = description.match(/(\d+)%/);
-      const damageMatch = description.match(/(\d+) damage/);
-      if (boostMatch && damageMatch) {
-        const boostValue = parseInt(boostMatch[1]);
-        const selfDamage = parseInt(damageMatch[1]);
-        applyAttackBoost(player, setPlayer, boostValue, 3, addLogMessage, `${player.name} enters a berserker rage, gaining ${boostValue}% attack for 3 turns!`);
-        const newHealth = Math.max(1, player.health - selfDamage);
-        setPlayer(prev => ({ ...prev, health: newHealth }));
-        addLogMessage(`${player.name} takes ${selfDamage} damage from the rage!`);
-      }
-      return true;
-    }
+
 
     // Life Steal - Deal damage and heal
     if (description.includes('life steal')) {
@@ -941,93 +979,53 @@ export const BattleArena = ({
       return true;
     }
 
-    // Rapid Fire - Deal damage and gain attack boost
-    if (description.includes('deal') && description.includes('damage and gain') && description.includes('attack boost')) {
+    // Universal attack boost parser - handles all attack boost abilities
+    if (description.includes('attack boost') || description.includes('increase attack') || description.includes('gain') && description.includes('attack')) {
+      console.log('Attack boost ability detected:', description);
+      
+      // Extract damage if present
       const damageMatch = description.match(/deal (\d+) damage/);
-      const boostMatch = description.match(/(\d+)% attack boost/);
-      const turnsMatch = description.match(/for (\d+) turns/);
-      if (damageMatch && boostMatch && turnsMatch) {
+      if (damageMatch) {
         const damage = parseInt(damageMatch[1]);
-        const boostValue = parseInt(boostMatch[1]);
-        const duration = parseInt(turnsMatch[1]);
-        
-        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} rapidly fires for ${damage} damage!`);
-        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
+        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} deals ${damage} damage!`);
       }
-      return opponent.health > 0;
-    }
-
-    // Power Shot / Focused Strike - Deal damage with attack boost
-    if (description.includes('damage with') && description.includes('attack')) {
-      const damageMatch = description.match(/deal (\d+) damage/);
-      const boostMatch = description.match(/(\d+)% attack/);
-      if (damageMatch && boostMatch) {
-        const baseDamage = parseInt(damageMatch[1]);
-        const boostPercent = parseInt(boostMatch[1]);
-        const boostedDamage = Math.floor(baseDamage * (1 + boostPercent / 100));
-        
-        dealDamage(boostedDamage, opponent, setOpponent, addLogMessage, `${player.name} fires with enhanced power for ${boostedDamage} damage!`);
-      }
-      return opponent.health > 0;
-    }
-
-    // Explosive Barrage - Deal damage and increase attack
-    if (description.includes('deal') && description.includes('damage and increase attack')) {
-      const damageMatch = description.match(/deal (\d+) damage/);
-      const boostMatch = description.match(/increase attack by (\d+)%/);
-      const turnsMatch = description.match(/for (\d+) turns/);
-      if (damageMatch && boostMatch && turnsMatch) {
-        const damage = parseInt(damageMatch[1]);
-        const boostValue = parseInt(boostMatch[1]);
-        const duration = parseInt(turnsMatch[1]);
-        
-        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} unleashes an explosive barrage for ${damage} damage!`);
-        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
-      }
-      return opponent.health > 0;
-    }
-
-    // Venomous Assault - Deal damage, apply poison, and gain attack boost
-    if (description.includes('apply') && description.includes('poison') && description.includes('gain') && description.includes('attack')) {
-      const damageMatch = description.match(/deal (\d+) damage/);
-      const poisonMatch = description.match(/apply (\d+) poison/);
-      const boostMatch = description.match(/(\d+)% attack/);
-      const turnsMatch = description.match(/for (\d+) turns/);
-      if (damageMatch && poisonMatch && boostMatch && turnsMatch) {
-        const damage = parseInt(damageMatch[1]);
-        const poisonDamage = parseInt(poisonMatch[1]);
-        const boostValue = parseInt(boostMatch[1]);
-        const duration = parseInt(turnsMatch[1]);
-        
-        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} strikes with venomous assault for ${damage} damage!`);
-        applyPoison(opponent, setOpponent, 3, addLogMessage, `${opponent.name} is poisoned for ${poisonDamage} damage per turn!`);
-        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turns!`);
-      }
-      return opponent.health > 0;
-    }
-
-    // Battle Fury - Pure attack boost
-    if (description.includes('increase attack by') && description.includes('for 4 turns')) {
-      const boostMatch = description.match(/increase attack by (\d+)%/);
+      
+      // Extract attack boost value
+      const boostMatch = description.match(/(\d+)% attack boost/) || 
+                        description.match(/increase attack by (\d+)%/) ||
+                        description.match(/gain (\d+)% attack/);
+      
+      // Extract duration
+      const turnsMatch = description.match(/for (\d+) turns?/);
+      
       if (boostMatch) {
         const boostValue = parseInt(boostMatch[1]);
-        applyAttackBoost(player, setPlayer, boostValue, 4, addLogMessage, `${player.name} enters battle fury, gaining ${boostValue}% attack boost for 4 turns!`);
-      }
-      return true;
-    }
-
-    // Berserker Shot - Deal damage and gain attack boost
-    if (description.includes('deal') && description.includes('damage and gain') && description.includes('attack boost for 2 turns')) {
-      const damageMatch = description.match(/deal (\d+) damage/);
-      const boostMatch = description.match(/(\d+)% attack boost/);
-      if (damageMatch && boostMatch) {
-        const damage = parseInt(damageMatch[1]);
-        const boostValue = parseInt(boostMatch[1]);
+        const duration = turnsMatch ? parseInt(turnsMatch[1]) : 2; // Default to 2 turns
         
-        dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} fires a berserker shot for ${damage} damage!`);
-        applyAttackBoost(player, setPlayer, boostValue, 2, addLogMessage, `${player.name} gains ${boostValue}% attack boost for 2 turns!`);
+        console.log('Attack boost values:', { boostValue, duration });
+        
+        applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turn${duration > 1 ? 's' : ''}!`);
+        
+        // Handle special cases
+        if (description.includes('poison')) {
+          const poisonMatch = description.match(/apply (\d+) poison/);
+          if (poisonMatch) {
+            const poisonDamage = parseInt(poisonMatch[1]);
+            applyPoison(opponent, setOpponent, 3, addLogMessage, `${opponent.name} is poisoned for ${poisonDamage} damage per turn!`);
+          }
+        }
+        
+        if (description.includes('berserker rage')) {
+          const selfDamage = 10;
+          setPlayer(prev => ({
+            ...prev,
+            health: Math.max(1, prev.health - selfDamage)
+          }));
+          addLogMessage(`${player.name} takes ${selfDamage} damage from berserker rage!`);
+        }
+        
+        return opponent.health > 0;
       }
-      return opponent.health > 0;
     }
 
     // Volley - Alternative quick shot with different percentage
@@ -1052,6 +1050,8 @@ export const BattleArena = ({
       dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} aims for the head and deals ${damage} critical damage!`);
       return opponent.health > 0;
     }
+
+
 
     // Default case - just log the ability use
     addLogMessage(`${player.name} uses ${ability.name}!`);

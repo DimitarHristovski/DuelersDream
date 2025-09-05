@@ -166,17 +166,22 @@ export const applyAttackBoost = (
   addLogMessage: (message: string) => void,
   logMessage: string
 ) => {
-  // Increase attack power directly
-  setPlayer(prev => ({
-    ...prev,
-    attackMin: Math.floor(prev.attackMin * (1 + boostValue / 100)),
-    attackMax: Math.floor(prev.attackMax * (1 + boostValue / 100)),
-    effects: { 
+  console.log('applyAttackBoost called with:', { boostValue, duration, playerName: player.name });
+  console.log('Player effects before:', player.effects);
+  
+  // Set attack boost effect
+  setPlayer(prev => {
+    const newEffects = {
       ...prev.effects, 
       attackBoost: boostValue,
       attackBoostDuration: duration
-    }
-  }));
+    };
+    console.log('Player effects after:', newEffects);
+    return {
+      ...prev,
+      effects: newEffects
+    };
+  });
   addLogMessage(logMessage);
 };
 
@@ -601,17 +606,23 @@ export const calculateAttackDamage = (
   reduction: number = 0
 ): number => {
   let damage = Math.floor(Math.random() * (max - min + 1)) + min;
+  console.log('calculateAttackDamage:', { min, max, boost, reduction, baseDamage: damage });
   
   // Apply damage boost if any
   if (boost > 0) {
-    damage = Math.floor(damage * (1 + boost/100));
+    const boostedDamage = Math.floor(damage * (1 + boost/100));
+    console.log(`Applying ${boost}% attack boost: ${damage} -> ${boostedDamage}`);
+    damage = boostedDamage;
   }
   
   // Apply damage reduction if any
   if (reduction > 0) {
-    damage = Math.floor(damage * (1 - reduction/100));
+    const reducedDamage = Math.floor(damage * (1 - reduction/100));
+    console.log(`Applying ${reduction}% attack reduction: ${damage} -> ${reducedDamage}`);
+    damage = reducedDamage;
   }
   
+  console.log('Final damage:', damage);
   return damage;
 };
 
