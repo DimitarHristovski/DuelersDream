@@ -655,7 +655,7 @@ export const BattleArena = ({
 
 
     // Life Steal - Deal damage and heal
-    if (description.includes('life steal')) {
+    if (description.includes('life steal') || (description.includes('steal') && description.includes('health') && description.includes('damage'))) {
       const damageMatch = description.match(/(\d+) damage/);
       const healMatch = description.match(/(\d+) health/);
       if (damageMatch && healMatch) {
@@ -1052,6 +1052,14 @@ export const BattleArena = ({
     }
 
 
+
+    // Generic fixed damage handler (e.g., "Deal 35 damage")
+    const fixedDamageMatch = description.match(/deal (\d+) damage/);
+    if (fixedDamageMatch) {
+      const damage = parseInt(fixedDamageMatch[1]);
+      dealDamage(damage, opponent, setOpponent, addLogMessage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
+      return opponent.health > 0;
+    }
 
     // Default case - just log the ability use
     addLogMessage(`${player.name} uses ${ability.name}!`);

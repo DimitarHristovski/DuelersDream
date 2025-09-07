@@ -148,7 +148,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Rapid Fire",
         iconName: "Target",
-        description: "Deal 20 damage and gain 30% attack boost for 2 turns",
+        description: "Deal 20 damage and gain 30% attack boost",
         cooldown: 4,
         manaCost: 25
       },
@@ -162,14 +162,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Fury",
         iconName: "Crosshair",
-        description: "Increase attack by 60% for 2 turns",
+        description: "Increase attack by 60% ",
         cooldown: 7,
         manaCost: 35
       },
       {
         name: "Berserker Shot",
         iconName: "Eye",
-        description: "Deal 30 damage and gain 45% attack boost for 2 turns",
+        description: "Deal 30 damage and gain 45% attack boost ",
         cooldown: 6,
         manaCost: 32
       }
@@ -188,48 +188,30 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 20
       },
-      {
-        name: "Mark Target",
-        iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 1 turn",
-        cooldown: 4,
-        manaCost: 25
-      },
+     
       {
         name: "Aimed Shot",
         iconName: "Target",
-        description: "Deal 25-35 damage",
+        description: "Deal 35 damage",
         cooldown: 5,
         manaCost: 35
       },
       {
         name: "Explosive Barrage",
         iconName: "Zap",
-        description: "Deal 22 damage and increase attack by 25% for 2 turns",
+        description: "Deal 22 damage and increase attack by 25% ",
         cooldown: 5,
         manaCost: 28
       },
       {
         name: "Focused Strike",
         iconName: "ArrowRight",
-        description: "Deal 25 damage with 50% attack increase",
+        description: "Deal 25 damage and increase attack by 50%",
         cooldown: 4,
         manaCost: 26
       },
-      {
-        name: "Venomous Assault",
-        iconName: "Droplets",
-        description: "Deal 18 damage, apply 8 poison, gain 20% attack for 2 turns",
-        cooldown: 5,
-        manaCost: 28
-      },
-      {
-        name: "Camouflage",
-        iconName: "Leaf",
-        description: "Gain 100% evasion for 1 turn",
-        cooldown: 8,
-        manaCost: 40
-      }
+    
+    
     ]
   },
   "Mage": {
@@ -364,14 +346,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -393,7 +375,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Rage",
         iconName: "Flame",
-        description: "Increase attack by 50% for 2 turns",
+        description: "Increase attack by 50% ",
         cooldown: 4,
         manaCost: 25
       },
@@ -445,7 +427,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Righteous Fury",
         iconName: "Flame",
-        description: "Increase damage by 40% for 2 turns",
+        description: "Increase damage by 40% ",
         cooldown: 6,
         manaCost: 30
       }
@@ -474,14 +456,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -510,14 +492,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -546,14 +528,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -582,14 +564,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -619,14 +601,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% for 2 turns",
+        description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
       },
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Reduce opponent's attack by 30% for 2 turns",
+        description: "Reduce opponent's attack by 30% ",
         cooldown: 4,
         manaCost: 20
       }
@@ -648,7 +630,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Mark Target",
         iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 2 turns",
+        description: "Marked target takes 25% more damage ",
         cooldown: 4,
         manaCost: 25
       },
@@ -691,14 +673,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Crippling Shot",
         iconName: "Droplet",
-        description: "Reduce enemy attack by 30% for 2 turns",
+        description: "Reduce enemy attack by 30% ",
         cooldown: 4,
         manaCost: 25
       },
       {
         name: "Mark Target",
         iconName: "Crosshair",
-        description: "Marked (+25% dmg) for 2 turns",
+        description: "Marked (+25% dmg) ",
         cooldown: 4,
         manaCost: 25
       }
@@ -756,7 +738,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Mark Target",
         iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 2 turns",
+        description: "Marked target takes 25% more damage ",
         cooldown: 4,
         manaCost: 25
       },
@@ -792,7 +774,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Mark Target",
         iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 2 turns",
+        description: "Marked target takes 25% more damage ",
         cooldown: 4,
         manaCost: 25
       },
@@ -828,7 +810,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Mark Target",
         iconName: "Crosshair",
-        description: "Marked target takes 25% more damage for 2 turns",
+        description: "Marked target takes 25% more damage ",
         cooldown: 4,
         manaCost: 25
       },

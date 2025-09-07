@@ -48,6 +48,11 @@ export const BattleArenaUI = ({
   const renderPlayerCard = (player: Player, playerNum: 1 | 2) => {
     const isActive = player.isActive && !gameOver;
     
+    // Compute boosted attack range for UI display
+    const attackBoostPercent = player.effects.attackBoost || 0;
+    const boostedAttackMin = Math.floor(player.attackMin * (1 + attackBoostPercent / 100));
+    const boostedAttackMax = Math.floor(player.attackMax * (1 + attackBoostPercent / 100));
+
     return (
       <div className={`relative h-full ${isActive ? 'z-10' : 'z-0'}`}>
         {/* Active player indicator */}
@@ -157,7 +162,7 @@ export const BattleArenaUI = ({
               player.effects.poisoned > 0 || player.effects.evading || 
               player.effects.stunned || player.effects.bleeding > 0 || 
               player.effects.regeneration > 0 || player.effects.attackReduction > 0 ||
-              player.effects.summonedCreature) && (
+              player.effects.summonedCreature || player.effects.attackBoost > 0) && (
               <div className="flex flex-wrap gap-1.5">
                 {player.effects.shield > 0 && (
                   <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
@@ -169,6 +174,12 @@ export const BattleArenaUI = ({
                   <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700 py-1">
                     <Sword className="h-3 w-3 mr-1" />
                     +{player.effects.damageBoost}% DMG
+                  </Badge>
+                )}
+                {player.effects.attackBoost > 0 && (
+                  <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700 py-1">
+                    <Sword className="h-3 w-3 mr-1" />
+                    +{player.effects.attackBoost}% ATK
                   </Badge>
                 )}
                 {player.effects.poisoned > 0 && (
@@ -211,7 +222,14 @@ export const BattleArenaUI = ({
             
             <div className="flex items-center space-x-2 text-sm text-amber-200">
               <Sword className="h-4 w-4 text-amber-400" />
-              <span>Attack: {player.attackMin}-{player.attackMax}</span>
+              <span>
+                Attack: {player.attackMin}-{player.attackMax}
+                {attackBoostPercent > 0 && (
+                  <>
+                    {' '}(<span className="text-amber-300 font-semibold">{boostedAttackMin}-{boostedAttackMax}</span>)
+                  </>
+                )}
+              </span>
             </div>
             
             {/* Abilities section */}
