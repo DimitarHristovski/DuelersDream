@@ -1,0 +1,28 @@
+| Combo            | Tier 2 Class Name    | Description                                  |
+| ---------------- | -------------------- | -------------------------------------------- |
+| Warrior + Mage   | **Battlemage**       | Armored fighter with destructive magic.      |
+| Warrior + Rogue  | **Warlord**          | Tactical melee expert with cunning strikes.  |
+| Warrior + Archer | **Marksman Knight**  | Armored knight skilled with ranged weapons.  |
+| Warrior + Healer | **Paladin**          | Holy warrior with healing powers.            |
+| Warrior + Ranger | **Beastguard**       | Protector who commands nature and beasts.    |
+| Warrior + Slayer | **Berserker**        | Rage-fueled heavy melee fighter.             |
+| Mage + Rogue     | **Spellblade**       | Stealth assassin with magic-infused attacks. |
+| Mage + Archer    | **Arcane Archer**    | Ranged fighter with magical arrows.          |
+| Mage + Healer    | **Priest**           | Magic healer with offensive holy spells.     |
+| Mage + Ranger    | **Elemental Warden** | Nature mage defending with elemental magic.  |
+| Mage + Slayer    | **Warlock**          | Dark magic user with cursed power.           |
+| Mage + Oracle    | **Sage**             | Wise spellcaster with foresight abilities.   |
+| Rogue + Archer   | **Sniper**           | Stealthy, long-range precision killer.       |
+| Rogue + Healer   | **Shadow Priest**    | Stealthy assassin with healing magic.        |
+| Rogue + Ranger   | **Pathfinder**       | Stealth scout with tracking skills.          |
+| Rogue + Slayer   | **Shadowblade**      | Stealthy melee killer with burst damage.     |
+| Rogue + Oracle   | **Nightseer**        | Shadow user with prophetic powers.           |
+| Archer + Healer  | **Lightshot**        | Ranged fighter with holy support skills.     |
+| Archer + Ranger  | **Hawkeye**          | Expert marksman with survival skills.        |
+| Archer + Slayer  | **Hunter**           | Deadly predator specializing in kills.       |
+| Archer + Oracle  | **Starshot Seer**    | Archer with foresight-guided arrows.         |
+| Healer + Ranger  | **Beastwarden**      | Nature guardian and healer of animals.       |
+| Healer + Slayer  | **Exorcist**         | Holy warrior purging evil with force.        |
+| Healer + Oracle  | **Prophet**          | Healer with divine visions.                  |
+| Ranger + Slayer  | **Stalker**          | Silent hunter with deadly strikes.           |
+| Ranger + Oracle  | **Spirit Tracker**   | Tracker guided by spiritual visions.         |

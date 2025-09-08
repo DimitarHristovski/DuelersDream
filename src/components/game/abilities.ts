@@ -54,6 +54,7 @@ export interface Player {
     stunDuration: number;
     bleedDuration: number;
     bleedDamage: number;
+    poisonDamage: number;
     spellDamageBoost: number;
     spellDamageBoostDuration: number;
     damageReduction: number;
@@ -67,6 +68,17 @@ export interface Player {
     evasionDuration: number;
     // Counter reflected spell damage percent
     counterSpell: number;
+    // Repel abilities effect
+    repelAbilities: boolean;
+    repelAbilitiesDuration: number;
+    // Untargetable (cannot be hit by attacks or abilities)
+    untargetable: boolean;
+    untargetableDuration: number;
+    // Shadow ambush delayed strike
+    ambushPending: boolean;
+    ambushDelay: number;
+    ambushMin: number;
+    ambushMax: number;
   };
   isComputer?: boolean;
 }
@@ -105,6 +117,7 @@ export const createDefaultEffects = () => ({
   stunDuration: 0,
   bleedDuration: 0,
   bleedDamage: 0,
+  poisonDamage: 8,
   spellDamageBoost: 0,
   spellDamageBoostDuration: 0,
   damageReduction: 0,
@@ -117,7 +130,18 @@ export const createDefaultEffects = () => ({
   evasion: 0,
   evasionDuration: 0,
   // Counter reflected spell damage percent
-  counterSpell: 0
+  counterSpell: 0,
+  // Repel abilities effect
+  repelAbilities: false,
+  repelAbilitiesDuration: 0,
+  // Untargetable effect
+  untargetable: false,
+  untargetableDuration: 0,
+  // Ambush defaults
+  ambushPending: false,
+  ambushDelay: 0,
+  ambushMin: 0,
+  ambushMax: 0
 });
 
 // Ability utilities

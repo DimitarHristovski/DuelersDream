@@ -79,6 +79,13 @@ export const BattleArena = ({
     if (gameOver) return;
     const [attacker, defender, setAttacker, setDefender] = getActiveAndDefender();
 
+    // Cannot attack untargetable target
+    if (defender.effects.untargetable && defender.effects.untargetableDuration > 0) {
+      addLogMessage(`${defender.name} is untargetable! The attack misses.`);
+      endOfAction(true);
+      return;
+    }
+
     if (attacker.effects.stunned) {
       toast({ title: 'Stunned!', description: 'You are stunned and cannot attack.', variant: 'destructive' });
       return;
@@ -221,6 +228,48 @@ export const BattleArena = ({
         }
       }
 
+      // expire untargetable effect
+      if (updatedEffects.untargetableDuration > 0) {
+        updatedEffects.untargetableDuration = Math.max(0, updatedEffects.untargetableDuration - 1);
+        if (updatedEffects.untargetableDuration === 0) {
+          updatedEffects.untargetable = false;
+          addLogMessage(`${prev.name} emerges from the shadows.`);
+        }
+      }
+
+      // resolve ambush strike if pending and delay elapsed
+      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
+        const minD = prev.effects.ambushMin || 60;
+        const maxD = prev.effects.ambushMax || 90;
+        const damage = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
+        // Determine opponent setter
+        setPlayer2(o => {
+          const newHealth = Math.max(0, o.health - damage);
+          addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
+          return { ...o, health: newHealth };
+        });
+      }
+
+      // decrement ambush delay if any
+      if (updatedEffects.ambushDelay > 0) {
+        updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
+      }
+      // clear ambushPending after strike
+      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
+        updatedEffects.ambushPending = false;
+        updatedEffects.ambushMin = 0;
+        updatedEffects.ambushMax = 0;
+      }
+
+      // expire repel abilities effect
+      if (updatedEffects.repelAbilitiesDuration > 0) {
+        updatedEffects.repelAbilitiesDuration = Math.max(0, updatedEffects.repelAbilitiesDuration - 1);
+        if (updatedEffects.repelAbilitiesDuration === 0) {
+          updatedEffects.repelAbilities = false;
+          addLogMessage(`${prev.name}'s repelling shield fades.`);
+        }
+      }
+
       // expire marked target effect
       if (updatedEffects.markDuration > 0) {
         updatedEffects.markDuration = Math.max(0, updatedEffects.markDuration - 1);
@@ -285,6 +334,16 @@ export const BattleArena = ({
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
       }
 
+      // Summoned creature damage to opponent at start of owner's turn (non-lethal)
+      if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
+        const petDamage = prev.effects.summonedCreature.damage;
+        setPlayer2(o => {
+          const reduced = Math.max(1, o.health - petDamage);
+          if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
+          return { ...o, health: reduced };
+        });
+      }
+
       // Apply bleeding damage
       if (updatedEffects.bleeding > 0) {
         const bleedDamage = updatedEffects.bleedDamage || 6;
@@ -295,7 +354,7 @@ export const BattleArena = ({
 
       // Apply poison damage
       if (updatedEffects.poisoned > 0) {
-        const poisonDamage = 8;
+        const poisonDamage = updatedEffects.poisonDamage || 8;
         const newHealth = Math.max(1, interimHealth - poisonDamage);
         addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
         return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
@@ -357,6 +416,47 @@ export const BattleArena = ({
         if (updatedEffects.evasionDuration === 0) {
           updatedEffects.evasion = 0;
           addLogMessage(`${prev.name}'s evasion has worn off.`);
+        }
+      }
+
+      // expire untargetable effect
+      if (updatedEffects.untargetableDuration > 0) {
+        updatedEffects.untargetableDuration = Math.max(0, updatedEffects.untargetableDuration - 1);
+        if (updatedEffects.untargetableDuration === 0) {
+          updatedEffects.untargetable = false;
+          addLogMessage(`${prev.name} emerges from the shadows.`);
+        }
+      }
+
+      // resolve ambush strike if pending and delay elapsed
+      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
+        const minD = prev.effects.ambushMin || 60;
+        const maxD = prev.effects.ambushMax || 90;
+        const damage = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
+        setPlayer1(o => {
+          const newHealth = Math.max(0, o.health - damage);
+          addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
+          return { ...o, health: newHealth };
+        });
+      }
+
+      // decrement ambush delay if any
+      if (updatedEffects.ambushDelay > 0) {
+        updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
+      }
+      // clear ambushPending after strike
+      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
+        updatedEffects.ambushPending = false;
+        updatedEffects.ambushMin = 0;
+        updatedEffects.ambushMax = 0;
+      }
+
+      // expire repel abilities effect
+      if (updatedEffects.repelAbilitiesDuration > 0) {
+        updatedEffects.repelAbilitiesDuration = Math.max(0, updatedEffects.repelAbilitiesDuration - 1);
+        if (updatedEffects.repelAbilitiesDuration === 0) {
+          updatedEffects.repelAbilities = false;
+          addLogMessage(`${prev.name}'s repelling shield fades.`);
         }
       }
 
@@ -425,6 +525,16 @@ export const BattleArena = ({
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
       }
 
+      // Summoned creature damage to opponent at start of owner's turn (non-lethal)
+      if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
+        const petDamage = prev.effects.summonedCreature.damage;
+        setPlayer1(o => {
+          const reduced = Math.max(1, o.health - petDamage);
+          if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
+          return { ...o, health: reduced };
+        });
+      }
+
       // Apply bleeding damage
       if (updatedEffects.bleeding > 0) {
         const bleedDamage = updatedEffects.bleedDamage || 6;
@@ -435,7 +545,7 @@ export const BattleArena = ({
 
       // Apply poison damage
       if (updatedEffects.poisoned > 0) {
-        const poisonDamage = 8;
+        const poisonDamage = updatedEffects.poisonDamage || 8;
         const newHealth = Math.max(1, interimHealth - poisonDamage);
         addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
         return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
@@ -581,6 +691,18 @@ export const BattleArena = ({
     
     console.log('Ability used:', ability.name, 'Description:', description);
 
+    // If opponent has a repelling shield active, block abilities (not basic attacks)
+    if (opponent.effects.repelAbilities && opponent.effects.repelAbilitiesDuration > 0) {
+      addLogMessage(`${opponent.name}'s repelling shield negates ${ability.name}!`);
+      return true;
+    }
+
+    // Also block abilities against untargetable targets
+    if (opponent.effects.untargetable && opponent.effects.untargetableDuration > 0) {
+      addLogMessage(`${opponent.name} is untargetable! ${ability.name} fails.`);
+      return true;
+    }
+
     // Helper: when abilities deal damage, ensure counterattack triggers like basic attacks
     const abilityDealDamage = (rawDamage: number, message: string, onAppliedDamage?: (actualDamage: number) => void) => {
       return dealDamage(
@@ -617,6 +739,22 @@ export const BattleArena = ({
         }
       }));
       addLogMessage(`${player.name} gains permanent regeneration (${amount} per turn).`);
+      return true;
+    }
+
+    // Repelling shield: repel abilities for N turns
+    if (description.includes('repel') && description.includes('abilities')) {
+      const turnsMatch = description.match(/for\s+(\d+)\s+turns?/);
+      const duration = turnsMatch ? parseInt(turnsMatch[1]) : 4;
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          repelAbilities: true,
+          repelAbilitiesDuration: duration
+        }
+      }));
+      addLogMessage(`${player.name} is surrounded by a repelling shield for ${duration} turns!`);
       return true;
     }
 
@@ -737,15 +875,23 @@ export const BattleArena = ({
       return true;
     }
     
-    // Poison Strike - Apply poison effect
-    if (description.includes('poison') && description.includes('damage')) {
-      const poisonMatch = description.match(/(\d+)/);
-      if (poisonMatch) {
-        const poisonDamage = parseInt(poisonMatch[1]);
-        applyPoison(opponent, setOpponent, 1, addLogMessage, `${player.name} uses ${ability.name} and poisons ${opponent.name} for ${poisonDamage} damage per turn!`);
-      }
+    // Poison (specific) - deal immediate poison damage parsed from description
+    if (ability.name.toLowerCase() === 'poison') {
+      const dm = description.match(/(\d+)/);
+      const poisonPerTurn = dm ? parseInt(dm[1]) : 16;
+      setOpponent(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          poisoned: 1,
+          poisonDamage: poisonPerTurn
+        }
+      }));
+      addLogMessage(`${player.name} uses ${ability.name} and poisons ${opponent.name} for ${poisonPerTurn} damage per turn!`);
       return true;
     }
+
+   
     
     // Bleeding Strike - Apply bleeding effect
     if (description.includes('bleed') && description.includes('damage')) {
@@ -891,64 +1037,69 @@ export const BattleArena = ({
       return opponent.health > 0;
     }
 
+    // Blood Frenzy - Attack twice for 30-40 each, then take 15 self-damage
+    if (ability.name.toLowerCase() === 'blood frenzy' || (description.includes('attack twice') && description.includes('30-40'))) {
+      const hit1 = Math.floor(Math.random() * (40 - 30 + 1)) + 30;
+      abilityDealDamage(hit1, `${player.name} unleashes Blood Frenzy and strikes for ${hit1} damage!`);
 
-
-
-
-
-    // Hunter's Mark - Mark target and gain attack boost
-    if (description.includes('hunter\'s mark') || description.includes('hunters mark')) {
-      const markMatch = description.match(/(\d+)% more damage/);
-      const boostMatch = description.match(/(\d+)% attack/);
-      if (markMatch && boostMatch) {
-        const markDamage = parseInt(markMatch[1]);
-        const attackBoost = parseInt(boostMatch[1]);
-        
-        // Mark the opponent
-        setOpponent(prev => ({
-          ...prev,
-          effects: {
-            ...prev.effects,
-            marked: true,
-            markDamageIncrease: markDamage,
-            markDuration: 3
-          }
-        }));
-        
-        // Boost own attack
-        applyAttackBoost(player, setPlayer, attackBoost, 2, addLogMessage, `${player.name} marks ${opponent.name} and gains ${attackBoost}% attack boost!`);
-        addLogMessage(`${opponent.name} will take ${markDamage}% more damage for 3 turns!`);
+      if (opponent.health > 0) {
+        const hit2 = Math.floor(Math.random() * (40 - 30 + 1)) + 30;
+        abilityDealDamage(hit2, `${player.name} follows up for ${hit2} damage!`);
       }
+
+      // Apply self-damage
+      setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - 15) }));
+      addLogMessage(`${player.name} takes 15 self-damage from Blood Frenzy!`);
+      return opponent.health > 0;
+    }
+
+    // Summon Wolf - create a permanent summoned creature that deals N damage per turn
+    if ((ability.name.toLowerCase() === 'summon wolf') || (description.includes('summon') && description.includes('wolf'))) {
+      const dmgMatch = description.match(/(\d+)\s+damage\s+per\s+turn/);
+      const damage = dmgMatch ? parseInt(dmgMatch[1]) : 12;
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreature: { damage, turnsLeft: -1 }
+        }
+      }));
+      addLogMessage(`${player.name} summons a wolf that will deal ${damage} damage each turn!`);
       return true;
     }
 
-
-
-
-    // Mark Target - Mark opponent for increased damage
-    if (description.includes('marked target takes') && description.includes('more damage')) {
-      const damageMatch = description.match(/(\d+)% more damage/);
-      const turnsMatch = description.match(/(\d+) turns/);
-      if (damageMatch && turnsMatch) {
-        const damageIncrease = parseInt(damageMatch[1]);
-        const duration = parseInt(turnsMatch[1]);
-        
-        setOpponent(prev => ({
-          ...prev,
-          effects: {
-            ...prev.effects,
-            marked: true,
-            markDamageIncrease: damageIncrease,
-            markDuration: duration
-          }
-        }));
-        
-        addLogMessage(`${player.name} marks ${opponent.name}! They will take ${damageIncrease}% more damage for ${duration} turns!`);
-      }
+    // Fear Howl - Become untargetable for 3 turns (stealth mode)
+    if ((ability.name.toLowerCase() === 'fear howl') || (description.includes('untargetable') && description.includes('3 turn'))) {
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          untargetable: true,
+          untargetableDuration: 3
+        }
+      }));
+      addLogMessage(`${player.name} enters stealth and becomes untargetable for 3 turns!`);
       return true;
     }
 
-   
+    // Shadow Ambush - Become untargetable for 1 turn, then strike next turn for 60-90 damage
+    if ((ability.name.toLowerCase() === 'shadow ambush') || (description.includes('untargetable') && description.includes('strike next turn'))) {
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          untargetable: true,
+          untargetableDuration: 1,
+          ambushPending: true,
+          ambushDelay: 1,
+          ambushMin: 60,
+          ambushMax: 90
+        }
+      }));
+      addLogMessage(`${player.name} vanishes into the shadows!`);
+      return true;
+    }
+
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {

@@ -207,7 +207,7 @@ export const BattleArenaUI = ({
               player.effects.poisoned > 0 || player.effects.evading || 
               player.effects.stunned || player.effects.bleeding > 0 || 
               player.effects.regeneration > 0 || player.effects.attackReduction > 0 ||
-              player.effects.summonedCreature || player.effects.attackBoost > 0 || player.effects.spellDamageBoost > 0) && (
+              player.effects.summonedCreature || player.effects.attackBoost > 0 || player.effects.spellDamageBoost > 0 || player.effects.repelAbilities) && (
               <div className="flex flex-wrap gap-1.5">
                 {player.effects.shield > 0 && (
                   <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
@@ -248,6 +248,11 @@ export const BattleArenaUI = ({
                     Evading
                   </Badge>
                 )}
+                {player.effects.untargetable && (
+                  <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
+                    Untargetable ({player.effects.untargetableDuration})
+                  </Badge>
+                )}
                 {player.effects.stunned && (
                   <Badge variant="outline" className="bg-yellow-900/30 text-yellow-300 border-yellow-700 py-1 animate-pulse">
                     Stunned
@@ -266,6 +271,11 @@ export const BattleArenaUI = ({
                 {player.effects.summonedCreature && (
                   <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
                     Summon ({player.effects.summonedCreature.turnsLeft})
+                  </Badge>
+                )}
+                {player.effects.repelAbilities && (
+                  <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
+                    Repel ({player.effects.repelAbilitiesDuration})
                   </Badge>
                 )}
               </div>

@@ -73,11 +73,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         manaCost: 30
       },
       {
-        name: "Berserker Rage",
+        name: "Rage",
         iconName: "Flame",
-        description: "Increase attack by 150%, take 10 self-damage",
-        cooldown: 8,
-        manaCost: 40
+        description: "Increase attack by 50% deal 50 damage ",
+        cooldown: 4,
+        manaCost: 25
       },
       {
         name: "Execute",
@@ -352,6 +352,13 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Deal 20 damage and steal 20 health",
         cooldown: 6,
         manaCost: 30
+      } ,
+        {
+        name: "Commanding Strike",
+        iconName: "Sword",
+        description: "Deal 50-80 damage,Increase attack by 200%",
+        cooldown: 8,
+        manaCost: 50
       }
     ]
   },
@@ -368,26 +375,32 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 4,
         manaCost: 30
       },
-      {
-        name: "Rage",
+       {
+        name: "Berserker Rage",
         iconName: "Flame",
-        description: "Increase attack by 50% ",
-        cooldown: 4,
-        manaCost: 25
+        description: "Increase attack by 150%, take 10 self-damage",
+        cooldown: 8,
+        manaCost: 40
       },
       {
-        name: "Battle Roar",
-        iconName: "Skull",
-        description: "Reduce enemy attack by 25% for 1 turn",
-        cooldown: 5,
-        manaCost: 20
+        name: "Execute",
+        iconName: "Sword",
+        description: "If enemy is under 25% health: instantly kill; otherwise deal 80 damage",
+        cooldown: 8,
+        manaCost: 45
       },
       {
-        name: "Bloodlust",
-        iconName: "Droplet",
-        description: "Regenerate 10 health per turn for 1 turn",
+        name: "Rally",
+        iconName: "Heart",
+        description: "Restore 30 health points",
         cooldown: 5,
-        manaCost: 25
+        manaCost: 30
+      }, {
+        name: "Blood Frenzy",
+        iconName: "Flame",
+        description: "Attack twice for 30-40 damage each, but take 15 self-damage",
+        cooldown: 7,
+        manaCost: 50
       }
     ]
   },
@@ -402,31 +415,37 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Divine Smite",
         iconName: "Sparkles",
-        description: "Deal 20-30 holy damage",
+        description: "Deal 40-60 holy damage",
         cooldown: 4,
         manaCost: 30
       },
       {
         name: "Lay on Hands",
         iconName: "Heart",
-        description: "Heal yourself for 30 health",
+        description: "restore 50% health",
         cooldown: 6,
         manaCost: 40
       },
-      {
-        name: "Divine Shield",
-        iconName: "Shield",
-        description: "Reduce damage taken by 75% until next turn",
+    {
+        name: "Mana Heal",
+        iconName: "Heart",
+        description: "Convert 100 mana to 500 health",
         cooldown: 5,
-        manaCost: 35
+        manaCost: 0
       },
       {
-        name: "Righteous Fury",
-        iconName: "Flame",
-        description: "Increase damage by 40% ",
-        cooldown: 6,
-        manaCost: 30
-      }
+        name: "Blessing of Light",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 100%, increase attack by 100%, and restore 20% health",
+        cooldown: 5,
+        manaCost: 25
+      },         {
+        name: "Divine Shield",
+        iconName: "Shield",
+        description: "Repel abilities for 4 turns",
+        cooldown: 5,
+        manaCost: 35
+      }, 
     ]
   },
   "Beastguard": {
@@ -438,14 +457,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Shield Bash",
         iconName: "Shield",
-        description: "Stun enemy for 1 turn and deal 12-18 damage",
+        description: "Deal 12-18 damage",
         cooldown: 4,
         manaCost: 20
       },
       {
         name: "Rally",
         iconName: "Heart",
-        description: "Restore 15 health points",
+        description: "Restore 50 health points",
         cooldown: 5,
         manaCost: 25
       },
@@ -457,12 +476,19 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         manaCost: 30
       },
       {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Reduce opponent's attack by 30% ",
-        cooldown: 4,
+        name: "Quick Shot",
+        iconName: "Target",
+        description: "Fire three quick shots",
+        cooldown: 3,
         manaCost: 20
-      }
+      },
+      {
+        name: "Summon Wolf",
+        iconName: "Dog",
+        description: "Summon a wolf that deals 12 damage per turn permanently",
+        cooldown: 6,
+        manaCost: 40
+      },
     ]
   },
   "Shadowblade": {
@@ -472,18 +498,18 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     description: "Tier 2 melee specialist",
     abilities: [
       {
-        name: "Shield Bash",
-        iconName: "Shield",
-        description: "Stun enemy for 1 turn and deal 12-18 damage",
+        name: "Bleeding Strike",
+        iconName: "Zap",
+        description: "Inflict 6 bleed damage",
         cooldown: 4,
         manaCost: 20
       },
       {
-        name: "Rally",
-        iconName: "Heart",
-        description: "Restore 15 health points",
-        cooldown: 5,
-        manaCost: 25
+        name: "Vampiric Strike",
+        iconName: "Droplets",
+        description: "Vampiric strike deal 40-80 damage with 100% healing",
+        cooldown: 6,
+        manaCost: 28
       },
       {
         name: "Battle Shout",
@@ -493,11 +519,17 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         manaCost: 30
       },
       {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Reduce opponent's attack by 30% ",
-        cooldown: 4,
-        manaCost: 20
+        name: "Whirlwind",
+        iconName: "Wind",
+        description: "Whirlwind 25 damage to enemy, 8 self damage",
+        cooldown: 5,
+        manaCost: 25
+      },   {
+        name: "Shadow Ambush",
+        iconName: "Moon",
+        description: "Become untargetable for 1 turn, then strike next turn for 60-90 damage",
+        cooldown: 8,
+        manaCost: 50
       }
     ]
   },
@@ -508,16 +540,16 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     description: "Tier 2 melee specialist",
     abilities: [
       {
-        name: "Shield Bash",
-        iconName: "Shield",
-        description: "Stun enemy for 1 turn and deal 12-18 damage",
+        name: "Focused Strike",
+        iconName: "ArrowRight",
+        description: "Deal 25 damage and increase attack by 50%",
         cooldown: 4,
-        manaCost: 20
+        manaCost: 26
       },
       {
         name: "Rally",
         iconName: "Heart",
-        description: "Restore 15 health points",
+        description: "Restore 5% health",
         cooldown: 5,
         manaCost: 25
       },
@@ -527,14 +559,21 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Increase attack by 40% ",
         cooldown: 5,
         manaCost: 30
-      },
-      {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Reduce opponent's attack by 30% ",
+      },       {
+        name: "Poison",
+        iconName: "Zap",
+        description: "Inflict 20 poison damage",
         cooldown: 4,
         manaCost: 20
-      }
+      },{
+        name: "Fear Howl",
+        iconName: "Skull",
+        description: "Become untargetable for 3 turns (stealth mode)",
+        cooldown: 8,
+        manaCost: 50
+      },
+      
+     
     ]
   },
   "Doomblade Priest": {
