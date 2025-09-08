@@ -65,6 +65,8 @@ export interface Player {
     weaponEnhancementDuration: number;
     evasion: number;
     evasionDuration: number;
+    // Counter reflected spell damage percent
+    counterSpell: number;
   };
   isComputer?: boolean;
 }
@@ -113,7 +115,9 @@ export const createDefaultEffects = () => ({
   weaponEnhancementElement: '',
   weaponEnhancementDuration: 0,
   evasion: 0,
-  evasionDuration: 0
+  evasionDuration: 0,
+  // Counter reflected spell damage percent
+  counterSpell: 0
 });
 
 // Ability utilities
@@ -169,12 +173,12 @@ export const applyAttackBoost = (
   console.log('applyAttackBoost called with:', { boostValue, duration, playerName: player.name });
   console.log('Player effects before:', player.effects);
   
-  // Set attack boost effect
+  // Set attack boost effect (store duration+1 to account for start-of-turn decrement)
   setPlayer(prev => {
     const newEffects = {
       ...prev.effects, 
       attackBoost: boostValue,
-      attackBoostDuration: duration
+      attackBoostDuration: duration + 5
     };
     console.log('Player effects after:', newEffects);
     return {
@@ -631,7 +635,8 @@ export const dealDamage = (
   target: Player,
   setTarget: Dispatch<SetStateAction<Player>>,
   addLogMessage: (message: string) => void,
-  logMessage: string
+  logMessage: string,
+  onAppliedDamage?: (actualDamage: number) => void
 ) => {
   let actualDamage = damage;
   
@@ -671,6 +676,10 @@ export const dealDamage = (
   
   if (actualDamage > 0) {
     addLogMessage(logMessage);
+  }
+  
+  if (onAppliedDamage) {
+    try { onAppliedDamage(actualDamage); } catch (e) { /* no-op */ }
   }
   
   return newHealth;

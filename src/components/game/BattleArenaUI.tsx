@@ -1,4 +1,4 @@
-import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy, Droplet } from 'lucide-react';
+import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy, Droplet, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -44,6 +44,49 @@ export const BattleArenaUI = ({
 }: BattleArenaUIProps) => {
   console.log('BattleArenaUI rendered with props:', { player1, player2, gameOver, winner });
   
+  // Helper: get last damage dealt for a player from battle log
+  const getLastDamageDealt = (playerName: string): number | null => {
+    for (let i = 0; i < battleLog.length; i++) {
+      const log = battleLog[i];
+      const lower = log.toLowerCase();
+      if (!lower.includes(playerName.toLowerCase())) continue;
+      // Ignore DOT/reflect/counter logs
+      if (lower.includes('poison') || lower.includes('bleed') || lower.includes('reflect') || lower.includes('counter')) continue;
+      const match = log.match(/(\d+)\s+damage/);
+      if (match) {
+        const dmg = parseInt(match[1]);
+        if (!Number.isNaN(dmg)) return dmg;
+      }
+    }
+    return null;
+  };
+
+  // Helper: compute boosted damage preview from a description string
+  const getBoostedDamagePreview = (description: string, spellBoost: number): string | null => {
+    if (!spellBoost || spellBoost <= 0) return null;
+    const desc = description.toLowerCase();
+    // Skip non-damage abilities
+    if (!desc.includes('deal')) return null;
+
+    // Range: "Deal A-B ... damage"
+    const rangeMatch = desc.match(/deal\s+(\d+)-(\d+).*damage/);
+    if (rangeMatch) {
+      const min = parseInt(rangeMatch[1]);
+      const max = parseInt(rangeMatch[2]);
+      const bMin = Math.floor(min * (1 + spellBoost / 100));
+      const bMax = Math.floor(max * (1 + spellBoost / 100));
+      return `${bMin}-${bMax}`;
+    }
+    // Fixed: "Deal N damage"
+    const fixedMatch = desc.match(/deal\s+(\d+)\s+damage/);
+    if (fixedMatch) {
+      const base = parseInt(fixedMatch[1]);
+      const boosted = Math.floor(base * (1 + spellBoost / 100));
+      return `${boosted}`;
+    }
+    return null;
+  };
+  
   // Render player card with abilities
   const renderPlayerCard = (player: Player, playerNum: 1 | 2) => {
     const isActive = player.isActive && !gameOver;
@@ -52,6 +95,8 @@ export const BattleArenaUI = ({
     const attackBoostPercent = player.effects.attackBoost || 0;
     const boostedAttackMin = Math.floor(player.attackMin * (1 + attackBoostPercent / 100));
     const boostedAttackMax = Math.floor(player.attackMax * (1 + attackBoostPercent / 100));
+
+    const lastDamage = getLastDamageDealt(player.name);
 
     return (
       <div className={`relative h-full ${isActive ? 'z-10' : 'z-0'}`}>
@@ -162,7 +207,7 @@ export const BattleArenaUI = ({
               player.effects.poisoned > 0 || player.effects.evading || 
               player.effects.stunned || player.effects.bleeding > 0 || 
               player.effects.regeneration > 0 || player.effects.attackReduction > 0 ||
-              player.effects.summonedCreature || player.effects.attackBoost > 0) && (
+              player.effects.summonedCreature || player.effects.attackBoost > 0 || player.effects.spellDamageBoost > 0) && (
               <div className="flex flex-wrap gap-1.5">
                 {player.effects.shield > 0 && (
                   <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
@@ -180,6 +225,12 @@ export const BattleArenaUI = ({
                   <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700 py-1">
                     <Sword className="h-3 w-3 mr-1" />
                     +{player.effects.attackBoost}% ATK
+                  </Badge>
+                )}
+                {player.effects.spellDamageBoost > 0 && (
+                  <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    +{player.effects.spellDamageBoost}% SPELL
                   </Badge>
                 )}
                 {player.effects.poisoned > 0 && (
@@ -231,6 +282,18 @@ export const BattleArenaUI = ({
                 )}
               </span>
             </div>
+            {player.effects.spellDamageBoost > 0 && (
+              <div className="flex items-center space-x-2 text-sm text-amber-200">
+                <Sparkles className="h-4 w-4 text-purple-300" />
+                <span>Spell Power: +{player.effects.spellDamageBoost}%</span>
+              </div>
+            )}
+            {lastDamage !== null && (
+              <div className="flex items-center space-x-2 text-sm text-amber-200">
+                <Sword className="h-4 w-4 text-red-300" />
+                <span>Last Damage: <span className="text-red-300 font-semibold">{lastDamage}</span></span>
+              </div>
+            )}
             
             {/* Abilities section */}
             <div className="space-y-2">
@@ -239,6 +302,8 @@ export const BattleArenaUI = ({
                 {player.abilities.map((ability, index) => {
                   const isDisabled = (ability.currentCooldown || 0) > 0 || !player.isActive || gameOver || player.isComputer;
                   const notEnoughMana = player.isActive && (ability.manaCost || 0) > player.mana;
+                  const spellBoost = player.effects.spellDamageBoost || 0;
+                  const boostedPreview = getBoostedDamagePreview(ability.description, spellBoost);
                   
                   return (
                     <div className="relative group" key={`${player.name}-ability-${index}`}>
@@ -270,6 +335,9 @@ export const BattleArenaUI = ({
                           })()}
                         </div>
                         <div className="text-[10px] font-medium">{ability.name}</div>
+                        {boostedPreview && (
+                          <div className="text-[9px] text-amber-200/80 mt-0.5">→ {boostedPreview}</div>
+                        )}
                         {(ability.currentCooldown || 0) > 0 && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-sm">
                             <Badge variant="default" className="bg-amber-900 text-amber-100 text-[10px] px-1 py-0 rounded-sm">
@@ -299,6 +367,11 @@ export const BattleArenaUI = ({
                           <p className="text-[10px] text-amber-300">CD: {ability.cooldown} turns</p>
                           {ability.manaCost && <p className="text-[10px] text-blue-300">Mana: {ability.manaCost}</p>}
                         </div>
+                        {boostedPreview && (
+                          <div className="mt-1 text-[10px] text-purple-300 flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" /> With Surge: {boostedPreview}
+                          </div>
+                        )}
                         <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-black/90"></div>
                       </div>
                     </div>
