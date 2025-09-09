@@ -39,7 +39,7 @@ export const CLASS_CATEGORIES = {
   "Tier 2": {
     "Melee": [
       "Warlord", "Berserker", "Paladin", "Beastguard",
-      "Shadowblade", "Stalker", "Doomblade Priest", "Templar Seer"
+      "Shadowblade", "Stalker", "Templar Seer"
     ],
     "Ranged": [
       "Marksman Knight", "Sniper", "Hawkeye", "Hunter", "Pathfinder", "Lightshot",

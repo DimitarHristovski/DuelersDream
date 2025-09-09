@@ -1103,9 +1103,9 @@ export const BattleArena = ({
     // Judgment of Fate - Deal 60-90 damage, double if enemy below 40% health
     if (ability.name.toLowerCase() === "judgment of fate") {
       // Parse damage range from description (e.g., "Deal 60-90 damage")
-      const damageMatch = description.match(/deal (\d+)-(\d+) damage/);
+      const damageMatch = description.match(/deal (d+)-(d+) damage/);
       // Parse health threshold (e.g., "below 40% health")
-      const thresholdMatch = description.match(/below (\d+)% health/);
+      const thresholdMatch = description.match(/below (d+)% health/);
       
       if (damageMatch && thresholdMatch) {
         const minDamage = parseInt(damageMatch[1]);

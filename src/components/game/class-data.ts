@@ -576,42 +576,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
      
     ]
   },
-  "Doomblade Priest": {
-    health: 1000,
-    attackMin: 16,
-    attackMax: 24,
-    description: "Tier 2 melee specialist",
-    abilities: [
-      {
-        name: "Shield Bash",
-        iconName: "Shield",
-        description: "Stun enemy for 1 turn and deal 12-18 damage",
-        cooldown: 4,
-        manaCost: 20
-      },
-      {
-        name: "Rally",
-        iconName: "Heart",
-        description: "Restore 15 health points",
-        cooldown: 5,
-        manaCost: 25
-      },
-      {
-        name: "Battle Shout",
-        iconName: "Megaphone",
-        description: "Increase attack by 40% ",
-        cooldown: 5,
-        manaCost: 30
-      },
-      {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Reduce opponent's attack by 30% ",
-        cooldown: 4,
-        manaCost: 20
-      }
-    ]
-  },
+  
 
   "Templar Seer": {
     health: 1000,
@@ -620,33 +585,39 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     description: "Tier 2 melee specialist",
     abilities: [
       {
-        name: "Shield Bash",
-        iconName: "Shield",
-        description: "Stun enemy for 1 turn and deal 12-18 damage",
-        cooldown: 4,
-        manaCost: 20
-      },
-      {
-        name: "Rally",
-        iconName: "Heart",
-        description: "Restore 15 health points",
-        cooldown: 5,
-        manaCost: 25
-      },
-      {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 40% ",
+        description: "Increase attack by 100%",
         cooldown: 5,
         manaCost: 30
       },
       {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Reduce opponent's attack by 30% ",
-        cooldown: 4,
-        manaCost: 20
-      }
+        name: "Mana Heal",
+        iconName: "Heart",
+        description: "Convert 15 mana to 30 health",
+        cooldown: 5,
+        manaCost: 0
+      } ,  
+      {
+       name: "Prophetic Mark",
+       iconName: "Crosshair",
+       description: "permanently counterattack 50% of damage taken",
+       cooldown: 4,
+       manaCost: 25
+     } , {
+      name: "Clairvoyance",
+      iconName: "Sparkles",
+      description: "Increase spell damage by 50%",
+      cooldown: 5,
+      manaCost: 20
+    },
+    {
+      name: "Judgment of Fate",
+      iconName: "Sword",
+      description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage",
+      cooldown: 8,
+      manaCost: 50
+    }
     ]
   },
   "Marksman Knight": {
@@ -654,34 +625,39 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMin: 10,
     attackMax: 18,
     description: "Tier 2 ranged specialist",
-    abilities: [
+    abilities: [    {
+      name: "Shield Bash",
+      iconName: "Shield",
+      description: "deal 30-50 damage",
+      cooldown: 2,
+      manaCost: 5
+    },
       {
-        name: "Quick Shot",
+        name: "Rapid Fire",
         iconName: "Target",
-        description: "Fire two quick shots (80% damage each)",
-        cooldown: 3,
-        manaCost: 20
-      },
-      {
-        name: "Mark Target",
-        iconName: "Crosshair",
-        description: "Marked target takes 25% more damage ",
+        description: "Deal 50 damage and increase attack by 40%",
         cooldown: 4,
         manaCost: 25
       },
       {
-        name: "Aimed Shot",
+        name: "Power Shot",
         iconName: "Target",
-        description: "Deal 25-35 damage",
+        description: "Deal 58 damage and increase attack by 80%",
         cooldown: 5,
-        manaCost: 35
+        manaCost: 30
+      } , {
+        name: "Rally",
+        iconName: "Heart",
+        description: "Restore 100 health points",
+        cooldown: 5,
+        manaCost: 30
       },
       {
-        name: "Camouflage",
-        iconName: "Leaf",
-        description: "Gain 90% evasion for next attack",
-        cooldown: 6,
-        manaCost: 30
+        name: "Judgment of Fate",
+        iconName: "Sword",
+        description: "Deal 50-100 damage. If enemy is below 20% health, deal double damage",
+        cooldown: 8,
+        manaCost: 50
       }
     ]
   },

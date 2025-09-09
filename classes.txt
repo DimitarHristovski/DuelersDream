@@ -6,6 +6,7 @@
 | Warrior + Healer | **Paladin**          | Holy warrior with healing powers.            |
 | Warrior + Ranger | **Beastguard**       | Protector who commands nature and beasts.    |
 | Warrior + Slayer | **Berserker**        | Rage-fueled heavy melee fighter.             |
+| Warrior + Oracle | **Templar Seer**     | Warrior with divine foresight.               |
 | Mage + Rogue     | **Spellblade**       | Stealth assassin with magic-infused attacks. |
 | Mage + Archer    | **Arcane Archer**    | Ranged fighter with magical arrows.          |
 | Mage + Healer    | **Priest**           | Magic healer with offensive holy spells.     |
