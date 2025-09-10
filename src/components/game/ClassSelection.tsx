@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { 
   Sword, Shield, Heart, Zap, Sparkles, 
   User, ShieldX, Skull, Star, Target, Hourglass, 
@@ -39,26 +40,23 @@ export const CLASS_CATEGORIES = {
   "Tier 2": {
     "Melee": [
       "Warlord", "Berserker", "Paladin", "Beastguard",
-      "Shadowblade", "Stalker", "Templar Seer"
+      "Shadowblade", "Templar Seer",
     ],
     "Ranged": [
-      "Marksman Knight", "Sniper", "Hawkeye", "Hunter", "Pathfinder", "Lightshot",
-      "Starshot Seer", "Spirit Tracker"
+      "Marksman Knight", "Sniper", "Pathfinder", "Lightshot",
+      
     ],
     "Caster": [
       "Battlemage", "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock",
-      "Sage", "Shadow Priest", "Nightseer", "Beastwarden", "Exorcist", "Prophet", "Fatekiller"
+      "Sage", "Shadow Priest", "Nightseer", "Beastwarden", "Exorcist", "Prophet",
     ]
   }
 } as const;
-  
-  
-
 
 type CategoryKey = keyof typeof CLASS_CATEGORIES;
 type SubcategoryKey = keyof typeof CLASS_CATEGORIES[CategoryKey];
 
-// For animation variants
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -91,6 +89,7 @@ export const ClassSelection = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("Tier 1");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("Melee");
   const [showVersus, setShowVersus] = useState<boolean>(false);
+  const [hoveredAbility, setHoveredAbility] = useState<string | null>(null);
   
   // Handle versus screen display
   useEffect(() => {
@@ -120,7 +119,7 @@ export const ClassSelection = ({
     return <IconComponent className={className} />;
   };
 
-  // Render ability badge with tooltip
+  // Render ability badge with fixed tooltip
   const renderAbilityBadge = (ability: {
     name: string;
     description: string;
@@ -128,38 +127,58 @@ export const ClassSelection = ({
     manaCost?: number;
     iconName: string;
   }, index: number) => {
+    const uniqueId = `ability-${index}-${ability.name.replace(/\s+/g, "-").toLowerCase()}`;
+    const isHovered = hoveredAbility === uniqueId;
+    
     return (
-      <div key={index} className="group relative">
-        <div className={`flex items-center p-1.5 rounded-md text-xs ${
+      <div 
+        key={uniqueId} 
+        className="relative"
+        onMouseEnter={() => setHoveredAbility(uniqueId)}
+        onMouseLeave={() => setHoveredAbility(null)}
+      >
+        <div className={`flex items-center p-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105 ${
           ability.manaCost ? 'bg-blue-50 text-blue-700 border border-blue-200' : 
                             'bg-amber-50 text-amber-700 border border-amber-200'
         }`}>
           <span className="mr-1.5">
             {renderIcon(ability.iconName, "h-3.5 w-3.5")}
           </span>
-          <span className="font-medium">{ability.name}</span>
-          {ability.manaCost !== undefined && (
-            <span className="ml-1.5 text-blue-500 text-[10px] font-bold">{ability.manaCost}</span>
-          )}
+          <span className="truncate flex-1">{ability.name}</span>
+          <div className="flex items-center gap-1 ml-1.5">
+            <Badge variant="outline" className="text-[10px] px-1 py-0.5">
+              {ability.cooldown}t
+            </Badge>
+            {ability.manaCost !== undefined && (
+              <Badge variant="secondary" className="text-[10px] px-1 py-0.5">
+                {ability.manaCost} MP
+              </Badge>
+            )}
+          </div>
         </div>
         
-        {/* Tooltip */}
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1 px-3 py-2 w-48 
-                      bg-black/90 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 
-                      transition-opacity duration-200 pointer-events-none">
-          <p className="font-semibold mb-1">{ability.name}</p>
-          <p className="text-[10px]">{ability.description}</p>
-          <div className="flex justify-between mt-1">
-            <p className="text-[10px] text-amber-300">CD: {ability.cooldown} turns</p>
-            {ability.manaCost && <p className="text-[10px] text-blue-300">{ability.manaCost} mana</p>}
+        {/* Fixed Tooltip - Only shows when this specific ability is hovered */}
+        {isHovered && (
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-64 
+                        bg-black/90 text-white text-xs rounded-lg shadow-xl transform -translate-y-1">
+            <div className="flex items-center mb-2">
+              {renderIcon(ability.iconName, "h-4 w-4 mr-2")}
+              <p className="font-semibold">{ability.name}</p>
+            </div>
+            <p className="text-gray-300 mb-2">{ability.description}</p>
+            <div className="flex items-center justify-between text-gray-400">
+              <span>Cooldown: {ability.cooldown} turns</span>
+              {ability.manaCost !== undefined && (
+                <span>Cost: {ability.manaCost} MP</span>
+              )}
+            </div>
           </div>
-          <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-black/90"></div>
-        </div>
+        )}
       </div>
     );
   };
 
-  // Render class card
+  // Render class card with improved responsive design
   const renderClassCard = (
     className: keyof typeof PLAYER_CLASSES, 
     playerNumber: 1 | 2,
@@ -174,12 +193,13 @@ export const ClassSelection = ({
         initial="hidden"
         animate="visible"
         key={className}
+        className="w-full"
       >
         <Card 
-          className={`relative cursor-pointer transition-all overflow-hidden ${
+          className={`relative cursor-pointer transition-all duration-300 overflow-hidden group ${
             isSelected 
-              ? "ring-4 ring-amber-500 bg-amber-50/90" 
-              : "hover:ring-2 hover:ring-amber-300 hover:bg-amber-50/50"
+              ? "ring-4 ring-amber-500 bg-amber-50/90 shadow-lg scale-105" 
+              : "hover:ring-2 hover:ring-amber-300 hover:bg-amber-50/50 hover:shadow-md hover:scale-102"
           }`}
           onClick={() => handleClassSelect(playerNumber, className)}
         >
@@ -188,21 +208,24 @@ export const ClassSelection = ({
               <Star className="h-3 w-3" />
             </div>
           )}
+          
           <CardHeader className="p-3 pb-1 bg-gradient-to-r from-amber-50 to-amber-100/80">
             <CardTitle className="text-base flex items-center">
               {renderIcon(classData.abilities[0]?.iconName || "sword", "h-4 w-4 mr-1.5 text-amber-700")}
-              {className}
+              <span className="truncate">{className}</span>
             </CardTitle>
             <CardDescription className="text-xs line-clamp-2 h-8">{classData.description}</CardDescription>
           </CardHeader>
+          
           <CardContent className="p-3 pt-2">
+            {/* Stats Row - Responsive Grid */}
             <div className="flex justify-between mb-2">
               <div className="flex items-center">
                 <Heart className="h-4 w-4 text-red-500 mr-1" />
                 <span className="text-sm font-medium">{classData.health}</span>
               </div>
               <div className="flex items-center">
-                <Sword className="h-4 w-4 text-gray-700 mr-1" />
+                <Sword className="h-4 w-4 text-amber-200 mr-1" />
                 <span className="text-sm font-medium">{classData.attackMin}-{classData.attackMax}</span>
               </div>
               <div className="flex items-center">
@@ -211,6 +234,7 @@ export const ClassSelection = ({
               </div>
             </div>
             
+            {/* Abilities Section */}
             <div className="mt-2 space-y-1.5">
               <h4 className="text-xs font-semibold text-amber-800 flex items-center">
                 <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-600" />
@@ -298,13 +322,19 @@ export const ClassSelection = ({
           </div>
           
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
-            className="absolute bottom-8"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 0.5 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center"
           >
-            <div className="text-amber-300 text-xl font-bold animate-pulse">
-              Prepare for battle...
+            <div className="text-2xl text-amber-300 font-semibold mb-2">Battle Starting...</div>
+            <div className="w-64 bg-gray-700 rounded-full h-2">
+              <motion.div 
+                className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, ease: "linear" }}
+              />
             </div>
           </motion.div>
         </div>
@@ -313,257 +343,192 @@ export const ClassSelection = ({
   }
 
   return (
-    <div className="max-w-7xl w-full space-y-4 bg-black/80 rounded-lg p-6 overflow-hidden max-h-[85vh] backdrop-blur-sm border border-amber-800/30">
-      <h2 className="text-3xl font-bold text-center text-amber-100 mb-4">Choose Your Champion</h2>
-       {/* Battle preview */}
-       <div className="flex flex-col sm:flex-row justify-between items-center pt-4 bg-gradient-to-r from-amber-900/30 to-amber-700/20 p-4 rounded-lg">
-        <div className="flex items-center mb-4 sm:mb-0">
-          <div className="flex flex-col items-center mr-6">
-            <div className="text-amber-100 font-bold">{player1Name}</div>
-            <div className="text-amber-300">{player1Class}</div>
-          </div>
-          <div className="text-amber-600 font-bold text-xl mx-4">VS</div>
-          <div className="flex flex-col items-center ml-6">
-            <div className="text-amber-100 font-bold">{isPlayer2Computer ? `${player2Class} AI` : player2Name}</div>
-            <div className="text-amber-300">{player2Class}</div>
-          </div>
-        </div>
-        
-        <Button 
-          size="lg" 
-          onClick={handleBattleStart}
-          className="bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 
-                   text-white font-bold shadow-lg shadow-amber-900/50 flex items-center px-6"
-        >
-          Start Battle <ChevronRight className="ml-2 h-5 w-5" />
-        </Button>
-      </div>
+    <div className="max-w-7xl w-full space-y-6 bg-gradient-to-br from-amber-900/20 to-black/40 rounded-xl p-6">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-4"
+      >
+        <h1 className="text-4xl font-bold text-amber-100">Choose Your Classes</h1>
+        <p className="text-lg text-amber-200">Select the perfect class for each player and prepare for battle!</p>
+      </motion.div>
+
+      {/* Player Selection Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-amber-900/50">
-          <TabsTrigger value="player1" className="data-[state=active]:bg-amber-600">
-            <User className="h-4 w-4 mr-2" />
-            {player1Name || "Player 1"}
+        <TabsList className="grid w-full grid-cols-2 mb-6 bg-amber-800/30 rounded-lg p-1">
+          <TabsTrigger value="player1" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Player 1
           </TabsTrigger>
-          <TabsTrigger value="player2" className="data-[state=active]:bg-amber-600">
-            <User className="h-4 w-4 mr-2" />
-            {isPlayer2Computer ? "Computer" : player2Name || "Player 2"}
+          <TabsTrigger value="player2" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Player 2
           </TabsTrigger>
         </TabsList>
-        
-        {/* Player 1 Tab Content */}
-        <TabsContent value="player1" className="space-y-6 mt-4">
-          <div>
-            <Label htmlFor="player1-name" className="text-amber-200">Your Name</Label>
-            <Input 
-              id="player1-name" 
-              value={player1Name}
-              onChange={(e) => setPlayer1Name(e.target.value)}
-              placeholder="Enter your name" 
-              className="max-w-md bg-amber-50/10 border-amber-500/30 text-amber-100 placeholder:text-amber-400/50"
-            />
-          </div>
-          
-          <div className="flex h-[500px] overflow-hidden bg-black/40 rounded-lg border border-amber-800/30">
-            {/* Sidebar Categories */}
-            <div className="w-56 border-r border-amber-800/30 pr-2">
-              <h3 className="text-amber-300 px-4 py-2 font-bold text-sm uppercase">Class Categories</h3>
-              <ScrollArea className="h-[460px] px-2">
-                {Object.keys(CLASS_CATEGORIES).map((category) => (
-                  <div key={category} className="mb-2">
-                    <button
-                      className={`w-full text-left p-2 rounded-md text-sm transition-colors flex items-center ${
-                        selectedCategory === category 
-                          ? "bg-amber-700/80 text-amber-100 font-medium" 
-                          : "hover:bg-amber-800/40 text-amber-200/70"
-                      }`}
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setSelectedSubcategory("Melee"); // Reset to first subcategory
-                      }}
-                    >
-                      <span className="mr-2">{category.split(" ")[0]}</span>
-                      <span>{category.split(" ").slice(1).join(" ")}</span>
-                      <span className="ml-auto bg-amber-900/70 text-amber-100 text-xs px-2 py-0.5 rounded-full">
-                        {Object.values(CLASS_CATEGORIES[category as CategoryKey]).flat().length}
-                      </span>
-                    </button>
-                    
-                    {/* Show subcategories when this category is selected */}
-                    {selectedCategory === category && (
-                      <div className="ml-4 mt-2 space-y-1">
-                        {Object.keys(CLASS_CATEGORIES[category as CategoryKey]).map((subcategory) => (
-                          <button
-                            key={subcategory}
-                            className={`w-full text-left p-1.5 rounded text-xs transition-colors ${
-                              selectedSubcategory === subcategory
-                                ? "bg-amber-600/60 text-amber-100"
-                                : "hover:bg-amber-800/30 text-amber-200/80"
-                            }`}
-                            onClick={() => setSelectedSubcategory(subcategory)}
-                          >
-                            {subcategory}
-                            <span className="ml-auto bg-amber-800/50 text-amber-100 text-xs px-1.5 py-0.5 rounded-full">
-                              {CLASS_CATEGORIES[category as CategoryKey][subcategory as SubcategoryKey].length}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </ScrollArea>
-            </div>
-            
-            {/* Class Cards */}
-            <div className="flex-1 overflow-hidden pl-4 pt-2">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-amber-200 font-bold">
-                  {selectedCategory.split(" ").slice(1).join(" ")} - {selectedSubcategory} Classes
-                </h3>
-                <span className="text-amber-300 text-sm">
-                  Selected: <span className="font-bold text-amber-100">{player1Class}</span>
-                </span>
-              </div>
-              <ScrollArea className="h-[460px] pr-4">
-                <motion.div 
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-4"
-                >
-                  {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]
-                    .filter(className => PLAYER_CLASSES[className as keyof typeof PLAYER_CLASSES])
-                    .map(className => renderClassCard(
-                      className as keyof typeof PLAYER_CLASSES,
-                      1,
-                      className === player1Class
-                    )
-                  )}
-                </motion.div>
-              </ScrollArea>
-            </div>
-          </div>
-        </TabsContent>
-        
-        {/* Player 2 Tab Content */}
-        <TabsContent value="player2" className="space-y-6 mt-4">
-          <div className="flex flex-wrap gap-6 items-start">
-            <div className="space-y-2">
-              <Label htmlFor="computer-opponent" className="text-amber-200 block">Computer Opponent</Label>
-              <div className="flex items-center space-x-3 bg-amber-900/20 p-3 rounded-md">
-                <Switch
-                  id="computer-opponent"
-                  checked={isPlayer2Computer}
-                  onCheckedChange={(checked) => {
-                    setIsPlayer2Computer(checked);
-                    if (checked && player2Name === "Player 2") {
-                      setPlayer2Name("Computer");
-                    } else if (!checked && player2Name === "Computer") {
-                      setPlayer2Name("Player 2");
-                    }
-                  }}
+
+        {/* Player 1 Tab */}
+        <TabsContent value="player1" className="space-y-6">
+          <div className="bg-black/40 rounded-lg p-6 shadow-sm border border-amber-800/30">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1">
+                <Label htmlFor="player1-name" className="text-sm font-medium text-amber-200">Player 1 Name</Label>
+                <Input
+                  id="player1-name"
+                  value={player1Name}
+                  onChange={(e) => setPlayer1Name(e.target.value)}
+                  placeholder="Enter player 1 name"
+                  className="mt-1"
                 />
-                <Label htmlFor="computer-opponent" className="text-amber-100">
-                  {isPlayer2Computer ? "AI Opponent" : "Human Opponent"}
-                </Label>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-400">{player1Class}</div>
+                <div className="text-sm text-amber-300">Selected Class</div>
               </div>
             </div>
-            
-            {!isPlayer2Computer && (
-              <div className="space-y-2 flex-grow max-w-md">
-                <Label htmlFor="player2-name" className="text-amber-200">Player 2 Name</Label>
-                <Input 
-                  id="player2-name" 
+          </div>
+
+          {/* Category Selection */}
+          <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(CLASS_CATEGORIES).map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setSelectedSubcategory(Object.keys(CLASS_CATEGORIES[category as CategoryKey])[0]);
+                  }}
+                  className="flex-1 min-w-0"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(CLASS_CATEGORIES[selectedCategory as CategoryKey]).map((subcategory) => (
+                <Button
+                  key={subcategory}
+                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
+                  onClick={() => setSelectedSubcategory(subcategory)}
+                  className="flex-1 min-w-0"
+                >
+                  {subcategory}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Class Grid - Enhanced Responsive Design */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
+          >
+            {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]?.map((className) => 
+              renderClassCard(className as keyof typeof PLAYER_CLASSES, 1, className === player1Class)
+            )}
+          </motion.div>
+        </TabsContent>
+
+        {/* Player 2 Tab */}
+        <TabsContent value="player2" className="space-y-6">
+          <div className="bg-black/40 rounded-lg p-6 shadow-sm border border-amber-800/30">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1">
+                <Label htmlFor="player2-name" className="text-sm font-medium text-amber-200">Player 2 Name</Label>
+                <Input
+                  id="player2-name"
                   value={player2Name}
                   onChange={(e) => setPlayer2Name(e.target.value)}
-                  placeholder="Enter player 2 name" 
-                  className="bg-amber-50/10 border-amber-500/30 text-amber-100 placeholder:text-amber-400/50"
+                  placeholder="Enter player 2 name"
+                  className="mt-1"
+                  disabled={isPlayer2Computer}
                 />
               </div>
-            )}
-          </div>
-          
-          <div className="flex h-[500px] overflow-hidden bg-black/40 rounded-lg border border-amber-800/30">
-            {/* Sidebar Categories */}
-            <div className="w-56 border-r border-amber-800/30 pr-2">
-              <h3 className="text-amber-300 px-4 py-2 font-bold text-sm uppercase">Class Categories</h3>
-              <ScrollArea className="h-[460px] px-2">
-                {Object.keys(CLASS_CATEGORIES).map((category) => (
-                  <div key={category} className="mb-2">
-                    <button
-                      className={`w-full text-left p-2 rounded-md text-sm transition-colors flex items-center ${
-                        selectedCategory === category 
-                          ? "bg-amber-700/80 text-amber-100 font-medium" 
-                          : "hover:bg-amber-800/40 text-amber-200/70"
-                      }`}
-                      onClick={() => setSelectedCategory(category)}
-                    >
-                      <span className="mr-2">{category.split(" ")[0]}</span>
-                      <span>{category.split(" ").slice(1).join(" ")}</span>
-                      <span className="ml-auto bg-amber-900/70 text-amber-100 text-xs px-2 py-0.5 rounded-full">
-                        {Object.values(CLASS_CATEGORIES[category as CategoryKey]).flat().length}
-                      </span>
-                    </button>
-                    
-                    {/* Show subcategories when this category is selected */}
-                    {selectedCategory === category && (
-                      <div className="ml-4 mt-2 space-y-1">
-                        {Object.keys(CLASS_CATEGORIES[category as CategoryKey]).map((subcategory) => (
-                          <button
-                            key={subcategory}
-                            className={`w-full text-left p-1.5 rounded text-xs transition-colors ${
-                              selectedSubcategory === subcategory
-                                ? "bg-amber-600/60 text-amber-100"
-                                : "hover:bg-amber-800/30 text-amber-200/80"
-                            }`}
-                            onClick={() => setSelectedSubcategory(subcategory)}
-                          >
-                            {subcategory}
-                            <span className="ml-auto bg-amber-800/50 text-amber-100 text-xs px-1.5 py-0.5 rounded-full">
-                              {CLASS_CATEGORIES[category as CategoryKey][subcategory as SubcategoryKey].length}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </ScrollArea>
-            </div>
-            
-            {/* Class Cards */}
-            <div className="flex-1 overflow-hidden pl-4 pt-2">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-amber-200 font-bold">
-                  {selectedCategory.split(" ").slice(1).join(" ")} - {selectedSubcategory} Classes
-                </h3>
-                <span className="text-amber-300 text-sm">
-                  Selected: <span className="font-bold text-amber-100">{player2Class}</span>
-                </span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="computer-mode"
+                    checked={isPlayer2Computer}
+                    onCheckedChange={setIsPlayer2Computer}
+                  />
+                  <Label htmlFor="computer-mode">Computer AI</Label>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-400">{player2Class}</div>
+                  <div className="text-sm text-amber-300">Selected Class</div>
+                </div>
               </div>
-              <ScrollArea className="h-[460px] pr-4">
-                <motion.div 
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-4"
-                >
-                  {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]
-                    .filter(className => PLAYER_CLASSES[className as keyof typeof PLAYER_CLASSES])
-                    .map(className => renderClassCard(
-                      className as keyof typeof PLAYER_CLASSES,
-                      2,
-                      className === player2Class
-                    )
-                  )}
-                </motion.div>
-              </ScrollArea>
             </div>
           </div>
+
+          {/* Category Selection */}
+          <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(CLASS_CATEGORIES).map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setSelectedSubcategory(Object.keys(CLASS_CATEGORIES[category as CategoryKey])[0]);
+                  }}
+                  className="flex-1 min-w-0"
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(CLASS_CATEGORIES[selectedCategory as CategoryKey]).map((subcategory) => (
+                <Button
+                  key={subcategory}
+                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
+                  onClick={() => setSelectedSubcategory(subcategory)}
+                  className="flex-1 min-w-0"
+                >
+                  {subcategory}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Class Grid - Enhanced Responsive Design */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
+          >
+            {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]?.map((className) => 
+              renderClassCard(className as keyof typeof PLAYER_CLASSES, 2, className === player2Class)
+            )}
+          </motion.div>
         </TabsContent>
       </Tabs>
-      
-     
+
+      {/* Start Battle Button */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex justify-center pt-6"
+      >
+        <Button
+          onClick={handleBattleStart}
+          size="lg"
+          className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+          disabled={!player1Class || !player2Class}
+        >
+          <Sword className="h-5 w-5 mr-2" />
+          Start Battle
+          <ArrowRight className="h-5 w-5 ml-2" />
+        </Button>
+      </motion.div>
     </div>
   );
 };

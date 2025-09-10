@@ -108,7 +108,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 4,
         manaCost: 20
       },
-
+      
       {
         name: "Bleeding Strike",
         iconName: "Zap",
@@ -182,7 +182,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 20
       },
-
+     
       {
         name: "Aimed Shot",
         iconName: "Target",
@@ -204,8 +204,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 4,
         manaCost: 26
       },
-
-
+    
+    
     ]
   },
   "Mage": {
@@ -258,7 +258,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-
+       
       {
         name: "Clairvoyance",
         iconName: "Sparkles",
@@ -272,8 +272,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Increase attack by 30% ",
         cooldown: 5,
         manaCost: 20
-      },
-      {
+      }  ,  
+       {
         name: "Prophetic Mark",
         iconName: "Crosshair",
         description: "permanently counterattack 50% of damage taken",
@@ -302,14 +302,14 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-
+ 
       {
         name: "Rejuvenation",
         iconName: "Heart",
         description: "Permanently heal 10 health every turn",
         cooldown: 6,
         manaCost: 35
-      }, {
+      }  ,   {
         name: "Blessing of Light",
         iconName: "Sparkles",
         description: "Increase spell damage by 50%, increase attack by 100%, and restore 5% health",
@@ -352,8 +352,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Deal 20 damage and steal 20 health",
         cooldown: 6,
         manaCost: 30
-      },
-      {
+      } ,
+        {
         name: "Commanding Strike",
         iconName: "Sword",
         description: "Deal 50-80 damage,Increase attack by 200%",
@@ -375,7 +375,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 4,
         manaCost: 30
       },
-      {
+       {
         name: "Berserker Rage",
         iconName: "Flame",
         description: "Increase attack by 150%, take 10 self-damage",
@@ -426,7 +426,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 6,
         manaCost: 40
       },
-      {
+    {
         name: "Mana Heal",
         iconName: "Heart",
         description: "Convert 100 mana to 500 health",
@@ -439,13 +439,13 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Increase spell damage by 100%, increase attack by 100%, and restore 20% health",
         cooldown: 5,
         manaCost: 25
-      }, {
+      },         {
         name: "Divine Shield",
         iconName: "Shield",
         description: "Repel abilities for 4 turns",
         cooldown: 5,
         manaCost: 35
-      },
+      }, 
     ]
   },
   "Beastguard": {
@@ -489,7 +489,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 6,
         manaCost: 40
       }
-
+      
     ]
   },
   "Shadowblade": {
@@ -525,7 +525,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Whirlwind 25 damage to enemy, 8 self damage",
         cooldown: 5,
         manaCost: 25
-      }, {
+      },   {
         name: "Shadow Ambush",
         iconName: "Moon",
         description: "Become untargetable for 1 turn, then strike next turn for 60-90 damage",
@@ -534,7 +534,50 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       }
     ]
   },
-
+  "Stalker": {
+    health: 1000,
+    attackMin: 14,
+    attackMax: 22,
+    description: "Tier 2 melee specialist",
+    abilities: [
+      {
+        name: "Focused Strike",
+        iconName: "ArrowRight",
+        description: "Deal 25 damage and increase attack by 50%",
+        cooldown: 4,
+        manaCost: 26
+      },
+      {
+        name: "Rally",
+        iconName: "Heart",
+        description: "Restore 5% health",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Battle Shout",
+        iconName: "Megaphone",
+        description: "Increase attack by 40% ",
+        cooldown: 5,
+        manaCost: 30
+      },       {
+        name: "Poison",
+        iconName: "Zap",
+        description: "Inflict 20 poison damage",
+        cooldown: 4,
+        manaCost: 20
+      },{
+        name: "Fear Howl",
+        iconName: "Skull",
+        description: "Become untargetable for 3 turns (stealth mode)",
+        cooldown: 8,
+        manaCost: 50
+      },
+      
+     
+    ]
+  },
+  
 
   "Templar Seer": {
     health: 1000,
@@ -555,27 +598,27 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Convert 15 mana to 30 health",
         cooldown: 5,
         manaCost: 0
-      },
+      } ,  
       {
-        name: "Prophetic Mark",
-        iconName: "Crosshair",
-        description: "permanently counterattack 50% of damage taken",
-        cooldown: 4,
-        manaCost: 25
-      }, {
-        name: "Clairvoyance",
-        iconName: "Sparkles",
-        description: "Increase spell damage by 50%",
-        cooldown: 5,
-        manaCost: 20
-      },
-      {
-        name: "Judgment of Fate",
-        iconName: "Sword",
-        description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage",
-        cooldown: 8,
-        manaCost: 50
-      }
+       name: "Prophetic Mark",
+       iconName: "Crosshair",
+       description: "permanently counterattack 50% of damage taken",
+       cooldown: 4,
+       manaCost: 25
+     } , {
+      name: "Clairvoyance",
+      iconName: "Sparkles",
+      description: "Increase spell damage by 50%",
+      cooldown: 5,
+      manaCost: 20
+    },
+    {
+      name: "Judgment of Fate",
+      iconName: "Sword",
+      description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage",
+      cooldown: 8,
+      manaCost: 50
+    }
     ]
   },
   "Marksman Knight": {
@@ -583,40 +626,40 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMin: 10,
     attackMax: 18,
     description: "Tier 2 ranged specialist",
-    abilities: [{
+    abilities: [    {
       name: "Shield Bash",
       iconName: "Shield",
       description: "deal 30-50 damage",
       cooldown: 2,
       manaCost: 5
     },
-    {
-      name: "Rapid Fire",
-      iconName: "Target",
-      description: "Deal 50 damage and increase attack by 40%",
-      cooldown: 4,
-      manaCost: 25
-    },
-    {
-      name: "Power Shot",
-      iconName: "Target",
-      description: "Deal 58 damage and increase attack by 80%",
-      cooldown: 5,
-      manaCost: 30
-    }, {
-      name: "Rally",
-      iconName: "Heart",
-      description: "Restore 100 health points",
-      cooldown: 5,
-      manaCost: 30
-    },
-    {
-      name: "Judgment of Fate",
-      iconName: "Sword",
-      description: "Deal 50-100 damage. If enemy is below 20% health, deal double damage",
-      cooldown: 8,
-      manaCost: 50
-    }
+      {
+        name: "Rapid Fire",
+        iconName: "Target",
+        description: "Deal 50 damage and increase attack by 40%",
+        cooldown: 4,
+        manaCost: 25
+      },
+      {
+        name: "Power Shot",
+        iconName: "Target",
+        description: "Deal 58 damage and increase attack by 80%",
+        cooldown: 5,
+        manaCost: 30
+      } , {
+        name: "Rally",
+        iconName: "Heart",
+        description: "Restore 100 health points",
+        cooldown: 5,
+        manaCost: 30
+      },
+      {
+        name: "Judgment of Fate",
+        iconName: "Sword",
+        description: "Deal 50-100 damage. If enemy is below 20% health, deal double damage",
+        cooldown: 8,
+        manaCost: 50
+      }
     ]
   },
   "Sniper": {
@@ -631,13 +674,13 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Deal 28-38 damage",
         cooldown: 5,
         manaCost: 35
-      }, {
+      },{
         name: "Power Shot",
         iconName: "Target",
         description: "Deal 28 damage and increase attack by 50%",
         cooldown: 5,
         manaCost: 30
-      }, {
+      },    {
         name: "Rally",
         iconName: "Heart",
         description: "Restore 30 health points",
@@ -649,7 +692,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Increase spell damage by 50%",
         cooldown: 5,
         manaCost: 20
-      }, {
+      },{
         name: "Execute",
         iconName: "Sword",
         description: "If enemy is under 30% health: instantly kill; otherwise deal 100 damage",
@@ -658,8 +701,90 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       },
     ]
   },
-
-
+  "Hawkeye": {
+    health: 1000,
+    attackMin: 14,
+    attackMax: 22,
+    description: "Tier 2 ranged specialist",
+    abilities: [
+      {
+        name: "Quick Shot",
+        iconName: "Target",
+        description: "Fire three quick shots",
+        cooldown: 3,
+        manaCost: 20
+      }, {
+        name: "Bleeding Strike",
+        iconName: "Zap",
+        description: "Inflict 6 bleed damage",
+        cooldown: 4,
+        manaCost: 20
+      },
+     
+      {
+        name: "Aimed Shot",
+        iconName: "Target",
+        description: "Deal 25-35 damage",
+        cooldown: 5,
+        manaCost: 35
+      }, {
+        name: "Focused Strike",
+        iconName: "ArrowRight",
+        description: "Deal 25 damage and increase attack by 50%",
+        cooldown: 4,
+        manaCost: 26
+      }, {
+        name: "Blood Frenzy",
+        iconName: "Flame",
+        description: "Attack twice for 30-40 damage each, but take 15 self-damage",
+        cooldown: 7,
+        manaCost: 50
+      }
+      
+    ]
+  },
+  "Hunter": {
+    health: 1000,
+    attackMin: 10,
+    attackMax: 18,
+    description: "Tier 2 ranged specialist",
+    abilities: [
+      {
+        name: "Rapid Fire",
+        iconName: "Target",
+        description: "Deal 20 damage and increase attack by 30%",
+        cooldown: 4,
+        manaCost: 25
+      },
+      
+      {
+        name: "Aimed Shot",
+        iconName: "Target",
+        description: "Deal 25-35 damage",
+        cooldown: 5,
+        manaCost: 35
+      },   {
+        name: "Shadow Ambush",
+        iconName: "Moon",
+        description: "Become untargetable for 1 turn, then strike next turn for 30-50 damage",
+        cooldown: 8,
+        manaCost: 50
+      } ,{
+        name: "Summon Wolf",
+        iconName: "Dog",
+        description: "Summon a wolf that deals 12 damage per turn permanently",
+        cooldown: 6,
+        manaCost: 40
+      },{
+        name: "Wolf Howl",
+        iconName: "Triangle",
+        description: "Empower your wolf: it deals 100% more damage every turn",
+        cooldown: 8,
+        manaCost: 55
+      }
+     
+    ]
+  },
   "Pathfinder": {
     health: 1000,
     attackMin: 12,
@@ -672,7 +797,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Deal 25 damage and increase attack by 50%",
         cooldown: 4,
         manaCost: 26
-      }, {
+      }  , {
         name: "Rally",
         iconName: "Heart",
         description: "Restore 30 health points",
@@ -692,7 +817,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Deal 25-35 damage",
         cooldown: 5,
         manaCost: 35
-      }, {
+      },{
         name: "Fear Howl",
         iconName: "Skull",
         description: "Become untargetable for 3 turns (stealth mode)",
@@ -713,34 +838,286 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         description: "Permanently heal 10 health every turn",
         cooldown: 6,
         manaCost: 35
-      },
-      {
+      }  ,    {
         name: "Holy Smite",
         iconName: "Flame",
         description: "Deal 20-40 holy damage",
         cooldown: 3,
         manaCost: 25
       },
-
-      {
-        name: "Mana Surge",
+      
+        {   
+           name: "Mana Surge",
         iconName: "Sparkles",
         description: "Increase spell damage by 70% for next turn",
         cooldown: 5,
         manaCost: 25
       }
-      , {
+    ,  {
         name: "Sacred Ward",
         iconName: "Shield",
         description: "Gain a shield that blocks 100 damage everyturn",
         cooldown: 6,
         manaCost: 40
       },
-
+     
     ]
   },
 
+  "Starshot Seer": {
+    health: 1000,
+    attackMin: 12,
+    attackMax: 20,
+    description: "Tier 2 ranged specialist",
+    abilities: [
+      {
+        name: "Quick Shot",
+        iconName: "Target",
+        description: "Fire two quick shots (80% damage each)",
+        cooldown: 3,
+        manaCost: 20
+      },
+      {
+        name: "Mark Target",
+        iconName: "Crosshair",
+        description: "Marked target takes 25% more damage for 2 turns",
+        cooldown: 4,
+        manaCost: 25
+      },
+      {
+        name: "Aimed Shot",
+        iconName: "Target",
+        description: "Deal 25-35 damage",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Camouflage",
+        iconName: "Leaf",
+        description: "Gain 90% evasion for next attack",
+        cooldown: 6,
+        manaCost: 30
+      }
+    ]
+  },
 
+  "Spirit Tracker": {
+    health: 1000,
+    attackMin: 10,
+    attackMax: 18,
+    description: "Tier 2 ranged specialist",
+    abilities: [
+      {
+        name: "Quick Shot",
+        iconName: "Target",
+        description: "Fire two quick shots (80% damage each)",
+        cooldown: 3,
+        manaCost: 20
+      },
+      {
+        name: "Mark Target",
+        iconName: "Crosshair",
+        description: "Marked target takes 25% more damage for 2 turns",
+        cooldown: 4,
+        manaCost: 25
+      },
+      {
+        name: "Aimed Shot",
+        iconName: "Target",
+        description: "Deal 25-35 damage",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Camouflage",
+        iconName: "Leaf",
+        description: "Gain 90% evasion for next attack",
+        cooldown: 6,
+        manaCost: 30
+      }
+    ]
+  },
+
+  "Battlemage": {
+    health: 1000,
+    attackMin: 7,
+    attackMax: 14,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Firebrand",
+        iconName: "Flame",
+        description: "Weapon strikes deal +10 fire for 1 turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Arcane Shield",
+        iconName: "Shield",
+        description: "Block next attack completely",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Chain Lightning",
+        iconName: "Bolt",
+        description: "Deal 22 damage; 50% chance to chain",
+        cooldown: 4,
+        manaCost: 30
+      },
+      {
+        name: "Power Strike",
+        iconName: "Sword",
+        description: "Next attack deals +50% damage",
+        cooldown: 3,
+        manaCost: 20
+      }
+    ]
+  },
+  "Spellblade": {
+    health: 1000,
+    attackMin: 9,
+    attackMax: 16,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Arcane Edge",
+        iconName: "Sword",
+        description: "Deal 20-28 damage; next hit +25%",
+        cooldown: 4,
+        manaCost: 30
+      },
+      {
+        name: "Blink",
+        iconName: "Zap",
+        description: "Evade next attack (guaranteed)",
+        cooldown: 5,
+        manaCost: 30
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Shadow Slash",
+        iconName: "Sword",
+        description: "Deal 18-24; 30% to bleed (3 turns)",
+        cooldown: 4,
+        manaCost: 25
+      }
+    ]
+  },
+  "Arcane Archer": {
+    health: 1000,
+    attackMin: 11,
+    attackMax: 18,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
+    ]
+  },
+  "Priest": {
+    health: 1000,
+    attackMin: 7,
+    attackMax: 14,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Greater Heal",
+        iconName: "Heart",
+        description: "Restore 30 health",
+        cooldown: 4,
+        manaCost: 35
+      },
+      {
+        name: "Holy Smite",
+        iconName: "Sparkles",
+        description: "Deal 15-25 holy damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Sanctuary",
+        iconName: "Shield",
+        description: "Block next incoming attack",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Cleanse",
+        iconName: "Sparkles",
+        description: "Remove negative effects",
+        cooldown: 5,
+        manaCost: 30
+      }
+    ]
+  },
+  "Elemental Warden": {
+    health: 1000,
+    attackMin: 9,
+    attackMax: 16,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
+    ]
+  },
   "Warlock": {
     health: 1000,
     attackMin: 11,
@@ -764,158 +1141,55 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Summon Imp",
         iconName: "Flame",
-        description: "Summon pet that deals 8 dmg for every turn",
+        description: "Summon pet that deals 8 dmg for 1 turn",
         cooldown: 5,
         manaCost: 30
       },
-      { name: "Vampiric Strike", iconName: "Droplets", description: "Vampiric strike deal 40-80 damage with 100% healing", cooldown: 6, manaCost: 28 },
-      { name: "Swap Stats", iconName: "RefreshCw", description: "Swap your health with opponent", cooldown: 8, manaCost: 40 },
-
-    ]
-  },
-
-
-  "Battlemage": {
-    health: 1000,
-    attackMin: 7,
-    attackMax: 14,
-    description: "Tier 2 caster specialist",
-    abilities: [
       {
-        name: "Battle Shout",
-        iconName: "Megaphone",
-        description: "Increase attack by 100%",
+        name: "Curse of Agony",
+        iconName: "Skull",
+        description: "8 damage per turn for 1 turn",
         cooldown: 5,
         manaCost: 30
-      }, {
-        name: "Poison",
-        iconName: "Zap",
-        description: "Inflict 20 poison damage",
-        cooldown: 4,
-        manaCost: 20
-      },
-      { name: "Fireball", iconName: "Flame", description: "Deal 20-30 fire damage", cooldown: 3, manaCost: 25 },
-      { name: "Mana Surge", iconName: "Sparkles", description: "Increase spell damage by 70% for next turn", cooldown: 5, manaCost: 25 },
-      { name: "Arcane Bolt", iconName: "Bolt", description: "Deal 30 damage", cooldown: 3, manaCost: 20 },
-    ]
-  },
-  "Spellblade": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Fireball", iconName: "Flame", description: "Deal 20-30 fire damage", cooldown: 3, manaCost: 25 },
-      { name: "Mana Heal", iconName: "Heart", description: "Convert 15 mana to 30 health", cooldown: 5, manaCost: 0 },
-      { name: "Intimidate", iconName: "Skull", description: "Increase attack by 20% ", cooldown: 4, manaCost: 20 },
-      { name: "Bleeding Strike", iconName: "Zap", description: "Inflict 6 bleed damage", cooldown: 4, manaCost: 20 }
-   ,     { name: "Shadow Ambush", iconName: "Moon", description: "Become untargetable for 1 turn, then strike next turn for 60-90 damage", cooldown: 8, manaCost: 50 }
-
-    ]
-  },
-  "Arcane Archer": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Quick Shot", iconName: "Target", description: "Fire three quick shots", cooldown: 3, manaCost: 20 },
-      { name: "Aimed Shot", iconName: "Target", description: "Deal 25-35 damage", cooldown: 5, manaCost: 35 },
-      { name: "Power Shot", iconName: "Target", description: "Deal 28 damage and increase attack by 50%", cooldown: 5, manaCost: 30 },
-      { name: "Focused Strike", iconName: "ArrowRight", description: "Deal 25 damage and increase attack by 50%", cooldown: 4, manaCost: 26 }
-    ,  {
-      name: "Mana Surge",
-      iconName: "Sparkles",
-      description: "Increase spell damage by 70% for next turn",
-      cooldown: 5,
-      manaCost: 25
-    },
-    ]
-  },
-  "Priest": {
-    health: 1000,
-    attackMin: 7,
-    attackMax: 14,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Rejuvenation", iconName: "Heart", description: "Permanently heal 10 health every turn", cooldown: 6, manaCost: 35 },
-      { name: "Blessing of Light", iconName: "Sparkles", description: "Increase spell damage by 50%, increase attack by 100%, and restore 5% health", cooldown: 5, manaCost: 25 },
-      { name: "Divine Shield", iconName: "Shield", description: "Repel abilities for 4 turns", cooldown: 5, manaCost: 35 },
-      { name: "Lay on Hands", iconName: "Heart", description: "restore 50% health", cooldown: 6, manaCost: 40 }
-   ,   {
-    name: "Sacred Ward",
-    iconName: "Shield",
-    description: "Gain a shield that blocks 100 damage everyturn",
-    cooldown: 6,
-    manaCost: 40
-  },
-    ]
-  },
-  "Elemental Warden": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      {
-        name: "Fire Blast",
-        iconName: "Flame",
-        description: "Deal 25-35 fire damage and inflict 5 damage everyturn",
-        cooldown: 3,
-        manaCost: 25
-      },
-      {
-        name: "Water Spout",
-        iconName: "Droplets",
-        description: "Deal 50 water damage , heal 30 health",
-        cooldown: 4,
-        manaCost: 28
-      },
-      {
-        name: "Earth Tremor",
-        iconName: "Mountain",
-        description: "Deal 30-40 earth damage and increase 30% spell damage",
-        cooldown: 5,
-        manaCost: 35
-      },
-      {
-        name: "Wind Slash",
-        iconName: "Wind",
-        description: "Deal 15-25 wind damage and increase your attack by 30%",
-        cooldown: 3,
-        manaCost: 22
-      },
-      {
-        name: "Spirit Bolt",
-        iconName: "Sparkles",
-        description: "Deal 35-45 spirit damage and restore 15 mana",
-        cooldown: 4,
-        manaCost: 0
       }
     ]
   },
+
   "Sage": {
     health: 1000,
     attackMin: 9,
     attackMax: 16,
     description: "Tier 2 caster specialist",
     abilities: [
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
       {
-        name: "Astral Bolt",
-        iconName: "Bolt",
-        description: "Deal 24-36 damage",
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
         cooldown: 3,
         manaCost: 25
-      },   {
-        name: "Ice Lance",
-        iconName: "Snowflake",
-        description: "Deal 15-25 damage",
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
         cooldown: 3,
-        manaCost: 20
-      }  ]
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
+    ]
   },
 
   "Shadow Priest": {
@@ -924,17 +1198,34 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMax: 14,
     description: "Tier 2 caster specialist",
     abilities: [
-      { name: "Shadow Bolt", iconName: "Bolt", description: "Deal 18-24 shadow damage", cooldown: 3, manaCost: 25 },
-      { name: "Life Tap", iconName: "Heart", description: "Lose 10 health to gain 25 mana", cooldown: 3, manaCost: 0 },
-      { name: "Curse of Agony", iconName: "Skull", description: "8 damage per turn for 1 turn", cooldown: 5, manaCost: 30 },
-      { name: "Shadow Ambush", iconName: "Moon", description: "Become untargetable for 1 turn, then strike next turn for 60-90 damage", cooldown: 8, manaCost: 50 }
-      , {
-        name: "Intimidate",
-        iconName: "Skull",
-        description: "Increase attack by 20% ",
-        cooldown: 4,
-        manaCost: 20
+      {
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
       },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
     ]
   },
 
@@ -944,17 +1235,33 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMax: 18,
     description: "Tier 2 caster specialist",
     abilities: [
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
-      { name: "Judgment of Fate", iconName: "Sword", description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage", cooldown: 8, manaCost: 50 }
-      ,
       {
-        name: "Vampiric Strike",
-        iconName: "Droplets",
-        description: "Vampiric strike deal 40-80 damage with 100% healing",
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
         cooldown: 6,
-        manaCost: 28
+        manaCost: 35
       }
     ]
   },
@@ -968,15 +1275,31 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       {
         name: "Summon Wolf",
         iconName: "Dog",
-        description: "Summon a wolf that deals 12 damage per turn permanently",
-        cooldown: 6,
-        manaCost: 40
+        description: "Summoned creature deals 8 dmg for 1 turn",
+        cooldown: 5,
+        manaCost: 30
       },
-      { name: "Wolf Howl", iconName: "Triangle", description: "Empower your wolf: it deals 100% more damage every turn", cooldown: 8, manaCost: 55 },
-      { name: "Fear Howl", iconName: "Skull", description: "Become untargetable for 3 turns (stealth mode)", cooldown: 8, manaCost: 50 },
-      { name: "Heal", iconName: "Heart", description: "Restore 25 health points", cooldown: 3, manaCost: 25 },
-      { name: "Sacred Ward", iconName: "Shield", description: "Gain a shield that blocks 100 damage everyturn", cooldown: 6, manaCost: 40 }
-
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      },
+      {
+        name: "Entangling Roots",
+        iconName: "Leaf",
+        description: "Immobilize enemy 1 turn",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Hunting Mark",
+        iconName: "Crosshair",
+        description: "Marked (+25% dmg) for 2 turns",
+        cooldown: 4,
+        manaCost: 25
+      }
     ]
   },
   "Exorcist": {
@@ -985,17 +1308,34 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMax: 18,
     description: "Tier 2 caster specialist",
     abilities: [
-      { name: "Holy Smite", iconName: "Sparkles", description: "Deal 15-25 holy damage", cooldown: 3, manaCost: 25 },
-      { name: "Cleanse", iconName: "Sparkles", description: "Remove negative effects", cooldown: 5, manaCost: 30 },
-      { name: "Divine Shield", iconName: "Shield", description: "Repel abilities for 4 turns", cooldown: 5, manaCost: 35 },
-      { name: "Blessing of Light", iconName: "Sparkles", description: "Increase spell damage by 50%, increase attack by 100%, and restore 20% health", cooldown: 5, manaCost: 25 }
-    ,  {
-      name: "Execute",
-      iconName: "Sword",
-      description: "If enemy is under 15% health: instantly kill; otherwise deal 40 damage",
-      cooldown: 8,
-      manaCost: 45
-    },
+      {
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
     ]
   },
 
@@ -1005,22 +1345,74 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     attackMax: 16,
     description: "Tier 2 caster specialist",
     abilities: [
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
-      { name: "Judgment of Fate", iconName: "Sword", description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage", cooldown: 8, manaCost: 50 },
       {
-        name: "Starlight Volley",
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
         iconName: "Sparkles",
-        description: "Unleash a barrage of astral arrows dealing 20-40 damage 5 times",
-        cooldown: 8,
-        manaCost: 60
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
       }
-
     ]
   },
 
 
+  "Fatekiller": {
+    health: 1000,
+    attackMin: 9,
+    attackMax: 16,
+    description: "Tier 2 caster specialist",
+    abilities: [
+      {
+        name: "Fireball",
+        iconName: "Flame",
+        description: "Deal 20-30 fire damage",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Heal",
+        iconName: "Heart",
+        description: "Restore 25 health points",
+        cooldown: 3,
+        manaCost: 25
+      },
+      {
+        name: "Mana Surge",
+        iconName: "Sparkles",
+        description: "Increase spell damage by 70% for next turn",
+        cooldown: 5,
+        manaCost: 25
+      },
+      {
+        name: "Rejuvenation",
+        iconName: "Heart",
+        description: "Heal 10 per turn for 3 turns",
+        cooldown: 6,
+        manaCost: 35
+      }
+    ]
+  },
 
 
 

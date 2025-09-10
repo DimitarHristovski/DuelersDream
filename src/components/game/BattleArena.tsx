@@ -689,7 +689,12 @@ export const BattleArena = ({
   const applyAbilityByDescription = (player: Player, opponent: Player, setPlayer: Dispatch<SetStateAction<Player>>, setOpponent: Dispatch<SetStateAction<Player>>, ability: Ability): boolean => {
     const description = ability.description.toLowerCase();
     
-    console.log('Ability used:', ability.name, 'Description:', description);
+    console.log('=== ABILITY DEBUG ===');
+    console.log('Ability used:', ability.name);
+    console.log('Description:', description);
+    console.log('Player:', player.name);
+    console.log('Opponent:', opponent.name);
+    console.log('===================');
 
     // If opponent has a repelling shield active, block abilities (not basic attacks)
     if (opponent.effects.repelAbilities && opponent.effects.repelAbilitiesDuration > 0) {
@@ -1001,7 +1006,7 @@ export const BattleArena = ({
     }
 
     // Mana to Health - Convert mana to health
-    if (description.includes('mana') && description.includes('health')) {
+    if (description.includes('mana') && description.includes('health') && !description.includes('lose')) {
       const conversionMatch = description.match(/(\d+) mana/);
       const healthMatch = description.match(/(\d+) health/);
       if (conversionMatch && healthMatch) {
@@ -1147,6 +1152,102 @@ export const BattleArena = ({
       return true;
     }
 
+    // Elemental Warden abilities (must be before generic handlers)
+    if (ability.name === "Fire Blast") {
+      console.log("Fire Blast ability triggered!");
+      const damage = Math.floor(Math.random() * (35 - 25 + 1)) + 25; // 25-35 damage
+      abilityDealDamage(damage, `${player.name} blasts with fire for ${damage} damage!`);
+      
+      // Parse permanent fire damage from description
+      const burnMatch = description.match(/inflict (\d+) damage everyturn/);
+      if (burnMatch) {
+        const burnDamage = parseInt(burnMatch[1]);
+        setOpponent(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            poisoned: 999, // Large number for "permanent" effect
+            poisonDamage: burnDamage
+          }
+        }));
+        addLogMessage(`${opponent.name} is burned and will take ${burnDamage} damage every turn!`);
+      }
+      return opponent.health > 0;
+    }
+
+    if (ability.name === "Water Spout") {
+      console.log("=== WATER SPOUT DEBUG ===");
+      console.log("Water Spout ability triggered!");
+      console.log("Player:", player.name, "Opponent:", opponent.name);
+      console.log("Opponent health before:", opponent.health);
+      
+      // Parse damage from description "Deal 50 water damage , heal 30 health"
+      const damageMatch = description.match(/deal (\d+) water damage/);
+      const damage = damageMatch ? parseInt(damageMatch[1]) : 50;
+      console.log("About to deal damage:", damage);
+      
+      try {
+        const result = abilityDealDamage(damage, `${player.name} summons a water spout for ${damage} damage!`);
+        console.log("Damage dealt, result:", result);
+        console.log("Opponent health after damage:", opponent.health);
+      } catch (error) {
+        console.error("Error in abilityDealDamage:", error);
+      }
+      
+      // Parse heal amount from description "heal 30 health"
+      const healMatch = description.match(/heal (\d+) health/);
+      const healAmount = healMatch ? parseInt(healMatch[1]) : 30;
+      console.log("Heal amount:", healAmount);
+      
+      try {
+        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is refreshed and restores ${healAmount} health!`);
+        console.log("Heal applied successfully");
+      } catch (error) {
+        console.error("Error in applyHeal:", error);
+      }
+      
+      console.log("=== END WATER SPOUT DEBUG ===");
+      return opponent.health > 0;
+    }
+
+    if (ability.name === "Earth Tremor") {
+      console.log("Earth Tremor ability triggered!");
+      const damage = Math.floor(Math.random() * (40 - 30 + 1)) + 30; // 30-40 damage
+      abilityDealDamage(damage, `${player.name} causes an earth tremor for ${damage} damage!`);
+      // Increase spell damage by 30%
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          spellDamageBoost: 30
+        }
+      }));
+      addLogMessage(`${player.name}'s connection to earth increases spell damage by 30%!`);
+      return opponent.health > 0;
+    }
+
+    if (ability.name === "Wind Slash") {
+      console.log("Wind Slash ability triggered!");
+      const damage = Math.floor(Math.random() * (25 - 15 + 1)) + 15; // 15-25 damage
+      abilityDealDamage(damage, `${player.name} slashes with wind for ${damage} damage!`);
+      // Increase attack by 30% for 2 turns
+      applyAttackBoost(player, setPlayer, 30, 2, addLogMessage, `${player.name} is empowered by wind and gains 30% attack for 2 turns!`);
+      return opponent.health > 0;
+    }
+
+    if (ability.name === "Spirit Bolt") {
+      console.log("Spirit Bolt ability triggered!");
+      const damage = Math.floor(Math.random() * (45 - 35 + 1)) + 35; // 35-45 damage
+      abilityDealDamage(damage, `${player.name} channels spirit energy for ${damage} damage!`);
+      // Restore 15 mana
+      setPlayer(prev => ({
+        ...prev,
+        mana: Math.min(prev.maxMana, prev.mana + 15)
+      }));
+      addLogMessage(`${player.name} channels spirit energy and restores 15 mana!`);
+      return opponent.health > 0;
+    }
+
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {
@@ -1205,6 +1306,108 @@ export const BattleArena = ({
         const healAmount = Math.max(1, Math.floor(player.maxHealth * (pct / 100)));
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} restores ${healAmount} health!`);
       }
+      return true;
+    }
+
+    // Swap Stats ability
+    if (ability.name === "Swap Stats") {
+      const playerHealth = player.health;
+      const opponentHealth = opponent.health;
+      
+      setPlayer(prev => ({
+        ...prev,
+        health: opponentHealth
+      }));
+      
+      setOpponent(prev => ({
+        ...prev,
+        health: playerHealth
+      }));
+      
+      addLogMessage(`${player.name} swaps health with ${opponent.name}!`);
+      return true;
+    }
+
+    // Starlight Volley ability
+    if (ability.name === "Starlight Volley") {
+      const damageMatch = description.match(/(\d+)-(\d+) damage (\d+) times/);
+      if (damageMatch) {
+        const minDamage = parseInt(damageMatch[1]);
+        const maxDamage = parseInt(damageMatch[2]);
+        const times = parseInt(damageMatch[3]);
+        
+        let totalDamage = 0;
+        const damages = [];
+        for (let i = 0; i < times; i++) {
+          const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+          damages.push(damage);
+          totalDamage += damage;
+        }
+        
+        // Apply all damage at once
+        dealDamage(totalDamage, opponent, setOpponent, addLogMessage, `${player.name} unleashes a barrage of ${times} astral arrows for ${totalDamage} total damage!`);
+      }
+      return true;
+    }
+    if (ability.name === "Starlight Volley") {
+      const damageMatch = description.match(/(\d+)-(\d+) damage (\d+) times/);
+      if (damageMatch) {
+        const minDamage = parseInt(damageMatch[1]);
+        const maxDamage = parseInt(damageMatch[2]);
+        const times = parseInt(damageMatch[3]);
+        
+        let totalDamage = 0;
+        for (let i = 0; i < times; i++) {
+          const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+          totalDamage += damage;
+          dealDamage(damage, opponent, setOpponent, addLogMessage, `Starlight arrow hits for ${damage} damage!`);
+        }
+        addLogMessage(`${player.name} unleashes a barrage of ${times} astral arrows for ${totalDamage} total damage!`);
+      }
+      return true;
+    }
+
+    // Summon Imp ability
+    if (ability.name === "Summon Imp") {
+      const damageMatch = description.match(/(\d+) dmg/);
+      const damage = damageMatch ? parseInt(damageMatch[1]) : 8;
+      
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreature: { damage: damage, turnsLeft: 999 }
+        }
+      }));
+      
+      addLogMessage(`${player.name} summons an imp that will deal ${damage} damage every turn!`);
+      return true;
+    }
+    if (ability.name === "Summon Imp") {
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreature: { damage: 8, turnsLeft: 999 }
+        }
+      }));
+      
+      addLogMessage(`${player.name} summons an imp that will deal 8 damage every turn!`);
+      return true;
+    }
+
+    // Life Tap ability
+    if (ability.name === "Life Tap") {
+      const healthLoss = 10;
+      const manaGain = 25;
+      
+      setPlayer(prev => ({
+        ...prev,
+        health: Math.max(0, prev.health - healthLoss),
+        mana: Math.min(prev.maxMana, prev.mana + manaGain)
+      }));
+      
+      addLogMessage(`${player.name} loses ${healthLoss} health to gain ${manaGain} mana!`);
       return true;
     }
 
