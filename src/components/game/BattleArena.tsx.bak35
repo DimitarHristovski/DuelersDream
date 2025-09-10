@@ -778,7 +778,7 @@ export const BattleArena = ({
       console.log('Attack boost ability detected:', description);
       
       // Extract damage if present
-      const damageMatch = description.match(/deal (\d+) damage/);
+      const damageMatch = description.match(/deal (\d+) damage/i);
       if (damageMatch) {
         const damage = parseInt(damageMatch[1]);
         abilityDealDamage(damage, `${player.name} deals ${damage} damage!`);
@@ -1115,19 +1115,6 @@ export const BattleArena = ({
       return opponent.health > 0;
     }
 
-    // Blessed Arrow - Parse damage and healing from description
-    if (ability.name.toLowerCase() === "blessed arrow") {
-      const damageMatch = description.match(/deal (\d+) damage/);
-      const healMatch = description.match(/restore (\d+) health/);
-      
-      if (damageMatch && healMatch) {
-        const damage = parseInt(damageMatch[1]);
-        const healAmount = parseInt(healMatch[1]);
-        abilityDealDamage(damage, `${player.name} fires a blessed arrow for ${damage} damage!`);
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed and restores ${healAmount} health!`);
-        return opponent.health > 0;
-      }
-    }
 
     // Sacred Ward - Parse shield amount from description
     if (ability.name.toLowerCase() === "sacred ward") {
@@ -1147,22 +1134,6 @@ export const BattleArena = ({
       return true;
     }
 
-    // Divine Volley - Parse damage range and percentage healing from description
-    if (ability.name.toLowerCase() === "divine volley") {
-      const damageMatch = description.match(/deal (\d+)-(\d+) holy damage/);
-      const healMatch = description.match(/restore (\d+)% health/);
-      
-      if (damageMatch && healMatch) {
-        const minDamage = parseInt(damageMatch[1]);
-        const maxDamage = parseInt(damageMatch[2]);
-        const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-        const healPercent = parseInt(healMatch[1]);
-        const healAmount = Math.max(1, Math.floor(player.maxHealth * (healPercent / 100)));
-        abilityDealDamage(damage, `${player.name} unleashes a divine volley for ${damage} holy damage!`);
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed by divine power and restores ${healAmount} health!`);
-        return opponent.health > 0;
-      }
-    }
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {
@@ -1180,7 +1151,7 @@ export const BattleArena = ({
     }
 
     // Generic fixed damage handler (e.g., "Deal 35 damage")
-    const fixedDamageMatch = description.match(/deal (\d+) damage/);
+    const fixedDamageMatch = description.match(/deal (\d+) damage/i);
     if (fixedDamageMatch) {
       let damage = parseInt(fixedDamageMatch[1]);
       // Apply spell damage boost if active

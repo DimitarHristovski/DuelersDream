@@ -778,7 +778,7 @@ export const BattleArena = ({
       console.log('Attack boost ability detected:', description);
       
       // Extract damage if present
-      const damageMatch = description.match(/deal (\d+) damage/);
+      const damageMatch = description.match(/deal (\d+) damage/i);
       if (damageMatch) {
         const damage = parseInt(damageMatch[1]);
         abilityDealDamage(damage, `${player.name} deals ${damage} damage!`);
@@ -841,7 +841,30 @@ export const BattleArena = ({
         }
         
         return opponent.health > 0;
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
       }
+    }      }
     }
     
     // Shield Bash - Deal 12-18 damage
@@ -849,7 +872,30 @@ export const BattleArena = ({
       const damage = Math.floor(Math.random() * 7) + 12; // 12-18 damage
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
     
     // Rally - Restore health points
     if (description.includes('restore') && description.includes('health')) {
@@ -914,7 +960,30 @@ export const BattleArena = ({
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} steals ${healAmount} health!`);
       }
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Mana Burn - Deal damage based on opponent's mana
     if (description.includes('mana burn')) {
@@ -928,7 +997,30 @@ export const BattleArena = ({
         addLogMessage(`${opponent.name} loses ${manaDrain} mana!`);
       }
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Execute - Deal massive damage to low health enemies
     if (ability.name.toLowerCase() === 'execute' || (description.includes('instant') && description.includes('kill'))) {
@@ -945,7 +1037,30 @@ export const BattleArena = ({
       }
       abilityDealDamage(damage, `${player.name} uses Execute and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Cleanse - Remove all negative effects and heal
     if (description.includes('cleanse')) {
@@ -971,7 +1086,30 @@ export const BattleArena = ({
         addLogMessage(`${player.name} takes ${selfDamage} self damage from whirlwind!`);
       }
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Vampiric Strike - Deal damage and heal based on actual damage dealt
     if (description.includes('vampiric strike')) {
@@ -998,7 +1136,30 @@ export const BattleArena = ({
         });
       }
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Mana to Health - Convert mana to health
     if (description.includes('mana') && description.includes('health')) {
@@ -1035,7 +1196,30 @@ export const BattleArena = ({
         abilityDealDamage(shot3, `${player.name} fires third quick shot for ${shot3} damage!`);
       }
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Blood Frenzy - Attack twice for 30-40 each, then take 15 self-damage
     if (ability.name.toLowerCase() === 'blood frenzy' || (description.includes('attack twice') && description.includes('30-40'))) {
@@ -1051,7 +1235,30 @@ export const BattleArena = ({
       setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - 15) }));
       addLogMessage(`${player.name} takes 15 self-damage from Blood Frenzy!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Summon Wolf - create a permanent summoned creature that deals N damage per turn
     if ((ability.name.toLowerCase() === 'summon wolf') || (description.includes('summon') && description.includes('wolf'))) {
@@ -1113,11 +1320,34 @@ export const BattleArena = ({
       
       abilityDealDamage(finalDamage, `${player.name} casts Judgment of Fate and deals ${finalDamage} damage!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Blessed Arrow - Parse damage and healing from description
     if (ability.name.toLowerCase() === "blessed arrow") {
-      const damageMatch = description.match(/deal (\d+) damage/);
+      const damageMatch = description.match(/deal (\d+) damage/i);
       const healMatch = description.match(/restore (\d+) health/);
       
       if (damageMatch && healMatch) {
@@ -1126,7 +1356,30 @@ export const BattleArena = ({
         abilityDealDamage(damage, `${player.name} fires a blessed arrow for ${damage} damage!`);
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed and restores ${healAmount} health!`);
         return opponent.health > 0;
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
       }
+    }      }
     }
 
     // Sacred Ward - Parse shield amount from description
@@ -1147,22 +1400,6 @@ export const BattleArena = ({
       return true;
     }
 
-    // Divine Volley - Parse damage range and percentage healing from description
-    if (ability.name.toLowerCase() === "divine volley") {
-      const damageMatch = description.match(/deal (\d+)-(\d+) holy damage/);
-      const healMatch = description.match(/restore (\d+)% health/);
-      
-      if (damageMatch && healMatch) {
-        const minDamage = parseInt(damageMatch[1]);
-        const maxDamage = parseInt(damageMatch[2]);
-        const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-        const healPercent = parseInt(healMatch[1]);
-        const healAmount = Math.max(1, Math.floor(player.maxHealth * (healPercent / 100)));
-        abilityDealDamage(damage, `${player.name} unleashes a divine volley for ${damage} holy damage!`);
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed by divine power and restores ${healAmount} health!`);
-        return opponent.health > 0;
-      }
-    }
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {
@@ -1177,10 +1414,33 @@ export const BattleArena = ({
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Generic fixed damage handler (e.g., "Deal 35 damage")
-    const fixedDamageMatch = description.match(/deal (\d+) damage/);
+    const fixedDamageMatch = description.match(/deal (\d+) damage/i);
     if (fixedDamageMatch) {
       let damage = parseInt(fixedDamageMatch[1]);
       // Apply spell damage boost if active
@@ -1191,7 +1451,30 @@ export const BattleArena = ({
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
+
+    // Enhanced Rejuvenation - Boost Rejuvenation healing and add mana regeneration
+    if (ability.name.toLowerCase() === "enhanced rejuvenation") {
+      const boostMatch = description.match(/boost.*healing by (\d+)/i);
+      const manaMatch = description.match(/(\d+) mana regeneration/i);
+      
+      if (boostMatch && manaMatch) {
+        const healingBoost = parseInt(boostMatch[1]);
+        const manaRegen = parseInt(manaMatch[1]);
+        
+        // Boost existing regeneration
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            regeneration: (prev.effects.regeneration || 0) + healingBoost,
+            manaRegeneration: (prev.effects.manaRegeneration || 0) + manaRegen
+          }
+        }));
+        
+        addLogMessage(`${player.name} enhances their rejuvenation (+${healingBoost} healing, +${manaRegen} mana per turn)!`);
+        return true;
+      }
+    }    }
 
     // Mana Surge / Permanent spell damage boost (e.g., "Increase spell damage by 70%")
     if (description.includes('increase spell damage by')) {

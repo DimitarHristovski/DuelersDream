@@ -845,7 +845,12 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-      
+      {
+        name: "Enhanced Rejuvenation",
+        iconName: "Heart",
+        description: "Boost Rejuvenation healing by 5 and gain 10 mana regeneration per turn",
+        cooldown: 8,
+        manaCost: 50   },
         {   
            name: "Mana Surge",
         iconName: "Sparkles",

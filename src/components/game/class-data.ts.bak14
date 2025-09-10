@@ -845,15 +845,21 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-      
-        {   
-           name: "Mana Surge",
-        iconName: "Sparkles",
-        description: "Increase spell damage by 70% for next turn",
+      {
+        name: "Blessed Arrow",
+        iconName: "ArrowRight",
+        description: "Deal 20 damage and heal 20 health",
         cooldown: 5,
-        manaCost: 25
-      }
-    ,  {
+        manaCost: 35
+      },
+    
+      {
+        name: "Life Steal",
+        iconName: "Heart",
+        description: "Deal 20 damage and steal 20 health",
+        cooldown: 6,
+        manaCost: 30
+      } ,  {
         name: "Sacred Ward",
         iconName: "Shield",
         description: "Gain a shield that blocks 100 damage everyturn",

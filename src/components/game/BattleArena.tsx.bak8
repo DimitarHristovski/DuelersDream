@@ -84,12 +84,10 @@ export const BattleArena = ({
       addLogMessage(`${defender.name} is untargetable! The attack misses.`);
       endOfAction(true);
       return;
-    }
 
     if (attacker.effects.stunned) {
       toast({ title: 'Stunned!', description: 'You are stunned and cannot attack.', variant: 'destructive' });
       return;
-    }
 
     // Check for evasion
     if (defender.effects.evasion > 0) {
@@ -109,8 +107,6 @@ export const BattleArena = ({
         
         endOfAction(true);
         return;
-      }
-    }
 
     const boost = attacker.effects.attackBoost || 0;
     const reduction = defender.effects.attackReduction || 0;
@@ -139,14 +135,12 @@ export const BattleArena = ({
           nextHitBonusDuration: 0
         }
       }));
-    }
     
     // Apply marked target bonus damage
     if (defender.effects.marked && defender.effects.markDamageIncrease > 0) {
       const markedBonus = Math.floor(damage * (defender.effects.markDamageIncrease / 100));
       damage += markedBonus;
       addLogMessage(`${defender.name} takes ${markedBonus} bonus damage from being marked!`);
-    }
     
     const newHealth = Math.max(0, defender.health - damage);
 
@@ -159,7 +153,6 @@ export const BattleArena = ({
       const reflected = Math.max(1, Math.floor(damage * reflectPct / 100));
       setAttacker(prev => ({ ...prev, health: Math.max(0, prev.health - reflected) }));
       addLogMessage(`${defender.name} counterattacks for ${reflected} damage!`);
-    }
 
     endOfAction(newHealth > 0);
   };
@@ -190,7 +183,6 @@ export const BattleArena = ({
           updatedEffects.attackBoost = 0;
           addLogMessage(`${prev.name}'s attack boost has worn off.`);
         }
-      }
 
       // expire stun effect
       if (updatedEffects.stunDuration > 0) {
@@ -199,7 +191,6 @@ export const BattleArena = ({
           updatedEffects.stunned = false;
           addLogMessage(`${prev.name} is no longer stunned!`);
         }
-      }
 
       // expire attack reduction effect
       if (updatedEffects.attackReductionDuration > 0) {
@@ -208,7 +199,6 @@ export const BattleArena = ({
           updatedEffects.attackReduction = 0;
           addLogMessage(`${prev.name}'s attack reduction has worn off.`);
         }
-      }
 
       // expire shield effect
       if (updatedEffects.shieldDuration > 0) {
@@ -217,7 +207,6 @@ export const BattleArena = ({
           updatedEffects.shield = 0;
           addLogMessage(`${prev.name}'s shield has worn off.`);
         }
-      }
 
       // expire evasion effect
       if (updatedEffects.evasionDuration > 0) {
@@ -226,7 +215,6 @@ export const BattleArena = ({
           updatedEffects.evasion = 0;
           addLogMessage(`${prev.name}'s evasion has worn off.`);
         }
-      }
 
       // expire untargetable effect
       if (updatedEffects.untargetableDuration > 0) {
@@ -235,7 +223,6 @@ export const BattleArena = ({
           updatedEffects.untargetable = false;
           addLogMessage(`${prev.name} emerges from the shadows.`);
         }
-      }
 
       // resolve ambush strike if pending and delay elapsed
       if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
@@ -248,18 +235,15 @@ export const BattleArena = ({
           addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
           return { ...o, health: newHealth };
         });
-      }
 
       // decrement ambush delay if any
       if (updatedEffects.ambushDelay > 0) {
         updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
-      }
       // clear ambushPending after strike
       if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
         updatedEffects.ambushPending = false;
         updatedEffects.ambushMin = 0;
         updatedEffects.ambushMax = 0;
-      }
 
       // expire repel abilities effect
       if (updatedEffects.repelAbilitiesDuration > 0) {
@@ -268,7 +252,6 @@ export const BattleArena = ({
           updatedEffects.repelAbilities = false;
           addLogMessage(`${prev.name}'s repelling shield fades.`);
         }
-      }
 
       // expire marked target effect
       if (updatedEffects.markDuration > 0) {
@@ -278,7 +261,6 @@ export const BattleArena = ({
           updatedEffects.markDamageIncrease = 0;
           addLogMessage(`${prev.name} is no longer marked.`);
         }
-      }
 
       // expire bleeding effect
       if (updatedEffects.bleedDuration > 0) {
@@ -287,7 +269,6 @@ export const BattleArena = ({
           updatedEffects.bleeding = 0;
           addLogMessage(`${prev.name} stops bleeding.`);
         }
-      }
 
       // expire weapon enhancement effect
       if (updatedEffects.weaponEnhancementDuration > 0) {
@@ -297,7 +278,6 @@ export const BattleArena = ({
           updatedEffects.weaponEnhancementElement = '';
           addLogMessage(`${prev.name}'s weapon enhancement has worn off.`);
         }
-      }
 
       // expire spell damage boost effect
       if (updatedEffects.spellDamageBoostDuration > 0) {
@@ -306,7 +286,6 @@ export const BattleArena = ({
           updatedEffects.spellDamageBoost = 0;
           addLogMessage(`${prev.name}'s spell damage boost has worn off.`);
         }
-      }
 
       // expire damage reduction effect
       if (updatedEffects.damageReductionDuration > 0) {
@@ -315,7 +294,6 @@ export const BattleArena = ({
           updatedEffects.damageReduction = 0;
           addLogMessage(`${prev.name}'s damage reduction has worn off.`);
         }
-      }
 
       // expire next hit bonus effect
       if (updatedEffects.nextHitBonusDuration > 0) {
@@ -324,7 +302,6 @@ export const BattleArena = ({
           updatedEffects.nextHitBonus = 0;
           addLogMessage(`${prev.name}'s next hit bonus has worn off.`);
         }
-      }
 
       // Apply permanent regeneration if present (heals per turn)
       let interimHealth = prev.health;
@@ -332,7 +309,6 @@ export const BattleArena = ({
         const healed = Math.min(updatedEffects.regeneration, prev.maxHealth - prev.health);
         interimHealth = prev.health + healed;
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
-      }
 
       // Summoned creature damage to opponent at start of owner's turn (non-lethal)
       if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
@@ -342,7 +318,6 @@ export const BattleArena = ({
           if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
           return { ...o, health: reduced };
         });
-      }
 
       // Apply bleeding damage
       if (updatedEffects.bleeding > 0) {
@@ -381,7 +356,6 @@ export const BattleArena = ({
           updatedEffects.attackBoost = 0;
           addLogMessage(`${prev.name}'s attack boost has worn off.`);
         }
-      }
 
       // expire stun effect
       if (updatedEffects.stunDuration > 0) {
@@ -390,7 +364,6 @@ export const BattleArena = ({
           updatedEffects.stunned = false;
           addLogMessage(`${prev.name} is no longer stunned!`);
         }
-      }
 
       // expire attack reduction effect
       if (updatedEffects.attackReductionDuration > 0) {
@@ -399,7 +372,6 @@ export const BattleArena = ({
           updatedEffects.attackReduction = 0;
           addLogMessage(`${prev.name}'s attack reduction has worn off.`);
         }
-      }
 
       // expire shield effect
       if (updatedEffects.shieldDuration > 0) {
@@ -408,7 +380,6 @@ export const BattleArena = ({
           updatedEffects.shield = 0;
           addLogMessage(`${prev.name}'s shield has worn off.`);
         }
-      }
 
       // expire evasion effect
       if (updatedEffects.evasionDuration > 0) {
@@ -417,7 +388,6 @@ export const BattleArena = ({
           updatedEffects.evasion = 0;
           addLogMessage(`${prev.name}'s evasion has worn off.`);
         }
-      }
 
       // expire untargetable effect
       if (updatedEffects.untargetableDuration > 0) {
@@ -426,7 +396,6 @@ export const BattleArena = ({
           updatedEffects.untargetable = false;
           addLogMessage(`${prev.name} emerges from the shadows.`);
         }
-      }
 
       // resolve ambush strike if pending and delay elapsed
       if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
@@ -438,18 +407,15 @@ export const BattleArena = ({
           addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
           return { ...o, health: newHealth };
         });
-      }
 
       // decrement ambush delay if any
       if (updatedEffects.ambushDelay > 0) {
         updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
-      }
       // clear ambushPending after strike
       if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
         updatedEffects.ambushPending = false;
         updatedEffects.ambushMin = 0;
         updatedEffects.ambushMax = 0;
-      }
 
       // expire repel abilities effect
       if (updatedEffects.repelAbilitiesDuration > 0) {
@@ -458,7 +424,6 @@ export const BattleArena = ({
           updatedEffects.repelAbilities = false;
           addLogMessage(`${prev.name}'s repelling shield fades.`);
         }
-      }
 
       // expire marked target effect
       if (updatedEffects.markDuration > 0) {
@@ -469,7 +434,6 @@ export const BattleArena = ({
           updatedEffects.markDuration = 0;
           addLogMessage(`${prev.name} is no longer marked.`);
         }
-      }
 
       // expire bleeding effect
       if (updatedEffects.bleedDuration > 0) {
@@ -478,7 +442,6 @@ export const BattleArena = ({
           updatedEffects.bleeding = 0;
           addLogMessage(`${prev.name} stops bleeding.`);
         }
-      }
 
       // expire weapon enhancement effect
       if (updatedEffects.weaponEnhancementDuration > 0) {
@@ -488,7 +451,6 @@ export const BattleArena = ({
           updatedEffects.weaponEnhancementElement = '';
           addLogMessage(`${prev.name}'s weapon enhancement has worn off.`);
         }
-      }
 
       // expire spell damage boost effect
       if (updatedEffects.spellDamageBoostDuration > 0) {
@@ -497,7 +459,6 @@ export const BattleArena = ({
           updatedEffects.spellDamageBoost = 0;
           addLogMessage(`${prev.name}'s spell damage boost has worn off.`);
         }
-      }
 
       // expire damage reduction effect
       if (updatedEffects.damageReductionDuration > 0) {
@@ -506,7 +467,6 @@ export const BattleArena = ({
           updatedEffects.damageReduction = 0;
           addLogMessage(`${prev.name}'s damage reduction has worn off.`);
         }
-      }
 
       // expire next hit bonus effect
       if (updatedEffects.nextHitBonusDuration > 0) {
@@ -515,7 +475,6 @@ export const BattleArena = ({
           updatedEffects.nextHitBonus = 0;
           addLogMessage(`${prev.name}'s next hit bonus has worn off.`);
         }
-      }
 
       // Apply permanent regeneration if present (heals per turn)
       let interimHealth = prev.health;
@@ -523,7 +482,6 @@ export const BattleArena = ({
         const healed = Math.min(updatedEffects.regeneration, prev.maxHealth - prev.health);
         interimHealth = prev.health + healed;
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
-      }
 
       // Summoned creature damage to opponent at start of owner's turn (non-lethal)
       if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
@@ -533,7 +491,6 @@ export const BattleArena = ({
           if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
           return { ...o, health: reduced };
         });
-      }
 
       // Apply bleeding damage
       if (updatedEffects.bleeding > 0) {
@@ -566,12 +523,10 @@ export const BattleArena = ({
     if (!player.isActive) {
       toast({ title: 'Not your turn!', description: 'Wait for your turn to use abilities.', variant: 'destructive' });
       return;
-    }
 
     if (player.effects.stunned) {
       toast({ title: 'Stunned!', description: 'You are stunned and cannot use abilities.', variant: 'destructive' });
       return;
-    }
 
     const ability = player.abilities[abilityIndex];
 
@@ -582,7 +537,6 @@ export const BattleArena = ({
         variant: 'destructive',
       });
       return;
-    }
 
     if (ability.manaCost && player.mana < ability.manaCost) {
       toast({
@@ -591,13 +545,11 @@ export const BattleArena = ({
         variant: 'destructive',
       });
       return;
-    }
 
     // Spend mana
     if (ability.manaCost) {
       setPlayer((prev) => ({ ...prev, mana: Math.max(0, prev.mana - ability.manaCost!) }));
       addLogMessage(`${player.name} spends ${ability.manaCost} mana to use ${ability.name}.`);
-    }
 
     // Apply the ability effect
     const continueBattle = applyAbilityByDescription(player, opponent, setPlayer, setOpponent, ability);
@@ -627,7 +579,6 @@ export const BattleArena = ({
           return prev - 1;
         });
       }, 1000);
-    }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -651,14 +602,12 @@ export const BattleArena = ({
         handleAbilityUse(computerPlayer === player1 ? 1 : 2, index);
       } else {
         handleAttack();
-      }
     }, 800);
   };
 
   useEffect(() => {
     if (!gameOver && ((player1.isActive && player1.isComputer) || (player2.isActive && player2.isComputer))) {
       computerTurn();
-    }
     return () => {
       if (computerMoveTimer.current) clearTimeout(computerMoveTimer.current);
     };
@@ -683,7 +632,6 @@ export const BattleArena = ({
         localStorage.setItem('duelGameStats', JSON.stringify(updated));
         return updated;
       });
-    }
   }, [player1.health, player2.health]);
 
   const applyAbilityByDescription = (player: Player, opponent: Player, setPlayer: Dispatch<SetStateAction<Player>>, setOpponent: Dispatch<SetStateAction<Player>>, ability: Ability): boolean => {
@@ -695,13 +643,11 @@ export const BattleArena = ({
     if (opponent.effects.repelAbilities && opponent.effects.repelAbilitiesDuration > 0) {
       addLogMessage(`${opponent.name}'s repelling shield negates ${ability.name}!`);
       return true;
-    }
 
     // Also block abilities against untargetable targets
     if (opponent.effects.untargetable && opponent.effects.untargetableDuration > 0) {
       addLogMessage(`${opponent.name} is untargetable! ${ability.name} fails.`);
       return true;
-    }
 
     // Helper: when abilities deal damage, ensure counterattack triggers like basic attacks
     const abilityDealDamage = (rawDamage: number, message: string, onAppliedDamage?: (actualDamage: number) => void) => {
@@ -740,7 +686,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} gains permanent regeneration (${amount} per turn).`);
       return true;
-    }
 
     // Repelling shield: repel abilities for N turns
     if (description.includes('repel') && description.includes('abilities')) {
@@ -756,7 +701,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} is surrounded by a repelling shield for ${duration} turns!`);
       return true;
-    }
 
     // Permanent counter mechanics from ability: counterattack only (no spell reflect)
     if (description.includes('permanently counterattack')) {
@@ -771,7 +715,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} will permanently counter ${pct}% of incoming damage.`);
       return true;
-    }
     
     // Universal attack boost parser - handles all attack boost abilities
     if (description.includes('attack boost') || description.includes('increase attack') || (description.includes('gain') && description.includes('attack'))) {
@@ -782,7 +725,6 @@ export const BattleArena = ({
       if (damageMatch) {
         const damage = parseInt(damageMatch[1]);
         abilityDealDamage(damage, `${player.name} deals ${damage} damage!`);
-      }
       
       // Extract attack boost value
       const boostMatch = description.match(/(\d+)% attack boost/) || 
@@ -841,15 +783,12 @@ export const BattleArena = ({
         }
         
         return opponent.health > 0;
-      }
-    }
     
     // Shield Bash - Deal 12-18 damage
     if (description.includes('deal 12-18 damage')) {
       const damage = Math.floor(Math.random() * 7) + 12; // 12-18 damage
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
     
     // Rally - Restore health points
     if (description.includes('restore') && description.includes('health')) {
@@ -861,9 +800,7 @@ export const BattleArena = ({
       } else {
         const healAmount = parseInt(description.match(/(\d+)/)?.[1] || '15');
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} uses ${ability.name} and restores ${healAmount} health!`);
-      }
       return true;
-    }
     
     // Intimidate - Reduce opponent's attack by percentage
     if (description.includes('reduce opponent') && description.includes('attack by')) {
@@ -871,9 +808,7 @@ export const BattleArena = ({
       if (reductionMatch) {
         const reductionValue = parseInt(reductionMatch[1]);
         applyAttackReduction(opponent, setOpponent, reductionValue, 1, addLogMessage, `${player.name} uses ${ability.name} and reduces ${opponent.name}'s attack by ${reductionValue}%!`);
-      }
       return true;
-    }
     
     // Poison (specific) - deal immediate poison damage parsed from description
     if (ability.name.toLowerCase() === 'poison') {
@@ -889,7 +824,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} uses ${ability.name} and poisons ${opponent.name} for ${poisonPerTurn} damage per turn!`);
       return true;
-    }
 
    
     
@@ -899,9 +833,7 @@ export const BattleArena = ({
       if (bleedMatch) {
         const bleedDamage = parseInt(bleedMatch[1]);
         applyBleedingEffect(opponent, setOpponent, 1, addLogMessage, `${player.name} uses ${ability.name} and makes ${opponent.name} bleed for ${bleedDamage} damage per turn!`);
-      }
       return true;
-    }
 
     // Life Steal - Deal damage and heal
     if (description.includes('life steal') || (description.includes('steal') && description.includes('health') && description.includes('damage'))) {
@@ -912,9 +844,7 @@ export const BattleArena = ({
         const healAmount = parseInt(healMatch[1]);
         abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} steals ${healAmount} health!`);
-      }
       return opponent.health > 0;
-    }
 
     // Mana Burn - Deal damage based on opponent's mana
     if (description.includes('mana burn')) {
@@ -926,9 +856,7 @@ export const BattleArena = ({
         abilityDealDamage(damage, `${player.name} burns ${opponent.name}'s mana for ${damage} damage!`);
         setOpponent(prev => ({ ...prev, mana: Math.max(0, prev.mana - manaDrain) }));
         addLogMessage(`${opponent.name} loses ${manaDrain} mana!`);
-      }
       return opponent.health > 0;
-    }
 
     // Execute - Deal massive damage to low health enemies
     if (ability.name.toLowerCase() === 'execute' || (description.includes('instant') && description.includes('kill'))) {
@@ -942,10 +870,8 @@ export const BattleArena = ({
         setOpponent(prev => ({ ...prev, health: 0 }));
         addLogMessage(`${player.name} executes ${opponent.name} instantly!`);
         return false; // stop turn switching; game over will trigger
-      }
       abilityDealDamage(damage, `${player.name} uses Execute and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
 
     // Cleanse - Remove all negative effects and heal
     if (description.includes('cleanse')) {
@@ -954,9 +880,7 @@ export const BattleArena = ({
         const healAmount = parseInt(healMatch[1]);
         removeAllNegativeEffects(player, setPlayer, addLogMessage, `${player.name} cleanses all negative effects!`);
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} heals for ${healAmount} health!`);
-      }
       return true;
-    }
 
     // Whirlwind - Deal damage to opponent and self
     if (description.includes('whirlwind')) {
@@ -969,9 +893,7 @@ export const BattleArena = ({
         const newHealth = Math.max(1, player.health - selfDamage);
         setPlayer(prev => ({ ...prev, health: newHealth }));
         addLogMessage(`${player.name} takes ${selfDamage} self damage from whirlwind!`);
-      }
       return opponent.health > 0;
-    }
 
     // Vampiric Strike - Deal damage and heal based on actual damage dealt
     if (description.includes('vampiric strike')) {
@@ -996,9 +918,7 @@ export const BattleArena = ({
             addLogMessage(`${player.name}'s vampiric strike was blocked and heals nothing.`);
           }
         });
-      }
       return opponent.health > 0;
-    }
 
     // Mana to Health - Convert mana to health
     if (description.includes('mana') && description.includes('health')) {
@@ -1013,9 +933,7 @@ export const BattleArena = ({
         } else {
           addLogMessage(`${player.name} doesn't have enough mana for ${ability.name}!`);
         }
-      }
       return true;
-    }
 
     // Quick Shot - Three shots; each deals 100%-150% of base damage
     if (description.includes('quick shot') || description.includes('three quick shots')) {
@@ -1029,13 +947,10 @@ export const BattleArena = ({
       if (opponent.health > 0) {
         const shot2 = Math.floor(baseDamage * (1 + Math.random() * 0.5));
         abilityDealDamage(shot2, `${player.name} fires second quick shot for ${shot2} damage!`);
-      }
       if (opponent.health > 0) {
         const shot3 = Math.floor(baseDamage * (1 + Math.random() * 0.5));
         abilityDealDamage(shot3, `${player.name} fires third quick shot for ${shot3} damage!`);
-      }
       return opponent.health > 0;
-    }
 
     // Blood Frenzy - Attack twice for 30-40 each, then take 15 self-damage
     if (ability.name.toLowerCase() === 'blood frenzy' || (description.includes('attack twice') && description.includes('30-40'))) {
@@ -1045,13 +960,11 @@ export const BattleArena = ({
       if (opponent.health > 0) {
         const hit2 = Math.floor(Math.random() * (40 - 30 + 1)) + 30;
         abilityDealDamage(hit2, `${player.name} follows up for ${hit2} damage!`);
-      }
 
       // Apply self-damage
       setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - 15) }));
       addLogMessage(`${player.name} takes 15 self-damage from Blood Frenzy!`);
       return opponent.health > 0;
-    }
 
     // Summon Wolf - create a permanent summoned creature that deals N damage per turn
     if ((ability.name.toLowerCase() === 'summon wolf') || (description.includes('summon') && description.includes('wolf'))) {
@@ -1066,7 +979,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} summons a wolf that will deal ${damage} damage each turn!`);
       return true;
-    }
 
     // Fear Howl - Become untargetable for 3 turns (stealth mode)
     if ((ability.name.toLowerCase() === 'fear howl') || (description.includes('untargetable') && description.includes('3 turn'))) {
@@ -1080,7 +992,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} enters stealth and becomes untargetable for 3 turns!`);
       return true;
-    }
 
     // Shadow Ambush - Become untargetable for 1 turn, then strike next turn for 60-90 damage
     if ((ability.name.toLowerCase() === 'shadow ambush') || (description.includes('untargetable') && description.includes('strike next turn'))) {
@@ -1098,7 +1009,6 @@ export const BattleArena = ({
       }));
       addLogMessage(`${player.name} vanishes into the shadows!`);
       return true;
-    }
 
     // Judgment of Fate - Deal 60-90 damage, double if enemy below 40% health
     if (ability.name.toLowerCase() === 'judgment of fate') {
@@ -1109,11 +1019,9 @@ export const BattleArena = ({
       if (enemyHealthPercent < 40) {
         finalDamage = baseDamage * 2;
         addLogMessage(`${opponent.name} is below 40% health - Judgment of Fate deals double damage!`);
-      }
       
       abilityDealDamage(finalDamage, `${player.name} casts Judgment of Fate and deals ${finalDamage} damage!`);
       return opponent.health > 0;
-    }
 
     // Blessed Arrow - Parse damage and healing from description
     if (ability.name.toLowerCase() === "blessed arrow") {
@@ -1126,8 +1034,6 @@ export const BattleArena = ({
         abilityDealDamage(damage, `${player.name} fires a blessed arrow for ${damage} damage!`);
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed and restores ${healAmount} health!`);
         return opponent.health > 0;
-      }
-    }
 
     // Sacred Ward - Parse shield amount from description
     if (ability.name.toLowerCase() === "sacred ward") {
@@ -1143,26 +1049,8 @@ export const BattleArena = ({
           }
         }));
         addLogMessage(`${player.name} creates a sacred ward that blocks ${shieldAmount} damage!`);
-      }
       return true;
-    }
 
-    // Divine Volley - Parse damage range and percentage healing from description
-    if (ability.name.toLowerCase() === "divine volley") {
-      const damageMatch = description.match(/deal (\d+)-(\d+) holy damage/);
-      const healMatch = description.match(/restore (\d+)% health/);
-      
-      if (damageMatch && healMatch) {
-        const minDamage = parseInt(damageMatch[1]);
-        const maxDamage = parseInt(damageMatch[2]);
-        const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-        const healPercent = parseInt(healMatch[1]);
-        const healAmount = Math.max(1, Math.floor(player.maxHealth * (healPercent / 100)));
-        abilityDealDamage(damage, `${player.name} unleashes a divine volley for ${damage} holy damage!`);
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed by divine power and restores ${healAmount} health!`);
-        return opponent.health > 0;
-      }
-    }
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {
@@ -1174,10 +1062,8 @@ export const BattleArena = ({
         const boosted = Math.floor(damage * (1 + player.effects.spellDamageBoost / 100));
         addLogMessage(`${player.name}'s spell is empowered (+${player.effects.spellDamageBoost}%)!`);
         damage = boosted;
-      }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
 
     // Generic fixed damage handler (e.g., "Deal 35 damage")
     const fixedDamageMatch = description.match(/deal (\d+) damage/);
@@ -1188,10 +1074,8 @@ export const BattleArena = ({
         const boosted = Math.floor(damage * (1 + player.effects.spellDamageBoost / 100));
         addLogMessage(`${player.name}'s spell is empowered (+${player.effects.spellDamageBoost}%)!`);
         damage = boosted;
-      }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
-    }
 
     // Mana Surge / Permanent spell damage boost (e.g., "Increase spell damage by 70%")
     if (description.includes('increase spell damage by')) {
@@ -1206,23 +1090,19 @@ export const BattleArena = ({
           }
         }));
         addLogMessage(`${player.name}'s spell damage is increased by ${spellBoost}% (persistent).`);
-      }
       // Also handle inline attack boost in same description if present
       const atkBoostMatch = description.match(/increase attack by (\d+)%/);
       if (atkBoostMatch) {
         const atkBoost = parseInt(atkBoostMatch[1]);
         // Make the attack increase last 2 turns
         applyAttackBoost(player, setPlayer, atkBoost, 2, addLogMessage, `${player.name} gains ${atkBoost}% attack for 2 turns!`);
-      }
       // Also handle inline healing: restore N% health
       const healPctMatch = description.match(/restore (\d+)% health/);
       if (healPctMatch) {
         const pct = parseInt(healPctMatch[1]);
         const healAmount = Math.max(1, Math.floor(player.maxHealth * (pct / 100)));
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} restores ${healAmount} health!`);
-      }
       return true;
-    }
 
     // Default case - just log the ability use
     addLogMessage(`${player.name} uses ${ability.name}!`);

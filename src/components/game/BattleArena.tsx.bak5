@@ -1101,18 +1101,51 @@ export const BattleArena = ({
     }
 
     // Judgment of Fate - Deal 60-90 damage, double if enemy below 40% health
-    if (ability.name.toLowerCase() === 'judgment of fate') {
-      const baseDamage = Math.floor(Math.random() * (90 - 60 + 1)) + 60; // 60-90 damage
-      const enemyHealthPercent = (opponent.health / opponent.maxHealth) * 100;
+    if (ability.name.toLowerCase() === "judgment of fate") {
+      // Parse damage range from description (e.g., "Deal 60-90 damage")
+      const damageMatch = description.match(/deal (\d+)-(\d+) damage/);
+      // Parse health threshold (e.g., "below 40% health")
+      const thresholdMatch = description.match(/below (\d+)% health/);
       
-      let finalDamage = baseDamage;
-      if (enemyHealthPercent < 40) {
-        finalDamage = baseDamage * 2;
-        addLogMessage(`${opponent.name} is below 40% health - Judgment of Fate deals double damage!`);
+      if (damageMatch && thresholdMatch) {
+        const minDamage = parseInt(damageMatch[1]);
+        const maxDamage = parseInt(damageMatch[2]);
+        const threshold = parseInt(thresholdMatch[1]);
+        
+        const baseDamage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+        const enemyHealthPercent = (opponent.health / opponent.maxHealth) * 100;
+        
+        let finalDamage = baseDamage;
+        if (enemyHealthPercent < threshold) {
+          finalDamage = baseDamage * 2;
+          addLogMessage(`${opponent.name} is below ${threshold}% health - Judgment of Fate deals double damage!`);
+        }
+        
+        abilityDealDamage(finalDamage, `${player.name} casts Judgment of Fate and deals ${finalDamage} damage!`);
+        return opponent.health > 0;
       }
-      
-      abilityDealDamage(finalDamage, `${player.name} casts Judgment of Fate and deals ${finalDamage} damage!`);
-      return opponent.health > 0;
+    }
+
+    // Wolf Howl - Empower summoned wolf to deal 100% more damage every turn
+    if (ability.name.toLowerCase() === "wolf howl") {
+      // Check if player has a summoned creature
+      if (player.effects.summonedCreature && player.effects.summonedCreature.turnsLeft !== 0) {
+        // Double the wolf damage permanently
+        setPlayer(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            summonedCreature: {
+              ...prev.effects.summonedCreature!,
+              damage: prev.effects.summonedCreature!.damage * 2
+            }
+          }
+        }));
+        addLogMessage(`${player.name} howls and empowers their wolf! It now deals ${player.effects.summonedCreature.damage * 2} damage per turn!`);
+      } else {
+        addLogMessage(`${player.name} howls, but has no wolf to empower!`);
+      }
+      return true;
     }
 
     // Blessed Arrow - Parse damage and healing from description
@@ -1122,13 +1155,6 @@ export const BattleArena = ({
       
       if (damageMatch && healMatch) {
         const damage = parseInt(damageMatch[1]);
-        const healAmount = parseInt(healMatch[1]);
-        abilityDealDamage(damage, `${player.name} fires a blessed arrow for ${damage} damage!`);
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed and restores ${healAmount} health!`);
-        return opponent.health > 0;
-      }
-    }
-
     // Sacred Ward - Parse shield amount from description
     if (ability.name.toLowerCase() === "sacred ward") {
       const shieldMatch = description.match(/blocks (\d+) damage/);
@@ -1140,29 +1166,37 @@ export const BattleArena = ({
           effects: {
             ...prev.effects,
             shield: prev.effects.shield + shieldAmount
-          }
-        }));
-        addLogMessage(`${player.name} creates a sacred ward that blocks ${shieldAmount} damage!`);
-      }
-      return true;
-    }
-
-    // Divine Volley - Parse damage range and percentage healing from description
+    // Divine Volley - Parse damage range and healing from description
     if (ability.name.toLowerCase() === "divine volley") {
       const damageMatch = description.match(/deal (\d+)-(\d+) holy damage/);
-      const healMatch = description.match(/restore (\d+)% health/);
+      const healMatch = description.match(/restore (\d+) health/);
       
       if (damageMatch && healMatch) {
         const minDamage = parseInt(damageMatch[1]);
         const maxDamage = parseInt(damageMatch[2]);
         const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-        const healPercent = parseInt(healMatch[1]);
-        const healAmount = Math.max(1, Math.floor(player.maxHealth * (healPercent / 100)));
+        const healAmount = parseInt(healMatch[1]);
         abilityDealDamage(damage, `${player.name} unleashes a divine volley for ${damage} holy damage!`);
         applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed by divine power and restores ${healAmount} health!`);
         return opponent.health > 0;
       }
+    }        }
+      }));
+      addLogMessage(`${player.name} creates a sacred ward that blocks 40 damage!`);
+      return true;
     }
+
+    // Divine Volley - Deal 70-100 holy damage and restore 50 health
+    if (ability.name.toLowerCase() === "divine volley") {
+      const minDamage = 70;
+      const maxDamage = 100;
+      const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+      const healAmount = 50;
+      abilityDealDamage(damage, `${player.name} unleashes a divine volley for ${damage} holy damage!`);
+      applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is blessed by divine power and restores ${healAmount} health!`);
+      return opponent.health > 0;
+    }
+
     // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
     const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
     if (rangeDamageMatch) {

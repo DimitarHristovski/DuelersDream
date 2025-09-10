@@ -1149,7 +1149,7 @@ export const BattleArena = ({
 
     // Divine Volley - Parse damage range and percentage healing from description
     if (ability.name.toLowerCase() === "divine volley") {
-      const damageMatch = description.match(/deal (\d+)-(\d+) holy damage/);
+      const damageMatch = description.match(/deal (\d+)-(\d+) damage/i);
       const healMatch = description.match(/restore (\d+)% health/);
       
       if (damageMatch && healMatch) {

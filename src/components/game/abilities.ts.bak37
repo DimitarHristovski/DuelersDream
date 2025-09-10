@@ -28,7 +28,7 @@ export interface Player {
     stunned: boolean;
     bleeding: number;
     regeneration: number;
-
+    manaRegeneration: number;
     attackReduction: number;
     summonedCreature: { damage: number, turnsLeft: number } | null;
     // Duration tracking for effects
@@ -92,7 +92,6 @@ export const createDefaultEffects = () => ({
   stunned: false,
   bleeding: 0,
   regeneration: 0,
-
   attackReduction: 0,
   summonedCreature: null,
   // Duration tracking for effects
@@ -425,7 +424,6 @@ export const removeAllPositiveEffects = (
       damageBoost: 0,
       damageBoostDuration: 0,
       regeneration: 0,
-
       evading: false,
       summonedCreature: null
     }

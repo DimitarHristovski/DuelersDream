@@ -845,9 +845,15 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-      
-        {   
-           name: "Mana Surge",
+      {
+        name: "Blessed Arrow",
+        iconName: "ArrowRight",
+        description: "Deal 50 damage and heal 30 health",
+        cooldown: 5,
+        manaCost: 35
+      },
+      {
+        name: "Mana Surge",
         iconName: "Sparkles",
         description: "Increase spell damage by 70% for next turn",
         cooldown: 5,

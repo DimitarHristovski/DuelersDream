@@ -845,9 +845,10 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 3,
         manaCost: 25
       },
-      
-        {   
-           name: "Mana Surge",
+      {
+      },
+      {
+        name: "Mana Surge",
         iconName: "Sparkles",
         description: "Increase spell damage by 70% for next turn",
         cooldown: 5,
