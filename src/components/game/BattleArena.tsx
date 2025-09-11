@@ -161,6 +161,28 @@ export const BattleArena = ({
       addLogMessage(`${defender.name} counterattacks for ${reflected} damage!`);
     }
 
+    // Check for Lightshot's Wrath passive ability
+    if (attacker.abilities.some(ability => ability.name === "Lightshot's Wrath")) {
+      const wrathAbility = attacker.abilities.find(ability => ability.name === "Lightshot's Wrath");
+      if (wrathAbility) {
+        // Parse attack boost percentage from description "increase attack by 20%"
+        const boostMatch = wrathAbility.description.match(/increase attack by (\d+)%/);
+        const boostAmount = boostMatch ? parseInt(boostMatch[1]) : 20; // Default to 20% if parsing fails
+        
+        const currentAttackBoost = attacker.effects.attackBoost || 0;
+        const newAttackBoost = currentAttackBoost + boostAmount; // Stack the parsed amount each time
+        setAttacker(prev => ({
+          ...prev,
+          effects: {
+            ...prev.effects,
+            attackBoost: newAttackBoost,
+            attackBoostDuration: Math.max(prev.effects.attackBoostDuration || 0, 999) // Make it last very long
+          }
+        }));
+        addLogMessage(`${attacker.name}'s Lightshot's Wrath increases attack by ${boostAmount}%! (Total: +${newAttackBoost}%)`);
+      }
+    }
+
     endOfAction(newHealth > 0);
   };
 
@@ -1176,10 +1198,7 @@ export const BattleArena = ({
     }
 
     if (ability.name === "Water Spout") {
-      console.log("=== WATER SPOUT DEBUG ===");
-      console.log("Water Spout ability triggered!");
-      console.log("Player:", player.name, "Opponent:", opponent.name);
-      console.log("Opponent health before:", opponent.health);
+     
       
       // Parse damage from description "Deal 50 water damage , heal 30 health"
       const damageMatch = description.match(/deal (\d+) water damage/);

@@ -13,6 +13,8 @@ export interface PlayerClass {
   health: number;
   attackMin: number;
   attackMax: number;
+  mana: number;
+  maxMana: number;
   description: string;
   abilities: PlayerClassAbility[];
 }
@@ -24,31 +26,33 @@ export const getIconByName = (name: string): LucideIcon => {
 
 export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   "Warrior": {
-    health: 1000,
-    attackMin: 10,
-    attackMax: 16,
+    health: 1700,
+    attackMin: 31, // Tier 1 melee: 31-38
+    attackMax: 38,
+    mana: 100,
+    maxMana: 100,
     description: "Tier 1 melee fighter",
     abilities: [
       {
         name: "Shield Bash",
         iconName: "Shield",
-        description: "deal 30-50 damage",
-        cooldown: 2,
+        description: "deal 130-150 damage",
+        cooldown: 5,
         manaCost: 5
       },
       {
         name: "Rally",
         iconName: "Heart",
         description: "Restore 30 health points",
-        cooldown: 5,
-        manaCost: 30
+        cooldown: 3,
+        manaCost: 5
       },
       {
         name: "Battle Shout",
         iconName: "Megaphone",
         description: "Increase attack by 100%",
-        cooldown: 5,
-        manaCost: 30
+        cooldown: 3,
+        manaCost: 20
       },
       {
         name: "Mana Heal",
@@ -60,16 +64,18 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Slayer": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
+    health: 1700,
+    attackMin: 31,
+    attackMax: 38,
+    mana: 100,
+    maxMana: 100,
     description: "Tier 1 melee fighter",
     abilities: [
       {
         name: "Battle Shout",
         iconName: "Megaphone",
-        description: "Increase attack by 50%",
-        cooldown: 5,
+        description: "Increase attack by 150%",
+        cooldown: 10,
         manaCost: 30
       },
       {
@@ -77,35 +83,37 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         iconName: "Flame",
         description: "Increase attack by 50% deal 50 damage ",
         cooldown: 4,
-        manaCost: 25
+        manaCost: 20
       },
       {
         name: "Execute",
         iconName: "Sword",
         description: "If enemy is under 15% health: instantly kill; otherwise deal 40 damage",
         cooldown: 8,
-        manaCost: 45
+        manaCost: 50
       },
       {
         name: "Whirlwind",
         iconName: "Wind",
-        description: "Whirlwind 25 damage to enemy, 8 self damage",
+        description: "Whirlwind 125 damage to enemy, 18 self damage",
         cooldown: 5,
-        manaCost: 25
+        manaCost: 30
       }
     ]
   },
   "Rogue": {
-    health: 1000,
-    attackMin: 12,
-    attackMax: 20,
+    health: 1700,
+    attackMin: 31,
+    attackMax: 38,
+    mana: 100,
+    maxMana: 100,
     description: "Tier 1 melee fighter",
     abilities: [
       {
         name: "Intimidate",
         iconName: "Skull",
-        description: "Increase attack by 20% ",
-        cooldown: 4,
+        description: "Increase attack by 120% ",
+        cooldown: 8,
         manaCost: 20
       },
 
@@ -134,9 +142,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Archer": {
-    health: 1000,
-    attackMin: 8,
-    attackMax: 14,
+    health: 1400,
+    attackMin: 21, // Tier 1 ranged: 21-28
+    attackMax: 28,
+    mana: 100,
+    maxMana: 100,
     description: "Tier 1 ranged fighter",
     abilities: [
       {
@@ -170,9 +180,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Ranger": {
-    health: 1000,
-    attackMin: 10,
-    attackMax: 16,
+    health: 1400,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 100,
+    maxMana: 100,
     description: "Tier 1 ranged fighter",
     abilities: [
       {
@@ -209,9 +221,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Mage": {
-    health: 1000,
-    attackMin: 6,
-    attackMax: 12,
+    health: 1200,
+    attackMin: 11, // Tier 1 caster: 11-18
+    attackMax: 18,
+    mana: 130,
+    maxMana: 130,
     description: "Tier 1 caster fighter",
     abilities: [
       {
@@ -246,9 +260,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Oracle": {
-    health: 1000,
-    attackMin: 8,
-    attackMax: 14,
+    health: 1200,
+    attackMin: 11,
+    attackMax: 18,
+    mana: 130,
+    maxMana: 130,
     description: "Tier 1 caster fighter",
     abilities: [
       {
@@ -283,9 +299,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Healer": {
-    health: 1000,
-    attackMin: 6,
-    attackMax: 12,
+    health: 1200,
+    attackMin: 11,
+    attackMax: 18,
+    mana: 130,
+    maxMana: 130,
     description: "Tier 1 caster fighter",
     abilities: [
       {
@@ -320,9 +338,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Warlord": {
-    health: 1000,
-    attackMin: 12,
-    attackMax: 20,
+    health: 1970,
+    attackMin: 41, // Tier 2 melee: 41-48 (31+10 to 38+10)
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -363,9 +383,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Berserker": {
-    health: 1000,
-    attackMin: 14,
-    attackMax: 22,
+    health: 1970,
+    attackMin: 41,
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -407,9 +429,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
 
   "Paladin": {
-    health: 1000,
-    attackMin: 14,
-    attackMax: 22,
+    health: 1970,
+    attackMin: 41,
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -449,9 +473,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Beastguard": {
-    health: 1000,
-    attackMin: 16,
-    attackMax: 24,
+    health: 1970,
+    attackMin: 41,
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -493,9 +519,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Shadowblade": {
-    health: 1000,
-    attackMin: 12,
-    attackMax: 20,
+    health: 1970,
+    attackMin: 41,
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -537,9 +565,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
 
   "Templar Seer": {
-    health: 1000,
-    attackMin: 14,
-    attackMax: 22,
+    health: 1970,
+    attackMin: 41,
+    attackMax: 48,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 melee specialist",
     abilities: [
       {
@@ -579,9 +609,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Marksman Knight": {
-    health: 1000,
-    attackMin: 10,
-    attackMax: 18,
+    health: 1600,
+    attackMin: 31, // Tier 2 ranged: 31-38 (21+10 to 28+10)
+    attackMax: 38,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 ranged specialist",
     abilities: [{
       name: "Shield Bash",
@@ -620,9 +652,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Sniper": {
-    health: 1000,
-    attackMin: 12,
-    attackMax: 20,
+    health: 1600,
+    attackMin: 31,
+    attackMax: 38,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 ranged specialist",
     abilities: [
       {
@@ -661,9 +695,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
 
   "Pathfinder": {
-    health: 1000,
-    attackMin: 12,
-    attackMax: 20,
+    health: 1600,
+    attackMin: 31,
+    attackMax: 38,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 ranged specialist",
     abilities: [
       {
@@ -702,9 +738,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Lightshot": {
-    health: 1000,
-    attackMin: 14,
-    attackMax: 22,
+    health: 1600,
+    attackMin: 31,
+    attackMax: 38,
+    mana: 110,
+    maxMana: 110,
     description: "Tier 2 ranged specialist",
     abilities: [
       {
@@ -736,15 +774,23 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
         cooldown: 6,
         manaCost: 40
       },
-
+      {
+        name: "Lightshot's Wrath",
+        iconName: "Flame",
+        description: "Passive: When losing health, increase attack by 1% (stacks)",
+        cooldown: 0,
+        manaCost: 0
+      }
     ]
   },
 
 
   "Warlock": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
+    health: 1350, // Mid-range of 125-145
+    attackMin: 21, // Tier 2 caster: 21-28 (11+10 to 18+10)
+    attackMax: 28,
+    mana: 140, // Mid-range of 130-150
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       {
@@ -776,9 +822,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
 
   "Battlemage": {
-    health: 1000,
-    attackMin: 7,
-    attackMax: 14,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       {
@@ -800,9 +848,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Spellblade": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Fireball", iconName: "Flame", description: "Deal 20-30 fire damage", cooldown: 3, manaCost: 25 },
@@ -814,9 +864,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Arcane Archer": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Quick Shot", iconName: "Target", description: "Fire three quick shots", cooldown: 3, manaCost: 20 },
@@ -833,9 +885,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Priest": {
-    health: 1000,
-    attackMin: 7,
-    attackMax: 14,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Rejuvenation", iconName: "Heart", description: "Permanently heal 10 health every turn", cooldown: 6, manaCost: 35 },
@@ -852,9 +906,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Elemental Warden": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       {
@@ -895,9 +951,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Sage": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
@@ -919,9 +977,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Shadow Priest": {
-    health: 1000,
-    attackMin: 7,
-    attackMax: 14,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Shadow Bolt", iconName: "Bolt", description: "Deal 18-24 shadow damage", cooldown: 3, manaCost: 25 },
@@ -939,9 +999,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Nightseer": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
@@ -960,9 +1022,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Beastwarden": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       {
@@ -980,9 +1044,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
   "Exorcist": {
-    health: 1000,
-    attackMin: 11,
-    attackMax: 18,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Holy Smite", iconName: "Sparkles", description: "Deal 15-25 holy damage", cooldown: 3, manaCost: 25 },
@@ -1000,9 +1066,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
   "Prophet": {
-    health: 1000,
-    attackMin: 9,
-    attackMax: 16,
+    health: 1350,
+    attackMin: 21,
+    attackMax: 28,
+    mana: 140,
+    maxMana: 140,
     description: "Tier 2 caster specialist",
     abilities: [
       { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },

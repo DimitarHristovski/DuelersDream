@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
+import { PlayerClass } from './class-data';
 
 export interface Ability {
   name: string;
@@ -712,24 +713,10 @@ export const dealDamage = (
   return newHealth;
 };
 
-interface ClassData {
-  health: number;
-  attackMin: number;
-  attackMax: number;
-  description: string;
-  abilities: {
-    name: string;
-    iconName: string;
-    description: string;
-    cooldown: number;
-    manaCost: number;
-  }[];
-}
-
 export const buildDefaultPlayer = (
   name: string, 
   className: string,
-  classData: ClassData,
+  classData: PlayerClass,
   isActive: boolean,
   isComputer = false
 ): Player => {
@@ -738,8 +725,8 @@ export const buildDefaultPlayer = (
     className,
     health: classData.health,
     maxHealth: classData.health,
-    mana: 100, // Default starting mana
-    maxMana: 100, // Default max mana
+    mana: classData.mana,
+    maxMana: classData.maxMana,
     attackMin: classData.attackMin,
     attackMax: classData.attackMax,
     isActive,

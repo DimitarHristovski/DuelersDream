@@ -43,12 +43,12 @@ export const CLASS_CATEGORIES = {
       "Shadowblade", "Templar Seer",
     ],
     "Ranged": [
-      "Marksman Knight", "Sniper", "Pathfinder", "Lightshot",
+      "Marksman Knight", "Sniper", "Pathfinder", "Lightshot", "Beastwarden", "Arcane Archer",
       
     ],
     "Caster": [
-      "Battlemage", "Spellblade", "Arcane Archer", "Priest", "Elemental Warden", "Warlock",
-      "Sage", "Shadow Priest", "Nightseer", "Beastwarden", "Exorcist", "Prophet",
+      "Battlemage", "Spellblade", "Priest", "Elemental Warden", "Warlock",
+      "Sage", "Shadow Priest", "Nightseer", "Exorcist", "Prophet",
     ]
   }
 } as const;
@@ -230,7 +230,7 @@ export const ClassSelection = ({
               </div>
               <div className="flex items-center">
                 <Zap className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-sm font-medium">100</span>
+                <span className="text-sm font-medium">{classData.mana}</span>
               </div>
             </div>
             
