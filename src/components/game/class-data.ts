@@ -518,7 +518,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
     ]
   },
-  "Shadowblade": {
+  "Death Knight": {
     health: 1970,
     attackMin: 41,
     attackMax: 48,
@@ -564,7 +564,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
 
-  "Templar Seer": {
+"Dragon Slayer": {
     health: 1970,
     attackMin: 41,
     attackMax: 48,
@@ -608,7 +608,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       }
     ]
   },
-  "Marksman Knight": {
+  "Knight": {
     health: 1600,
     attackMin: 31, // Tier 2 ranged: 31-38 (21+10 to 28+10)
     attackMax: 38,
@@ -651,7 +651,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     }
     ]
   },
-  "Sniper": {
+  "Shaman": {
     health: 1600,
     attackMin: 31,
     attackMax: 38,
@@ -694,50 +694,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   },
 
 
-  "Pathfinder": {
-    health: 1600,
-    attackMin: 31,
-    attackMax: 38,
-    mana: 110,
-    maxMana: 110,
-    description: "Tier 2 ranged specialist",
-    abilities: [
-      {
-        name: "Focused Strike",
-        iconName: "ArrowRight",
-        description: "Deal 25 damage and increase attack by 50%",
-        cooldown: 4,
-        manaCost: 26
-      }, {
-        name: "Rally",
-        iconName: "Heart",
-        description: "Restore 30 health points",
-        cooldown: 5,
-        manaCost: 30
-      },
-      {
-        name: "Battle Shout",
-        iconName: "Megaphone",
-        description: "Increase attack by 100%",
-        cooldown: 5,
-        manaCost: 30
-      },
-      {
-        name: "Aimed Shot",
-        iconName: "Target",
-        description: "Deal 25-35 damage",
-        cooldown: 5,
-        manaCost: 35
-      }, {
-        name: "Fear Howl",
-        iconName: "Skull",
-        description: "Become untargetable for 3 turns (stealth mode)",
-        cooldown: 8,
-        manaCost: 50
-      },
-    ]
-  },
-  "Lightshot": {
+ 
+  "Wizard": {
     health: 1600,
     attackMin: 31,
     attackMax: 38,
@@ -847,7 +805,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       { name: "Arcane Bolt", iconName: "Bolt", description: "Deal 30 damage", cooldown: 3, manaCost: 20 },
     ]
   },
-  "Spellblade": {
+  "Enchanter": {
     health: 1350,
     attackMin: 21,
     attackMax: 28,
@@ -863,27 +821,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
     ]
   },
-  "Arcane Archer": {
-    health: 1350,
-    attackMin: 21,
-    attackMax: 28,
-    mana: 140,
-    maxMana: 140,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Quick Shot", iconName: "Target", description: "Fire three quick shots", cooldown: 3, manaCost: 20 },
-      { name: "Aimed Shot", iconName: "Target", description: "Deal 25-35 damage", cooldown: 5, manaCost: 35 },
-      { name: "Power Shot", iconName: "Target", description: "Deal 28 damage and increase attack by 50%", cooldown: 5, manaCost: 30 },
-      { name: "Focused Strike", iconName: "ArrowRight", description: "Deal 25 damage and increase attack by 50%", cooldown: 4, manaCost: 26 }
-    ,  {
-      name: "Mana Surge",
-      iconName: "Sparkles",
-      description: "Increase spell damage by 70% for next turn",
-      cooldown: 5,
-      manaCost: 25
-    },
-    ]
-  },
+
   "Priest": {
     health: 1350,
     attackMin: 21,
@@ -950,33 +888,9 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       }
     ]
   },
-  "Sage": {
-    health: 1350,
-    attackMin: 21,
-    attackMax: 28,
-    mana: 140,
-    maxMana: 140,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
-      {
-        name: "Astral Bolt",
-        iconName: "Bolt",
-        description: "Deal 24-36 damage",
-        cooldown: 3,
-        manaCost: 25
-      },   {
-        name: "Ice Lance",
-        iconName: "Snowflake",
-        description: "Deal 15-25 damage",
-        cooldown: 3,
-        manaCost: 20
-      }  ]
-  },
+ 
 
-  "Shadow Priest": {
+  "Lich": {
     health: 1350,
     attackMin: 21,
     attackMax: 28,
@@ -998,30 +912,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
     ]
   },
 
-  "Nightseer": {
-    health: 1350,
-    attackMin: 21,
-    attackMax: 28,
-    mana: 140,
-    maxMana: 140,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
-      { name: "Judgment of Fate", iconName: "Sword", description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage", cooldown: 8, manaCost: 50 }
-      ,
-      {
-        name: "Vampiric Strike",
-        iconName: "Droplets",
-        description: "Vampiric strike deal 40-80 damage with 100% healing",
-        cooldown: 6,
-        manaCost: 28
-      }
-    ]
-  },
-
-  "Beastwarden": {
+ 
+  "Druid": {
     health: 1350,
     attackMin: 21,
     attackMax: 28,
@@ -1043,51 +935,8 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
 
     ]
   },
-  "Exorcist": {
-    health: 1350,
-    attackMin: 21,
-    attackMax: 28,
-    mana: 140,
-    maxMana: 140,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Holy Smite", iconName: "Sparkles", description: "Deal 15-25 holy damage", cooldown: 3, manaCost: 25 },
-      { name: "Cleanse", iconName: "Sparkles", description: "Remove negative effects", cooldown: 5, manaCost: 30 },
-      { name: "Divine Shield", iconName: "Shield", description: "Repel abilities for 4 turns", cooldown: 5, manaCost: 35 },
-      { name: "Blessing of Light", iconName: "Sparkles", description: "Increase spell damage by 50%, increase attack by 100%, and restore 20% health", cooldown: 5, manaCost: 25 }
-    ,  {
-      name: "Execute",
-      iconName: "Sword",
-      description: "If enemy is under 15% health: instantly kill; otherwise deal 40 damage",
-      cooldown: 8,
-      manaCost: 45
-    },
-    ]
-  },
 
-  "Prophet": {
-    health: 1350,
-    attackMin: 21,
-    attackMax: 28,
-    mana: 140,
-    maxMana: 140,
-    description: "Tier 2 caster specialist",
-    abilities: [
-      { name: "Clairvoyance", iconName: "Sparkles", description: "Increase spell damage by 50%", cooldown: 5, manaCost: 20 },
-      { name: "Foresight", iconName: "Eye", description: "Increase attack by 30% ", cooldown: 5, manaCost: 20 },
-      { name: "Prophetic Mark", iconName: "Crosshair", description: "permanently counterattack 50% of damage taken", cooldown: 4, manaCost: 25 },
-      { name: "Judgment of Fate", iconName: "Sword", description: "Deal 60-90 damage. If enemy is below 40% health, deal double damage", cooldown: 8, manaCost: 50 },
-      {
-        name: "Starlight Volley",
-        iconName: "Sparkles",
-        description: "Unleash a barrage of astral arrows dealing 20-40 damage 5 times",
-        cooldown: 8,
-        manaCost: 60
-      }
-
-    ]
-  },
-
+ 
 
 
 
