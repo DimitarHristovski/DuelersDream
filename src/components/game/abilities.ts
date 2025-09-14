@@ -32,6 +32,9 @@ export interface Player {
 
     attackReduction: number;
     summonedCreature: { damage: number, turnsLeft: number } | null;
+    summonedCreatures: { name: string; damage: number; turnsLeft: number; }[];
+    summonedCreatureDamageBoost: number;
+    summonedCreatureDamageBoostDuration: number;
     // Duration tracking for effects
     shieldDuration: number;
     damageBoostDuration: number;
@@ -96,6 +99,9 @@ export const createDefaultEffects = () => ({
 
   attackReduction: 0,
   summonedCreature: null,
+  summonedCreatures: [],
+  summonedCreatureDamageBoost: 0,
+  summonedCreatureDamageBoostDuration: 0,
   // Duration tracking for effects
   shieldDuration: 0,
   damageBoostDuration: 0,
@@ -223,7 +229,24 @@ export const applyHeal = (
   addLogMessage: (message: string) => void,
   logMessage: string
 ) => {
-  const newHealth = Math.min(player.maxHealth, player.health + healAmount);
+  // Check for Alchemy Mastery passive - parse values from description
+  let finalHealAmount = healAmount;
+  const alchemyMasteryAbility = player.abilities.find(ability => ability.name === "Alchemy Mastery");
+  if (alchemyMasteryAbility) {
+    const healthPercent = (player.health / player.maxHealth) * 100;
+    const boostMatch = alchemyMasteryAbility.description.match(/is (\d+)% stronger/i);
+    const thresholdMatch = alchemyMasteryAbility.description.match(/under (\d+)% health/i);
+    const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+    const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+    
+    if (healthPercent < threshold) {
+      const multiplier = 1 + (boostPercent / 100);
+      finalHealAmount = Math.floor(healAmount * multiplier);
+      addLogMessage(`${player.name}'s Alchemy Mastery makes healing ${boostPercent}% stronger!`);
+    }
+  }
+  
+  const newHealth = Math.min(player.maxHealth, player.health + finalHealAmount);
   
   setPlayer(prev => ({
     ...prev,

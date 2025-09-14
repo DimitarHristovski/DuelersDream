@@ -114,15 +114,33 @@ export const BattleArena = ({
 
     const boost = attacker.effects.attackBoost || 0;
     const reduction = defender.effects.attackReduction || 0;
+    
+    // Check for Mutagens passive - parse values from description
+    let mutagensBoost = 0;
+    const mutagensAbility = attacker.abilities.find(ability => ability.name === "Mutagens");
+    if (mutagensAbility) {
+      const healthPercent = (attacker.health / attacker.maxHealth) * 100;
+      const boostMatch = mutagensAbility.description.match(/increase attack by (\d+)%/i);
+      const thresholdMatch = mutagensAbility.description.match(/above (\d+)% health/i);
+      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+      
+      if (healthPercent > threshold) {
+        mutagensBoost = boostPercent;
+        addLogMessage(`${attacker.name}'s Mutagens provide ${boostPercent}% attack boost!`);
+      }
+    }
+    
+    const totalBoost = boost + mutagensBoost;
     console.log('Attack calculation:', {
       playerName: attacker.name,
       attackMin: attacker.attackMin,
       attackMax: attacker.attackMax,
-      attackBoost: boost,
+      attackBoost: totalBoost,
       attackReduction: reduction,
       effects: attacker.effects
     });
-    let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, boost, reduction);
+    let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, totalBoost, reduction);
     
     // Apply next hit bonus
     if (attacker.effects.nextHitBonus > 0) {
@@ -161,9 +179,9 @@ export const BattleArena = ({
       addLogMessage(`${defender.name} counterattacks for ${reflected} damage!`);
     }
 
-    // Check for Lightshot's Wrath passive ability
-    if (attacker.abilities.some(ability => ability.name === "Lightshot's Wrath")) {
-      const wrathAbility = attacker.abilities.find(ability => ability.name === "Lightshot's Wrath");
+    // Check for Gods's Wrath passive ability
+    if (attacker.abilities.some(ability => ability.name === "Gods's Wrath")) {
+      const wrathAbility = attacker.abilities.find(ability => ability.name === "Gods's Wrath");
       if (wrathAbility) {
         // Parse attack boost percentage from description "increase attack by 20%"
         const boostMatch = wrathAbility.description.match(/increase attack by (\d+)%/);
@@ -179,7 +197,7 @@ export const BattleArena = ({
             attackBoostDuration: Math.max(prev.effects.attackBoostDuration || 0, 999) // Make it last very long
           }
         }));
-        addLogMessage(`${attacker.name}'s Lightshot's Wrath increases attack by ${boostAmount}%! (Total: +${newAttackBoost}%)`);
+        addLogMessage(`${attacker.name}'s Gods's Wrath increases attack by ${boostAmount}%! (Total: +${newAttackBoost}%)`);
       }
     }
 
@@ -201,7 +219,7 @@ export const BattleArena = ({
         currentCooldown: a.currentCooldown && a.currentCooldown > 0 ? a.currentCooldown - 1 : 0,
       }));
       const manaRegen = 5;
-      const newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
+      let newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
       if (newMana > prev.mana) addLogMessage(`${prev.name} regenerates ${manaRegen} mana.`);
 
       // expire temporary attack boost
@@ -356,6 +374,18 @@ export const BattleArena = ({
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
       }
 
+      // Check for Totemic Strength passive - parse values from description
+      const totemicStrengthAbility = prev.abilities.find(ability => ability.name === "Totemic Strength");
+      if (totemicStrengthAbility && prev.health < prev.maxHealth) {
+        const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
+        const healAmount = healMatch ? parseInt(healMatch[1]) : 20;
+        const healed = Math.min(healAmount, prev.maxHealth - interimHealth);
+        if (healed > 0) {
+          interimHealth += healed;
+          addLogMessage(`${prev.name}'s Totemic Strength regenerates ${healed} health.`);
+        }
+      }
+
       // Summoned creature damage to opponent at start of owner's turn (non-lethal)
       if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
         const petDamage = prev.effects.summonedCreature.damage;
@@ -364,6 +394,34 @@ export const BattleArena = ({
           if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
           return { ...o, health: reduced };
         });
+      }
+
+      // Process multiple summoned creatures
+      if (prev.effects.summonedCreatures && prev.effects.summonedCreatures.length > 0) {
+        let totalDamage = 0;
+        const activeCreatures = prev.effects.summonedCreatures.filter(creature => creature.turnsLeft > 0);
+        
+        activeCreatures.forEach(creature => {
+          let creatureDamage = creature.damage;
+          // Apply summoned creature damage boost if active
+          if (prev.effects.summonedCreatureDamageBoost && prev.effects.summonedCreatureDamageBoost > 0) {
+            creatureDamage = Math.floor(creatureDamage * (1 + prev.effects.summonedCreatureDamageBoost / 100));
+          }
+          totalDamage += creatureDamage;
+        });
+        
+        if (totalDamage > 0) {
+          setPlayer2(o => {
+            const reduced = Math.max(1, o.health - totalDamage);
+            addLogMessage(`${prev.name}'s summoned creatures deal ${totalDamage} total damage to ${o.name}!`);
+            return { ...o, health: reduced };
+          });
+        }
+        
+        // Decrement turns for all creatures and remove expired ones
+        updatedEffects.summonedCreatures = prev.effects.summonedCreatures
+          .map(creature => ({ ...creature, turnsLeft: creature.turnsLeft - 1 }))
+          .filter(creature => creature.turnsLeft > 0);
       }
 
       // Apply bleeding damage
@@ -380,6 +438,31 @@ export const BattleArena = ({
         const newHealth = Math.max(1, interimHealth - poisonDamage);
         addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
         return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
+      }
+
+      // Check for Mana Overflow passive - parse values from description
+      const manaOverflowAbility = prev.abilities.find(ability => ability.name === "Mana Overflow");
+      if (manaOverflowAbility) {
+        const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
+        const manaGain = manaMatch ? parseInt(manaMatch[1]) : 20;
+        const extraMana = Math.min(manaGain, prev.maxMana - newMana);
+        if (extraMana > 0) {
+          newMana += extraMana;
+          addLogMessage(`${prev.name}'s Mana Overflow grants +${extraMana} mana!`);
+        }
+      }
+
+      // Check for Elemental Harmony passive - parse values from description
+      const elementalHarmonyAbility = prev.abilities.find(ability => ability.name === "Elemental Harmony");
+      if (elementalHarmonyAbility) {
+        const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
+        const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
+        const attackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
+        const spellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
+        
+        updatedEffects.attackBoost = (updatedEffects.attackBoost || 0) + attackGain;
+        updatedEffects.spellDamageBoost = (updatedEffects.spellDamageBoost || 0) + spellGain;
+        addLogMessage(`${prev.name}'s Elemental Harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`);
       }
 
       return { ...prev, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects, health: interimHealth };
@@ -547,6 +630,18 @@ export const BattleArena = ({
         addLogMessage(`${prev.name} regenerates ${healed} health.`);
       }
 
+      // Check for Totemic Strength passive - parse values from description
+      const totemicStrengthAbility = prev.abilities.find(ability => ability.name === "Totemic Strength");
+      if (totemicStrengthAbility && prev.health < prev.maxHealth) {
+        const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
+        const healAmount = healMatch ? parseInt(healMatch[1]) : 20;
+        const healed = Math.min(healAmount, prev.maxHealth - interimHealth);
+        if (healed > 0) {
+          interimHealth += healed;
+          addLogMessage(`${prev.name}'s Totemic Strength regenerates ${healed} health.`);
+        }
+      }
+
       // Summoned creature damage to opponent at start of owner's turn (non-lethal)
       if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
         const petDamage = prev.effects.summonedCreature.damage;
@@ -555,6 +650,34 @@ export const BattleArena = ({
           if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
           return { ...o, health: reduced };
         });
+      }
+
+      // Process multiple summoned creatures
+      if (prev.effects.summonedCreatures && prev.effects.summonedCreatures.length > 0) {
+        let totalDamage = 0;
+        const activeCreatures = prev.effects.summonedCreatures.filter(creature => creature.turnsLeft > 0);
+        
+        activeCreatures.forEach(creature => {
+          let creatureDamage = creature.damage;
+          // Apply summoned creature damage boost if active
+          if (prev.effects.summonedCreatureDamageBoost && prev.effects.summonedCreatureDamageBoost > 0) {
+            creatureDamage = Math.floor(creatureDamage * (1 + prev.effects.summonedCreatureDamageBoost / 100));
+          }
+          totalDamage += creatureDamage;
+        });
+        
+        if (totalDamage > 0) {
+          setPlayer1(o => {
+            const reduced = Math.max(1, o.health - totalDamage);
+            addLogMessage(`${prev.name}'s summoned creatures deal ${totalDamage} total damage to ${o.name}!`);
+            return { ...o, health: reduced };
+          });
+        }
+        
+        // Decrement turns for all creatures and remove expired ones
+        updatedEffects.summonedCreatures = prev.effects.summonedCreatures
+          .map(creature => ({ ...creature, turnsLeft: creature.turnsLeft - 1 }))
+          .filter(creature => creature.turnsLeft > 0);
       }
 
       // Apply bleeding damage
@@ -571,6 +694,31 @@ export const BattleArena = ({
         const newHealth = Math.max(1, interimHealth - poisonDamage);
         addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
         return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
+      }
+
+      // Check for Mana Overflow passive - parse values from description
+      const manaOverflowAbility = prev.abilities.find(ability => ability.name === "Mana Overflow");
+      if (manaOverflowAbility) {
+        const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
+        const manaGain = manaMatch ? parseInt(manaMatch[1]) : 20;
+        const extraMana = Math.min(manaGain, prev.maxMana - newMana);
+        if (extraMana > 0) {
+          newMana += extraMana;
+          addLogMessage(`${prev.name}'s Mana Overflow grants +${extraMana} mana!`);
+        }
+      }
+
+      // Check for Elemental Harmony passive - parse values from description
+      const elementalHarmonyAbility = prev.abilities.find(ability => ability.name === "Elemental Harmony");
+      if (elementalHarmonyAbility) {
+        const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
+        const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
+        const attackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
+        const spellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
+        
+        updatedEffects.attackBoost = (updatedEffects.attackBoost || 0) + attackGain;
+        updatedEffects.spellDamageBoost = (updatedEffects.spellDamageBoost || 0) + spellGain;
+        addLogMessage(`${prev.name}'s Elemental Harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`);
       }
 
       return { ...prev, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects, health: interimHealth };
@@ -665,7 +813,19 @@ export const BattleArena = ({
 
       const availableAbilities = computerPlayer.abilities
         .map((ability, index) => ({ ability, index }))
-        .filter(({ ability }) => (!ability.currentCooldown || ability.currentCooldown <= 0) && (!ability.manaCost || computerPlayer.mana >= ability.manaCost));
+        .filter(({ ability }) => {
+          // Check if ability is passive (cannot be activated)
+          const isPassive = (ability.cooldown === 0 && ability.manaCost === 0) || 
+            ability.name === "Mutagens" || ability.name === "Monster Lore" || 
+            ability.name === "Alchemy Mastery" || ability.name === "Totemic Strength" || 
+            ability.name === "Spirit Endurance" || ability.name === "Elemental Mastery" ||
+            ability.name === "Mana Overflow" || ability.name === "Elemental Harmony";
+          
+          // Filter out passive abilities and abilities on cooldown/not enough mana
+          return !isPassive && 
+            (!ability.currentCooldown || ability.currentCooldown <= 0) && 
+            (!ability.manaCost || computerPlayer.mana >= ability.manaCost);
+        });
 
       if (availableAbilities.length > 0 && Math.random() > 0.3) {
         const randomIndex = Math.floor(Math.random() * availableAbilities.length);
@@ -688,6 +848,63 @@ export const BattleArena = ({
 
   // Game over and stats
   useEffect(() => {
+    // Check for Spirit Endurance reincarnation before game over
+    if (player1.health === 0) {
+      const spiritEnduranceAbility = player1.abilities.find(ability => ability.name === "Spirit Endurance");
+      if (spiritEnduranceAbility && (spiritEnduranceAbility.currentCooldown || 0) === 0) {
+        // Trigger reincarnation
+        const reviveHealth = Math.floor(player1.maxHealth * 1); // Revive with 50% health
+        setPlayer1(prev => ({
+          ...prev,
+          health: reviveHealth,
+          effects: {
+            ...prev.effects,
+            attackBoost: 0, // Reset attack boost
+            attackBoostDuration: 0, // Reset attack boost duration
+            damageBoost: 0, // Reset damage boost
+            spellDamageBoost: 0, // Reset spell damage boost
+            spellDamageBoostDuration: 0, // Reset spell damage boost duration
+            // Keep other effects like regeneration, poison, etc.
+          },
+          abilities: prev.abilities.map(ability => 
+            ability.name === "Spirit Endurance" 
+              ? { ...ability, currentCooldown: ability.cooldown }
+              : ability
+          )
+        }));
+        addLogMessage(`${player1.name} is reincarnated by Spirit Endurance with ${reviveHealth} health! All buffs have been reset.`);
+        return; // Don't end the game
+      }
+    }
+    
+    if (player2.health === 0) {
+      const spiritEnduranceAbility = player2.abilities.find(ability => ability.name === "Spirit Endurance");
+      if (spiritEnduranceAbility && (spiritEnduranceAbility.currentCooldown || 0) === 0) {
+        // Trigger reincarnation
+        const reviveHealth = Math.floor(player2.maxHealth * 1); // Revive with 100% health
+        setPlayer2(prev => ({
+          ...prev,
+          health: reviveHealth,
+          effects: {
+            ...prev.effects,
+            attackBoost: 0, // Reset attack boost
+            attackBoostDuration: 0, // Reset attack boost duration
+            damageBoost: 0, // Reset damage boost
+            spellDamageBoost: 0, // Reset spell damage boost
+            spellDamageBoostDuration: 0, // Reset spell damage boost duration
+            // Keep other effects like regeneration, poison, etc.
+          },
+          abilities: prev.abilities.map(ability => 
+            ability.name === "Spirit Endurance" 
+              ? { ...ability, currentCooldown: ability.cooldown }
+              : ability
+          )
+        }));
+        addLogMessage(`${player2.name} is reincarnated by Spirit Endurance with ${reviveHealth} health! All buffs have been reset.`);
+        return; // Don't end the game
+      }
+    }
+
     if (player1.health === 0 || player2.health === 0) {
       const didP1Die = player1.health === 0;
       const winPlayer = didP1Die ? player2 : player1;
@@ -1065,18 +1282,25 @@ export const BattleArena = ({
     }
 
     // Blood Frenzy - Attack twice for 30-40 each, then take 15 self-damage
-    if (ability.name.toLowerCase() === 'blood frenzy' || (description.includes('attack twice') && description.includes('30-40'))) {
-      const hit1 = Math.floor(Math.random() * (40 - 30 + 1)) + 30;
-      abilityDealDamage(hit1, `${player.name} unleashes Blood Frenzy and strikes for ${hit1} damage!`);
-
-      if (opponent.health > 0) {
-        const hit2 = Math.floor(Math.random() * (40 - 30 + 1)) + 30;
-        abilityDealDamage(hit2, `${player.name} follows up for ${hit2} damage!`);
-      }
+    if (ability.name.toLowerCase() === 'blood frenzy' || (description.includes('attack twice') && description.includes('damage each'))) {
+      // Parse damage range from description "Attack twice for 30-40 damage each"
+      const damageMatch = description.match(/attack twice for (\d+)-(\d+) damage each/);
+      const selfDamageMatch = description.match(/take (\d+) self-damage/);
+      
+      const minDamage = damageMatch ? parseInt(damageMatch[1]) : 30;
+      const maxDamage = damageMatch ? parseInt(damageMatch[2]) : 40;
+      const selfDamage = selfDamageMatch ? parseInt(selfDamageMatch[1]) : 15;
+      
+      const hit1 = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+      const hit2 = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+      const totalDamage = hit1 + hit2;
+      
+      // Deal both attacks as total damage
+      dealDamage(totalDamage, opponent, setOpponent, addLogMessage, `${player.name} unleashes Blood Frenzy and strikes twice for ${hit1} + ${hit2} = ${totalDamage} total damage!`);
 
       // Apply self-damage
-      setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - 15) }));
-      addLogMessage(`${player.name} takes 15 self-damage from Blood Frenzy!`);
+      setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - selfDamage) }));
+      addLogMessage(`${player.name} takes ${selfDamage} self-damage from Blood Frenzy!`);
       return opponent.health > 0;
     }
 
@@ -1267,9 +1491,81 @@ export const BattleArena = ({
       return opponent.health > 0;
     }
 
-    // Generic ranged damage handler (e.g., "Deal 20-30 fire damage")
-    const rangeDamageMatch = description.match(/deal (\d+)-(\d+).*damage/);
+    // Necromancer abilities (must be before generic handlers)
+    if (ability.name === "Summon Skeleton") {
+      const damage = 15;
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreatures: [
+            ...prev.effects.summonedCreatures,
+            { name: "Skeleton", damage: damage, turnsLeft: 5 }
+          ]
+        }
+      }));
+      addLogMessage(`${player.name} summons a skeleton that deals ${damage} damage per turn for 5 turns!`);
+      return true;
+    }
+
+    if (ability.name === "Summon Zombie") {
+      const damage = 18;
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreatures: [
+            ...prev.effects.summonedCreatures,
+            { name: "Zombie", damage: damage, turnsLeft: 5 }
+          ]
+        }
+      }));
+      addLogMessage(`${player.name} summons a zombie that deals ${damage} damage per turn for 5 turns!`);
+      return true;
+    }
+
+    if (ability.name === "Summon Wraith") {
+      const damage = 20;
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreatures: [
+            ...prev.effects.summonedCreatures,
+            { name: "Wraith", damage: damage, turnsLeft: 5 }
+          ]
+        }
+      }));
+      addLogMessage(`${player.name} summons a wraith that deals ${damage} damage per turn for 5 turns!`);
+      return true;
+    }
+
+    if (ability.name === "Necromancy Mastery") {
+      // Parse boost percentage from description "All summoned creatures deal 150% more damage everyturn"
+      const boostMatch = description.match(/(\d+)% more damage everyturn/);
+      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 150;
+      
+      setPlayer(prev => ({
+        ...prev,
+        effects: {
+          ...prev.effects,
+          summonedCreatureDamageBoost: boostPercent,
+          summonedCreatureDamageBoostDuration: 999 // Large number for permanent effect
+        }
+      }));
+      addLogMessage(`${player.name} enhances all summoned creatures to deal ${boostPercent}% more damage permanently!`);
+      return true;
+    }
+
+    // Generic ranged damage handler (e.g., "Deal 20-30 fire damage" or "Deal 70–100 fire damage")
+    const rangeDamageMatch = description.match(/deal (\d+)[–-](\d+).*damage/);
     if (rangeDamageMatch) {
+      // Check for Elemental Mastery spell immunity
+      if (opponent.abilities.some(ability => ability.name === "Elemental Mastery")) {
+        addLogMessage(`${opponent.name}'s Elemental Mastery grants immunity to ${ability.name}!`);
+        return opponent.health > 0;
+      }
+      
       const minD = parseInt(rangeDamageMatch[1]);
       const maxD = parseInt(rangeDamageMatch[2]);
       let damage = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
@@ -1278,6 +1574,22 @@ export const BattleArena = ({
         const boosted = Math.floor(damage * (1 + player.effects.spellDamageBoost / 100));
         addLogMessage(`${player.name}'s spell is empowered (+${player.effects.spellDamageBoost}%)!`);
         damage = boosted;
+      }
+      
+      // Check for Monster Lore passive - parse values from description
+      const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
+      if (monsterLoreAbility) {
+        const healthPercent = (player.health / player.maxHealth) * 100;
+        const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
+        const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
+        const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+        const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+        
+        if (healthPercent < threshold) {
+          const monsterLoreBoost = Math.floor(damage * (boostPercent / 100));
+          damage += monsterLoreBoost;
+          addLogMessage(`${player.name}'s Monster Lore provides ${boostPercent}% spell damage boost!`);
+        }
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
@@ -1292,6 +1604,22 @@ export const BattleArena = ({
         const boosted = Math.floor(damage * (1 + player.effects.spellDamageBoost / 100));
         addLogMessage(`${player.name}'s spell is empowered (+${player.effects.spellDamageBoost}%)!`);
         damage = boosted;
+      }
+      
+      // Check for Monster Lore passive - parse values from description
+      const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
+      if (monsterLoreAbility) {
+        const healthPercent = (player.health / player.maxHealth) * 100;
+        const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
+        const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
+        const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+        const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+        
+        if (healthPercent < threshold) {
+          const monsterLoreBoost = Math.floor(damage * (boostPercent / 100));
+          damage += monsterLoreBoost;
+          addLogMessage(`${player.name}'s Monster Lore provides ${boostPercent}% spell damage boost!`);
+        }
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
@@ -1417,8 +1745,12 @@ export const BattleArena = ({
 
     // Life Tap ability
     if (ability.name === "Life Tap") {
-      const healthLoss = 10;
-      const manaGain = 25;
+      // Parse health loss and mana gain from description "Lose 100 health to gain 100 mana"
+      const healthMatch = description.match(/lose (\d+) health/i);
+      const manaMatch = description.match(/gain (\d+) mana/i);
+      
+      const healthLoss = healthMatch ? parseInt(healthMatch[1]) : 10; // Default to 10 if parsing fails
+      const manaGain = manaMatch ? parseInt(manaMatch[1]) : 25; // Default to 25 if parsing fails
       
       setPlayer(prev => ({
         ...prev,

@@ -39,16 +39,25 @@ export const CLASS_CATEGORIES = {
   },
   "Tier 2": {
     "Melee": [
-      "Warlord", "Berserker", "Paladin", "Beastguard",
+      "Warlord", "Berserker", "Paladin",
       "Death Knight", "Dragon Slayer","Knight",
     ],
     "Ranged": [
-       "Shaman",  "Druid", "Elemental Warden","Priest",
+       "Shaman",  "Druid", "Elemental Warden","Priest","Crossbowman", "Beastguard"
       
     ],
     "Caster": [
       "Battlemage", "Enchanter",  "Warlock",
-       "Lich","Wizard",
+       "Lich","Wizard","Necromancer"
+    ]
+  },
+  "Tier 3":{
+    "Melee": [
+     "Witcher","Tauren Chieftain"
+    ],
+   
+    "Caster": [
+    "Invoker","Archmage"
     ]
   }
 } as const;

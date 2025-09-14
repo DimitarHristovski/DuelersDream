@@ -1,4 +1,4 @@
-import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy, Droplet, Sparkles } from 'lucide-react';
+import { Shield, Sword, Heart, Clock, Zap, Info, AlertCircle, Skull, ChevronRight, Trophy, Droplet, Sparkles, FlaskRound, Beaker, BookOpen, BatteryCharging, Atom } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -62,26 +62,42 @@ export const BattleArenaUI = ({
   };
 
   // Helper: compute boosted damage preview from a description string
-  const getBoostedDamagePreview = (description: string, spellBoost: number): string | null => {
-    if (!spellBoost || spellBoost <= 0) return null;
+  const getBoostedDamagePreview = (description: string, spellBoost: number, player: Player): string | null => {
     const desc = description.toLowerCase();
     // Skip non-damage abilities
     if (!desc.includes('deal')) return null;
 
-    // Range: "Deal A-B ... damage"
-    const rangeMatch = desc.match(/deal\s+(\d+)-(\d+).*damage/);
+    // Check for Monster Lore passive boost
+    let totalSpellBoost = spellBoost || 0;
+    const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
+    if (monsterLoreAbility) {
+      const healthPercent = (player.health / player.maxHealth) * 100;
+      const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
+      const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
+      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+      
+      if (healthPercent < threshold) {
+        totalSpellBoost += boostPercent;
+      }
+    }
+
+    if (totalSpellBoost <= 0) return null;
+
+    // Range: "Deal A-B ... damage" or "Deal A–B ... damage" (handle both regular hyphen and en-dash)
+    const rangeMatch = desc.match(/deal\s+(\d+)[–-](\d+).*damage/);
     if (rangeMatch) {
       const min = parseInt(rangeMatch[1]);
       const max = parseInt(rangeMatch[2]);
-      const bMin = Math.floor(min * (1 + spellBoost / 100));
-      const bMax = Math.floor(max * (1 + spellBoost / 100));
+      const bMin = Math.floor(min * (1 + totalSpellBoost / 100));
+      const bMax = Math.floor(max * (1 + totalSpellBoost / 100));
       return `${bMin}-${bMax}`;
     }
     // Fixed: "Deal N damage"
     const fixedMatch = desc.match(/deal\s+(\d+)\s+damage/);
     if (fixedMatch) {
       const base = parseInt(fixedMatch[1]);
-      const boosted = Math.floor(base * (1 + spellBoost / 100));
+      const boosted = Math.floor(base * (1 + totalSpellBoost / 100));
       return `${boosted}`;
     }
     return null;
@@ -273,6 +289,11 @@ export const BattleArenaUI = ({
                     Summon ({player.effects.summonedCreature.turnsLeft})
                   </Badge>
                 )}
+                {player.effects.summonedCreatureDamageBoost > 0 && (
+                  <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
+                    Necromancy Boost ({player.effects.summonedCreatureDamageBoostDuration})
+                  </Badge>
+                )}
                 {player.effects.repelAbilities && (
                   <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
                     Repel ({player.effects.repelAbilitiesDuration})
@@ -280,6 +301,165 @@ export const BattleArenaUI = ({
                 )}
               </div>
             )}
+            
+            {/* Passive Abilities Status */}
+            {(() => {
+              const hasPassiveAbilities = player.abilities.some(ability => 
+                ability.name === "Mutagens" || ability.name === "Monster Lore" || ability.name === "Alchemy Mastery" || 
+                ability.name === "Totemic Strength" || ability.name === "Spirit Endurance" ||
+                ability.name === "Elemental Mastery" || ability.name === "Mana Overflow" || ability.name === "Elemental Harmony"
+              );
+              
+              if (!hasPassiveAbilities) return null;
+              
+              const healthPercent = (player.health / player.maxHealth) * 100;
+              
+              // Parse Mutagens - "Increase attack by X% while above Y% health"
+              const mutagensAbility = player.abilities.find(ability => ability.name === "Mutagens");
+              let mutagensActive = false;
+              let mutagensBoost = 0;
+              let mutagensThreshold = 50;
+              if (mutagensAbility) {
+                const boostMatch = mutagensAbility.description.match(/increase attack by (\d+)%/i);
+                const thresholdMatch = mutagensAbility.description.match(/above (\d+)% health/i);
+                mutagensBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
+                mutagensThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+                mutagensActive = healthPercent > mutagensThreshold;
+              }
+              
+              // Parse Monster Lore - "Increase spell damage by X% while under Y% health"
+              const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
+              let monsterLoreActive = false;
+              let monsterLoreBoost = 0;
+              let monsterLoreThreshold = 50;
+              if (monsterLoreAbility) {
+                const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
+                const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
+                monsterLoreBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
+                monsterLoreThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+                monsterLoreActive = healthPercent < monsterLoreThreshold;
+              }
+              
+              // Parse Alchemy Mastery - "All healing received is X% stronger while under Y% health"
+              const alchemyMasteryAbility = player.abilities.find(ability => ability.name === "Alchemy Mastery");
+              let alchemyMasteryActive = false;
+              let alchemyMasteryBoost = 0;
+              if (alchemyMasteryAbility) {
+                const boostMatch = alchemyMasteryAbility.description.match(/is (\d+)% stronger/i);
+                const thresholdMatch = alchemyMasteryAbility.description.match(/under (\d+)% health/i);
+                alchemyMasteryBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
+                const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+                alchemyMasteryActive = healthPercent < threshold;
+              }
+              
+              // Parse Totemic Strength - "Regenerate X health everyturn"
+              const totemicStrengthAbility = player.abilities.find(ability => ability.name === "Totemic Strength");
+              let totemicStrengthActive = false;
+              let totemicStrengthHeal = 0;
+              if (totemicStrengthAbility) {
+                const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
+                totemicStrengthHeal = healMatch ? parseInt(healMatch[1]) : 20;
+                totemicStrengthActive = true; // Always active
+              }
+              
+              // Parse Spirit Endurance - "Reincarnation" (passive with cooldown)
+              const spiritEnduranceAbility = player.abilities.find(ability => ability.name === "Spirit Endurance");
+              let spiritEnduranceActive = false;
+              let spiritEnduranceCooldown = 0;
+              if (spiritEnduranceAbility) {
+                spiritEnduranceCooldown = spiritEnduranceAbility.currentCooldown || 0;
+                spiritEnduranceActive = spiritEnduranceCooldown === 0; // Active when cooldown is 0
+              }
+              
+              // Parse Elemental Mastery - "Spell immunity"
+              const elementalMasteryAbility = player.abilities.find(ability => ability.name === "Elemental Mastery");
+              let elementalMasteryActive = false;
+              if (elementalMasteryAbility) {
+                elementalMasteryActive = true; // Always active
+              }
+              
+              // Parse Mana Overflow - "Gain +X mana at the start of your turn"
+              const manaOverflowAbility = player.abilities.find(ability => ability.name === "Mana Overflow");
+              let manaOverflowActive = false;
+              let manaOverflowGain = 0;
+              if (manaOverflowAbility) {
+                const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
+                manaOverflowGain = manaMatch ? parseInt(manaMatch[1]) : 20;
+                manaOverflowActive = true; // Always active
+              }
+              
+              // Parse Elemental Harmony - "Every turn gain X% attack and X% spell damage (stacks)"
+              const elementalHarmonyAbility = player.abilities.find(ability => ability.name === "Elemental Harmony");
+              let elementalHarmonyActive = false;
+              let elementalHarmonyAttackGain = 0;
+              let elementalHarmonySpellGain = 0;
+              if (elementalHarmonyAbility) {
+                const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
+                const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
+                elementalHarmonyAttackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
+                elementalHarmonySpellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
+                elementalHarmonyActive = true; // Always active
+              }
+              
+              return (
+                <div className="flex flex-wrap gap-1.5">
+                  {mutagensActive && (
+                    <Badge variant="outline" className="bg-green-900/30 text-green-300 border-green-700 py-1">
+                      <Beaker className="h-3 w-3 mr-1" />
+                      Mutagens Active (+{mutagensBoost}% ATK)
+                    </Badge>
+                  )}
+                  {monsterLoreActive && (
+                    <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
+                      <BookOpen className="h-3 w-3 mr-1" />
+                      Monster Lore Active (+{monsterLoreBoost}% SPELL)
+                    </Badge>
+                  )}
+                  {alchemyMasteryActive && (
+                    <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
+                      <FlaskRound className="h-3 w-3 mr-1" />
+                      Alchemy Mastery Active (+{alchemyMasteryBoost}% HEAL)
+                    </Badge>
+                  )}
+                  {totemicStrengthActive && (
+                    <Badge variant="outline" className="bg-green-900/30 text-green-300 border-green-700 py-1">
+                      <Heart className="h-3 w-3 mr-1" />
+                      Totemic Strength Active (+{totemicStrengthHeal} HP/turn)
+                    </Badge>
+                  )}
+                  {spiritEnduranceActive && (
+                    <Badge variant="outline" className="bg-yellow-900/30 text-yellow-300 border-yellow-700 py-1">
+                      <Skull className="h-3 w-3 mr-1" />
+                      Spirit Endurance Ready
+                    </Badge>
+                  )}
+                  {!spiritEnduranceActive && spiritEnduranceAbility && (
+                    <Badge variant="outline" className="bg-gray-900/30 text-gray-300 border-gray-700 py-1">
+                      <Skull className="h-3 w-3 mr-1" />
+                      Spirit Endurance ({spiritEnduranceCooldown})
+                    </Badge>
+                  )}
+                  {elementalMasteryActive && (
+                    <Badge variant="outline" className="bg-blue-900/30 text-blue-300 border-blue-700 py-1">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Elemental Mastery Active
+                    </Badge>
+                  )}
+                  {manaOverflowActive && (
+                    <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
+                      <Zap className="h-3 w-3 mr-1" />
+                      Mana Overflow Active (+{manaOverflowGain} MP/turn)
+                    </Badge>
+                  )}
+                  {elementalHarmonyActive && (
+                    <Badge variant="outline" className="bg-amber-900/30 text-amber-300 border-amber-700 py-1">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Elemental Harmony Active (+{elementalHarmonyAttackGain}% ATK, +{elementalHarmonySpellGain}% SPELL/turn)
+                    </Badge>
+                  )}
+                </div>
+              );
+            })()}
             
             <div className="flex items-center space-x-2 text-sm text-amber-200">
               <Sword className="h-4 w-4 text-amber-400" />
@@ -310,10 +490,15 @@ export const BattleArenaUI = ({
               <h4 className="text-sm font-medium text-amber-200">Abilities</h4>
               <div className="grid grid-cols-3 gap-2">
                 {player.abilities.map((ability, index) => {
-                  const isDisabled = (ability.currentCooldown || 0) > 0 || !player.isActive || gameOver || player.isComputer;
-                  const notEnoughMana = player.isActive && (ability.manaCost || 0) > player.mana;
+                  const isDisabled = (ability.currentCooldown || 0) > 0;
+                  const notEnoughMana = ability.manaCost && player.mana < ability.manaCost;
+                  const isPassive = (ability.cooldown === 0 && ability.manaCost === 0) || 
+                    ability.name === "Mutagens" || ability.name === "Monster Lore" || 
+                    ability.name === "Alchemy Mastery" || ability.name === "Totemic Strength" || 
+                    ability.name === "Spirit Endurance" || ability.name === "Elemental Mastery" ||
+                    ability.name === "Mana Overflow" || ability.name === "Elemental Harmony";
                   const spellBoost = player.effects.spellDamageBoost || 0;
-                  const boostedPreview = getBoostedDamagePreview(ability.description, spellBoost);
+                  const boostedPreview = getBoostedDamagePreview(ability.description, spellBoost, player);
                   
                   return (
                     <div className="relative group" key={`${player.name}-ability-${index}`}>
@@ -321,14 +506,14 @@ export const BattleArenaUI = ({
                         variant={isActive ? "default" : "outline"}
                         size="sm"
                         className={`flex flex-col items-center justify-center p-2 h-auto text-xs relative w-full
-                          ${isDisabled || notEnoughMana
+                          ${isDisabled || notEnoughMana || isPassive
                             ? 'opacity-50 cursor-not-allowed' 
                             : 'hover:bg-amber-700'
                           }
-                          ${isActive && !isDisabled && !notEnoughMana ? 'bg-amber-800 text-amber-100' : 'bg-stone-800/50 text-stone-300'}
+                          ${isActive && !isDisabled && !notEnoughMana && !isPassive ? 'bg-amber-800 text-amber-100' : 'bg-stone-800/50 text-stone-300'}
                         `}
-                        onClick={() => handleAbilityUse(playerNum, index)}
-                        disabled={isDisabled || notEnoughMana}
+                        onClick={() => !isPassive && handleAbilityUse(playerNum, index)}
+                        disabled={isDisabled || notEnoughMana || isPassive}
                       >
                         <div className="mb-1">
                           {(() => {
@@ -345,7 +530,10 @@ export const BattleArenaUI = ({
                           })()}
                         </div>
                         <div className="text-[10px] font-medium">{ability.name}</div>
-                        {boostedPreview && (
+                        {isPassive && (
+                          <div className="text-[9px] text-green-300/80 mt-0.5">Passive</div>
+                        )}
+                        {boostedPreview && !isPassive && (
                           <div className="text-[9px] text-amber-200/80 mt-0.5">→ {boostedPreview}</div>
                         )}
                         {(ability.currentCooldown || 0) > 0 && (

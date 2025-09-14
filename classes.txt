@@ -1,18 +1,6 @@
 
 
 
-        {
-        name: "Starlight Volley",
-        iconName: "Sparkles",
-        description: "Unleash a barrage of astral arrows dealing 20-40 damage 5 times",
-        cooldown: 8,
-        manaCost: 60
-      }
-      { name: "Shadow Ambush", iconName: "Moon", description: "Become untargetable for 1 turn, then strike next turn for 60-90 damage", cooldown: 8, manaCost: 50 }
-, {
-        name: "Fear Howl",
-        iconName: "Skull",
-        description: "Become untargetable for 3 turns (stealth mode)",
-        cooldown: 8,
-        manaCost: 50
-      },
+   
+   
+           { name: "Fear Howl", iconName: "Skull", description: "Become untargetable for 3 turns (stealth mode)", cooldown: 8, manaCost: 50 },
