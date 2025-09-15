@@ -53,12 +53,20 @@ export const CLASS_CATEGORIES = {
   },
   "Tier 3":{
     "Melee": [
-     "Witcher","Tauren Chieftain"
+     "Witcher","TaurenChieftain"
     ],
    
     "Caster": [
     "Invoker","Archmage"
-    ]
+    ]},
+    "Tier 4":{
+      "Melee": [
+       "Godslayer",
+      ],
+     
+      "Caster": [
+      "Archon",
+      ]
   }
 } as const;
 

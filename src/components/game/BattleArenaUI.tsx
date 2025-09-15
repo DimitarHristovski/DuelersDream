@@ -67,13 +67,29 @@ export const BattleArenaUI = ({
     // Skip non-damage abilities
     if (!desc.includes('deal')) return null;
 
-    // Check for Monster Lore passive boost
+    // Check for Monster Lore and Monster Killer passive boosts
     let totalSpellBoost = spellBoost || 0;
+    
+    // Check Monster Lore
     const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
     if (monsterLoreAbility) {
       const healthPercent = (player.health / player.maxHealth) * 100;
       const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
       const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
+      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
+      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+      
+      if (healthPercent < threshold) {
+        totalSpellBoost += boostPercent;
+      }
+    }
+    
+    // Check Monster Killer
+    const monsterKillerAbility = player.abilities.find(ability => ability.name === "Monster Killer");
+    if (monsterKillerAbility) {
+      const healthPercent = (player.health / player.maxHealth) * 100;
+      const boostMatch = monsterKillerAbility.description.match(/increase spell damage by (\d+)%/i);
+      const thresholdMatch = monsterKillerAbility.description.match(/under (\d+)% health/i);
       const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
       const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
       
@@ -305,7 +321,7 @@ export const BattleArenaUI = ({
             {/* Passive Abilities Status */}
             {(() => {
               const hasPassiveAbilities = player.abilities.some(ability => 
-                ability.name === "Mutagens" || ability.name === "Monster Lore" || ability.name === "Alchemy Mastery" || 
+                ability.name === "Mutagens" || ability.name === "Monster Killer" || ability.name === "Monster Lore" || ability.name === "Alchemy Mastery" || 
                 ability.name === "Totemic Strength" || ability.name === "Spirit Endurance" ||
                 ability.name === "Elemental Mastery" || ability.name === "Mana Overflow" || ability.name === "Elemental Harmony"
               );
@@ -338,6 +354,19 @@ export const BattleArenaUI = ({
                 monsterLoreBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
                 monsterLoreThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
                 monsterLoreActive = healthPercent < monsterLoreThreshold;
+              }
+              
+              // Parse Monster Killer - "Increase spell damage by X% while under Y% health"
+              const monsterKillerAbility = player.abilities.find(ability => ability.name === "Monster Killer");
+              let monsterKillerActive = false;
+              let monsterKillerBoost = 0;
+              let monsterKillerThreshold = 50;
+              if (monsterKillerAbility) {
+                const boostMatch = monsterKillerAbility.description.match(/increase spell damage by (\d+)%/i);
+                const thresholdMatch = monsterKillerAbility.description.match(/under (\d+)% health/i);
+                monsterKillerBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
+                monsterKillerThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+                monsterKillerActive = healthPercent < monsterKillerThreshold;
               }
               
               // Parse Alchemy Mastery - "All healing received is X% stronger while under Y% health"
@@ -413,6 +442,12 @@ export const BattleArenaUI = ({
                     <Badge variant="outline" className="bg-purple-900/30 text-purple-300 border-purple-700 py-1">
                       <BookOpen className="h-3 w-3 mr-1" />
                       Monster Lore Active (+{monsterLoreBoost}% SPELL)
+                    </Badge>
+                  )}
+                  {monsterKillerActive && (
+                    <Badge variant="outline" className="bg-red-900/30 text-red-300 border-red-700 py-1">
+                      <BookOpen className="h-3 w-3 mr-1" />
+                      Monster Killer Active (+{monsterKillerBoost}% SPELL)
                     </Badge>
                   )}
                   {alchemyMasteryActive && (

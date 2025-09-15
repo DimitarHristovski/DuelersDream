@@ -1172,7 +1172,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       },
     ],
   },
-  "Witcher": {
+  Witcher: {
   health: 2200,
   attackMin: 51,
   attackMax: 58,
@@ -1197,11 +1197,11 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       manaCost: 50,},
     // Passive
     { name: "Mutagens", iconName: "Beaker", description: "Passive: Increase attack by 100% while above 50% health.", cooldown: 0, manaCost: 0 },
-    { name: "Monster Lore", iconName: "BookOpen", description: "Passive: Increase spell damage by 100% while under 50% health.", cooldown: 0, manaCost: 0 },
+    { name: "Monster Killer", iconName: "BookOpen", description: "Passive: Increase spell damage by 100% while under 50% health.", cooldown: 0, manaCost: 0 },
     { name: "Alchemy Mastery", iconName: "FlaskRound", description: "Passive: All healing received is 100% stronger while under 50% health.", cooldown: 0, manaCost: 0 }
   ]
 },
-"Tauren Chieftain": {
+TaurenChieftain: {
   health: 2400,
   attackMin: 52,
   attackMax: 58,
@@ -1241,7 +1241,7 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
       manaCost: 0,
     },  ]
 },
-"Invoker": {
+Invoker: {
   health: 1700,
   attackMin: 31,
   attackMax: 38,
@@ -1250,25 +1250,137 @@ export const PLAYER_CLASSES: Record<string, PlayerClass> = {
   description: "Tier 3 caster — master of fire, frost, and lightning.",
   abilities: [
     // Active
-    { name: "Fireball", iconName: "Flame", description: "Deal 70–100 fire damage.", cooldown: 4, manaCost: 40 },
-    {
-      name: "Divine Shield",
-      iconName: "Shield",
-      description: "Repel abilities for 4 turns",
-      cooldown: 10,
-      manaCost: 35,
-    },
+    { name: "Fireball", iconName: "Flame", description: "Deal 70–100 fire damage.", cooldown: 1, manaCost: 30 },
+    { name: "Summon Infernal", iconName: "Skull", description: "Summon an Infernal that deals 100 damage per turn for 10 turns.", cooldown: 20, manaCost: 150 },
     {
       name: "Sacred Ward",
       iconName: "Shield",
-      description: "Gain a shield that blocks 500 damage everyturn",
+      description: "Gain a shield that blocks 200 damage everyturn",
       cooldown: 30,
       manaCost: 100,
     },
     // Passive
     { name: "Elemental Mastery", iconName: "Sparkles", description: "Passive: Spell immunity.", cooldown: 0, manaCost: 0 },
     { name: "Mana Overflow", iconName: "BatteryCharging", description: "Passive: Gain +20 mana at the start of your turn.", cooldown: 0, manaCost: 0 },
-    { name: "Elemental Harmony", iconName: "Atom", description: "Passive: Every turn gain 1% attack and 1% spell damage (stacks)", cooldown: 0, manaCost: 0 }
+    { name: "Elemental Harmony", iconName: "Atom", description: "Passive: Every turn gain 5% attack and 10% spell damage (stacks)", cooldown: 0, manaCost: 0 }
   ]
 },
+Archmage: {
+  health: 1800,
+  attackMin: 33,
+  attackMax: 40,
+  mana: 180,
+  maxMana: 180,
+  description: "Tier 3 caster — supreme master of all schools of magic.",
+  abilities: [
+    // Active
+    { name: "Meteor", iconName: "Flame", description: "Deal 80–110 fire damage", cooldown: 3, manaCost: 50 },
+    { name: "Blizzard", iconName: "Snowflake", description: "Deal 70–95 frost damage and slow (−30% attack) for 2 turns.", cooldown: 3, manaCost: 50 },
+    { name: "Worldbreaker", iconName: "Skull", description: "Deal 150–200 arcane damage.", cooldown: 3, manaCost: 50 },
+    // Passive
+    { name: "Mana Overflow", iconName: "BatteryCharging", description: "Passive: Gain +20 mana at the start of your turn.", cooldown: 0, manaCost: 0 },
+    { name: "Mage Lore", iconName: "BookOpen", description: "Passive: Increase spell damage by 100% while under 100% health,Increase spell damage by 200% while under 50% health and Increase spell damage by 500% while under 10% health", cooldown: 0, manaCost: 0 },
+    { name: "Temporal Mastery", iconName: "Hourglass", description: "Passive:Every turn Gain a shield that blocks 200 damage everyturn (stacks)", cooldown: 0, manaCost: 0 }
+  ]
+},
+Godslayer: {
+  health: 2600,
+  attackMin: 61, attackMax: 68,
+  mana: 190, maxMana: 190,
+  description: "Tier 4 melee — demigod built to duel divinities.",
+  abilities: [
+    // === 1 ACTIVE (super-strong) ===
+    { 
+      name: "Divine Execution", 
+      iconName: "Skull", 
+      description: "If enemy is under 30% health: instantly kill; otherwise deal 400 damage.", 
+      cooldown: 1, 
+      manaCost: 10 
+    },
+
+    { 
+      name: "Executioner's Zeal", 
+      iconName: "Flame", 
+      description: "Passive: Each basic attack reduces Divine Execution’s cooldown by 1.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Oath of Finality", 
+      iconName: "Heart", 
+      description: "Passive: When you drop below 40% HP,spell damage is increased by 30%.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Relentless Verdict", 
+      iconName: "Sword", 
+      description: "Passive: If Divine Execution fails to kill, your next attack deals 500% damage.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Godbreaker’s Might", 
+      iconName: "Star", 
+      description: "Passive: Each enemy ability used against you increases Divine Execution’s damage by 50 (stacks).", 
+      cooldown: 0, manaCost: 0 
+    },
+    {
+      name: "Gods's Wrath",
+      iconName: "Flame",
+      description:
+        "Passive: When losing health, increase attack by 10% (stacks)",
+      cooldown: 0,
+      manaCost: 0,
+    },
+  ]
+},
+
+
+"Archon": {
+  health: 2000,
+  attackMin: 41, attackMax: 48,
+  mana: 200, maxMana: 200,
+  description: "Tier 4 caster — radiant demigod of order.",
+  abilities: [
+    // === 1 ACTIVE (super-strong) ===
+    { 
+      name: "Apotheosis", 
+      iconName: "Crown", 
+      description: "Ultimate: Deal 160–200 radiant damage, dispel 1 positive effect, and gain +25% damage & +25% damage reduction for 2 turns.", 
+      cooldown: 9, 
+      manaCost: 90 
+    },
+
+    // === 5 PASSIVES ===
+    { 
+      name: "Perfect Form", 
+      iconName: "Shield", 
+      description: "Passive: The first harmful effect on you each turn has its duration reduced by 1.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Decree", 
+      iconName: "ScrollText", 
+      description: "Passive: Your dispels remove 1 additional positive effect.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Seraphic Flow", 
+      iconName: "Wand2", 
+      description: "Passive: While above 60% mana, your spell damage is increased by 10%.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Aegis of Order", 
+      iconName: "ShieldCheck", 
+      description: "Passive: The first hit you take each turn is reduced by 30 damage and you gain 10 mana.", 
+      cooldown: 0, manaCost: 0 
+    },
+    { 
+      name: "Judicial Pressure", 
+      iconName: "Gavel", 
+      description: "Passive: Enemy abilities cost +5 mana.", 
+      cooldown: 0, manaCost: 0 
+    }
+  ]
+}
+
 };

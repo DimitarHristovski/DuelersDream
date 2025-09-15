@@ -201,6 +201,22 @@ export const BattleArena = ({
       }
     }
 
+    // Check for Executioner's Zeal passive - reduce Divine Execution cooldown by 1
+    const executionersZealAbility = attacker.abilities.find(ability => ability.name === "Executioner's Zeal");
+    if (executionersZealAbility) {
+      setAttacker(prev => ({
+          ...prev,
+        abilities: prev.abilities.map(ability => {
+          if (ability.name === "Divine Execution" && ability.currentCooldown > 0) {
+            const newCooldown = Math.max(0, ability.currentCooldown - 1);
+            addLogMessage(`${attacker.name}'s Executioner's Zeal reduces Divine Execution cooldown by 1! (${newCooldown} turns remaining)`);
+            return { ...ability, currentCooldown: newCooldown };
+          }
+          return ability;
+        })
+      }));
+    }
+
     endOfAction(newHealth > 0);
   };
 
@@ -475,7 +491,7 @@ export const BattleArena = ({
         currentCooldown: a.currentCooldown && a.currentCooldown > 0 ? a.currentCooldown - 1 : 0,
       }));
       const manaRegen = 15;
-      const newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
+      let newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
       if (newMana > prev.mana) addLogMessage(`${prev.name} regenerates ${manaRegen} mana.`);
 
       // expire temporary attack boost
@@ -733,6 +749,13 @@ export const BattleArena = ({
     const setPlayer = playerNum === 1 ? setPlayer1 : setPlayer2;
     const setOpponent = playerNum === 1 ? setPlayer2 : setPlayer1;
 
+    console.log('=== HANDLE ABILITY USE ===');
+    console.log('Player:', player.name);
+    console.log('Ability index:', abilityIndex);
+    console.log('All abilities:', player.abilities.map(a => a.name));
+    console.log('Selected ability:', player.abilities[abilityIndex]?.name);
+    console.log('========================');
+
     if (!player.isActive) {
       toast({ title: 'Not your turn!', description: 'Wait for your turn to use abilities.', variant: 'destructive' });
       return;
@@ -928,13 +951,12 @@ export const BattleArena = ({
   const applyAbilityByDescription = (player: Player, opponent: Player, setPlayer: Dispatch<SetStateAction<Player>>, setOpponent: Dispatch<SetStateAction<Player>>, ability: Ability): boolean => {
     const description = ability.description.toLowerCase();
     
-    console.log('=== ABILITY DEBUG ===');
-    console.log('Ability used:', ability.name);
+    console.log('=== ANY ABILITY USED ===');
+    console.log('Ability name:', ability.name);
+    console.log('Ability name lowercase:', ability.name.toLowerCase());
     console.log('Description:', description);
-    console.log('Player:', player.name);
-    console.log('Opponent:', opponent.name);
-    console.log('===================');
-
+    console.log('========================');
+    
     // If opponent has a repelling shield active, block abilities (not basic attacks)
     if (opponent.effects.repelAbilities && opponent.effects.repelAbilitiesDuration > 0) {
       addLogMessage(`${opponent.name}'s repelling shield negates ${ability.name}!`);
@@ -1190,6 +1212,8 @@ export const BattleArena = ({
       abilityDealDamage(damage, `${player.name} uses Execute and deals ${damage} damage!`);
       return opponent.health > 0;
     }
+
+
 
     // Cleanse - Remove all negative effects and heal
     if (description.includes('cleanse')) {
@@ -1762,8 +1786,59 @@ export const BattleArena = ({
       return true;
     }
 
+   
+
     // Default case - just log the ability use
     addLogMessage(`${player.name} uses ${ability.name}!`);
+
+    // Divine Execution - If enemy is under 30% health: instantly kill; otherwise deal 400 damage. Restore 10% health.
+    if (ability.name.toLowerCase() === 'divine execution') {
+      console.log('=== DIVINE EXECUTION TRIGGERED ===');
+      console.log('Description:', description);
+      console.log('Player:', player.name, 'Health:', player.health);
+      console.log('Opponent:', opponent.name, 'Health:', opponent.health);
+      
+      const thresholdMatch = description.match(/under (\d+)% health/);
+      const damageMatch = description.match(/deal (\d+) damage/);
+      
+      console.log('Regex matches:', { thresholdMatch, damageMatch });
+      
+      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 30;
+      let damage = damageMatch ? parseInt(damageMatch[1]) : 400;
+      
+      // Check for Oath of Finality passive - increase spell damage by 30% when below 40% HP
+      const oathOfFinalityAbility = player.abilities.find(ability => ability.name === "Oath of Finality");
+      if (oathOfFinalityAbility) {
+        const playerHealthPercent = (player.health / player.maxHealth) * 100;
+        if (playerHealthPercent < 40) {
+          const damageIncrease = Math.floor(damage * 0.30);
+          damage += damageIncrease;
+          addLogMessage(`${player.name}'s Oath of Finality increases Divine Execution spell damage by 30%! (+${damageIncrease} damage)`);
+        }
+      }
+      
+      console.log('Parsed values:', { threshold, damage });
+      
+      const healthPercent = (opponent.health / opponent.maxHealth) * 100;
+      console.log('Opponent health percent:', healthPercent);
+      
+      if (healthPercent < threshold) {
+        console.log('Executing instant kill');
+        setOpponent(prev => ({ ...prev, health: 0 }));
+        addLogMessage(`${player.name} uses Divine Execution and instantly kills ${opponent.name}!`);
+        return false;
+      } else {
+        console.log('Executing damage only');
+        // Deal damage to opponent
+        const newOpponentHealth = Math.max(0, opponent.health - damage);
+        console.log('Damaging opponent from', opponent.health, 'to', newOpponentHealth);
+        setOpponent(prev => ({ ...prev, health: newOpponentHealth }));
+        addLogMessage(`${player.name} uses Divine Execution and deals ${damage} damage!`);
+        
+        return newOpponentHealth > 0;
+      }
+    }
+
     return true;
   };
 
