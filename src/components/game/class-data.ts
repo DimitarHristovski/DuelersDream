@@ -1307,7 +1307,7 @@ Godslayer: {
     { 
       name: "Oath of Finality", 
       iconName: "Heart", 
-      description: "Passive: When you drop below 40% HP,spell damage is increased by 30%.", 
+      description: "Passive: When you drop below 100% HP,spell damage is increased by 30%.", 
       cooldown: 0, manaCost: 0 
     },
     { 
