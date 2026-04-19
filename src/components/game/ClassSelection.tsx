@@ -1,192 +1,157 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Sword, Shield, Heart, Zap, Sparkles, 
-  User, ShieldX, Skull, Star, Target, Hourglass, 
-  ChevronRight, ArrowRight, X
+import {
+  Sword,
+  Heart,
+  Zap,
+  Sparkles,
+  User,
+  Star,
+  ArrowRight,
+  Search,
+  Clock,
 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PLAYER_CLASSES, getIconByName } from './class-data';
 import { motion } from 'framer-motion';
+import { computePowerScore } from '@/lib/combat-meta';
+import { CLASS_ROLES, ALL_CLASSES_ORDERED, pickRandomAiClass, type RoleKey } from './class-categories';
 
 interface ClassSelectionProps {
   player1Class: keyof typeof PLAYER_CLASSES;
   setPlayer1Class: React.Dispatch<React.SetStateAction<keyof typeof PLAYER_CLASSES>>;
-  player2Class: keyof typeof PLAYER_CLASSES;
-  setPlayer2Class: React.Dispatch<React.SetStateAction<keyof typeof PLAYER_CLASSES>>;
   player1Name: string;
   setPlayer1Name: React.Dispatch<React.SetStateAction<string>>;
-  player2Name: string;
-  setPlayer2Name: React.Dispatch<React.SetStateAction<string>>;
-  isPlayer2Computer: boolean;
-  setIsPlayer2Computer: React.Dispatch<React.SetStateAction<boolean>>;
+  /** Called when the user enters the arena so the parent can use the same class in `startGame`. */
+  onOpponentClassLockedIn: (aiClass: keyof typeof PLAYER_CLASSES) => void;
   startGame: () => void;
 }
 
-// Define class categories
-export const CLASS_CATEGORIES = {
-  "Tier 1": {
-    "Melee": ["Warrior", "Slayer", "Rogue"],
-    "Ranged": ["Archer", "Ranger"],
-    "Caster": ["Mage", "Oracle", "Healer"]
-  },
-  "Tier 2": {
-    "Melee": [
-      "Warlord", "Berserker", "Paladin",
-      "Death Knight", "Dragon Slayer","Knight",
-    ],
-    "Ranged": [
-       "Shaman",  "Druid", "Elemental Warden","Priest","Crossbowman", "Beastguard"
-      
-    ],
-    "Caster": [
-      "Battlemage", "Enchanter",  "Warlock",
-       "Lich","Wizard","Necromancer"
-    ]
-  },
-  "Tier 3":{
-    "Melee": [
-     "Witcher","TaurenChieftain"
-    ],
-   
-    "Caster": [
-    "Invoker","Archmage"
-    ]},
-    "Tier 4":{
-      "Melee": [
-       "Godslayer",
-      ],
-     
-      "Caster": [
-      "Archon",
-      ]
-  }
-} as const;
+export { CLASS_ROLES, ALL_CLASSES_ORDERED };
 
-type CategoryKey = keyof typeof CLASS_CATEGORIES;
-type SubcategoryKey = keyof typeof CLASS_CATEGORIES[CategoryKey];
-
-// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
+    transition: { staggerChildren: 0.04 },
+  },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 },
 };
+
+function roleForClass(className: string): RoleKey | 'Other' {
+  const roles: RoleKey[] = ['Melee', 'Ranged', 'Caster'];
+  for (const r of roles) {
+    if ((CLASS_ROLES[r] as readonly string[]).includes(className)) return r;
+  }
+  return 'Other';
+}
 
 export const ClassSelection = ({
   player1Class,
   setPlayer1Class,
-  player2Class,
-  setPlayer2Class,
   player1Name,
   setPlayer1Name,
-  player2Name,
-  setPlayer2Name,
-  isPlayer2Computer,
-  setIsPlayer2Computer,
-  startGame
+  onOpponentClassLockedIn,
+  startGame,
 }: ClassSelectionProps) => {
-  const [selectedTab, setSelectedTab] = useState("player1");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Tier 1");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("Melee");
-  const [showVersus, setShowVersus] = useState<boolean>(false);
+  const [roleFilter, setRoleFilter] = useState<'all' | RoleKey>('all');
+  const [search, setSearch] = useState('');
+  const [showVersus, setShowVersus] = useState(false);
+  const [opponentPreviewClass, setOpponentPreviewClass] = useState<keyof typeof PLAYER_CLASSES | null>(null);
   const [hoveredAbility, setHoveredAbility] = useState<string | null>(null);
-  
-  // Handle versus screen display
+
+  const filteredClassNames = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return ALL_CLASSES_ORDERED.filter((name) => {
+      if (!(name in PLAYER_CLASSES)) return false;
+      if (roleFilter !== 'all' && !(CLASS_ROLES[roleFilter] as readonly string[]).includes(name)) {
+        return false;
+      }
+      if (q && !name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [roleFilter, search]);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (showVersus) {
-      console.log('Versus screen shown, will call startGame in 3 seconds');
-      timer = setTimeout(() => {
-        console.log('Calling startGame from versus screen');
-        startGame();
-      }, 3000);
+      timer = setTimeout(() => startGame(), 3000);
     }
     return () => clearTimeout(timer);
   }, [showVersus, startGame]);
-  
-  // Class selection handler
-  const handleClassSelect = (playerNumber: 1 | 2, className: keyof typeof PLAYER_CLASSES) => {
-    if (playerNumber === 1) {
-      setPlayer1Class(className);
-    } else {
-      setPlayer2Class(className);
-    }
-  };
 
-  // Helper function to render an icon component by name with specific class
   const renderIcon = (iconName: string, className: string) => {
     const IconComponent = getIconByName(iconName);
     return <IconComponent className={className} />;
   };
 
-  // Render ability badge with fixed tooltip
-  const renderAbilityBadge = (ability: {
-    name: string;
-    description: string;
-    cooldown: number;
-    manaCost?: number;
-    iconName: string;
-  }, index: number) => {
-    const uniqueId = `ability-${index}-${ability.name.replace(/\s+/g, "-").toLowerCase()}`;
+  const renderAbilityBadge = (
+    ability: {
+      name: string;
+      description: string;
+      cooldown: number;
+      manaCost?: number;
+      iconName: string;
+    },
+    index: number
+  ) => {
+    const uniqueId = `ability-${index}-${ability.name.replace(/\s+/g, '-').toLowerCase()}`;
     const isHovered = hoveredAbility === uniqueId;
-    
+
     return (
-      <div 
-        key={uniqueId} 
+      <div
+        key={uniqueId}
         className="relative"
         onMouseEnter={() => setHoveredAbility(uniqueId)}
         onMouseLeave={() => setHoveredAbility(null)}
       >
-        <div className={`flex items-center p-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105 ${
-          ability.manaCost ? 'bg-blue-50 text-blue-700 border border-blue-200' : 
-                            'bg-amber-50 text-amber-700 border border-amber-200'
-        }`}>
-          <span className="mr-1.5">
-            {renderIcon(ability.iconName, "h-3.5 w-3.5")}
+        <div
+          className={`flex items-center gap-2 p-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:scale-[1.02] ${
+            ability.manaCost
+              ? 'bg-duel-ember/30 text-amber-100/95 border border-duel-flame/35'
+              : 'bg-duel-wine/25 text-violet-100/90 border border-duel-wine/40'
+          }`}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-black/25 border border-white/10">
+            {renderIcon(ability.iconName, 'h-4 w-4 text-duel-brass')}
           </span>
-          <span className="truncate flex-1">{ability.name}</span>
-          <div className="flex items-center gap-1 ml-1.5">
-            <Badge variant="outline" className="text-[10px] px-1 py-0.5">
-              {ability.cooldown}t
+          <span className="truncate flex-1 min-w-0">{ability.name}</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <Badge variant="outline" className="inline-flex items-center text-[10px] px-1.5 py-0.5 border-duel-brass/30 text-duel-parchment gap-0.5">
+              <Clock className="h-3 w-3 opacity-90" />
+              {ability.cooldown}s
             </Badge>
             {ability.manaCost !== undefined && (
-              <Badge variant="secondary" className="text-[10px] px-1 py-0.5">
-                {ability.manaCost} MP
+              <Badge variant="secondary" className="inline-flex items-center text-[10px] px-1.5 py-0.5 bg-duel-ink/50 gap-0.5 border-0">
+                <Zap className="h-3 w-3 text-amber-400" />
+                {ability.manaCost}
               </Badge>
             )}
           </div>
         </div>
-        
-        {/* Fixed Tooltip - Only shows when this specific ability is hovered */}
         {isHovered && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-64 
-                        bg-black/90 text-white text-xs rounded-lg shadow-xl transform -translate-y-1">
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-64 bg-duel-ink/98 text-duel-parchment text-xs rounded-lg shadow-xl border border-duel-brass/25">
             <div className="flex items-center mb-2">
-              {renderIcon(ability.iconName, "h-4 w-4 mr-2")}
+              {renderIcon(ability.iconName, 'h-4 w-4 mr-2 text-duel-brass')}
               <p className="font-semibold">{ability.name}</p>
             </div>
-            <p className="text-gray-300 mb-2">{ability.description}</p>
-            <div className="flex items-center justify-between text-gray-400">
-              <span>Cooldown: {ability.cooldown} turns</span>
+            <p className="text-slate-400 mb-2">{ability.description}</p>
+            <div className="flex items-center justify-between text-duel-mist">
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3 text-duel-brass/80" /> {ability.cooldown}s CD
+              </span>
               {ability.manaCost !== undefined && (
-                <span>Cost: {ability.manaCost} MP</span>
+                <span className="inline-flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-amber-400/90" /> {ability.manaCost} MP
+                </span>
               )}
             </div>
           </div>
@@ -195,72 +160,71 @@ export const ClassSelection = ({
     );
   };
 
-  // Render class card with improved responsive design
-  const renderClassCard = (
-    className: keyof typeof PLAYER_CLASSES, 
-    playerNumber: 1 | 2,
-    isSelected: boolean
-  ) => {
+  const renderClassCard = (className: keyof typeof PLAYER_CLASSES, isSelected: boolean) => {
     const classData = PLAYER_CLASSES[className];
     if (!classData) return null;
-    
+    const power = computePowerScore(classData);
+    const role = roleForClass(String(className));
+
     return (
-      <motion.div
-        variants={itemVariants}
-        initial="hidden"
-        animate="visible"
-        key={className}
-        className="w-full"
-      >
-        <Card 
-          className={`relative cursor-pointer transition-all duration-300 overflow-hidden group ${
-            isSelected 
-              ? "ring-4 ring-amber-500 bg-amber-50/90 shadow-lg scale-105" 
-              : "hover:ring-2 hover:ring-amber-300 hover:bg-amber-50/50 hover:shadow-md hover:scale-102"
+      <motion.div variants={itemVariants} initial="hidden" animate="visible" key={String(className)} className="w-full">
+        <Card
+          className={`relative cursor-pointer transition-all duration-300 overflow-hidden group border backdrop-blur-sm ${
+            isSelected
+              ? 'ring-2 ring-duel-brass/70 bg-duel-ink/95 border-duel-brass/50 shadow-lg shadow-black/50 scale-[1.02]'
+              : 'border-stone-700/50 bg-duel-ink/70 hover:border-duel-brass/35 hover:bg-duel-panel/90'
           }`}
-          onClick={() => handleClassSelect(playerNumber, className)}
+          onClick={() => setPlayer1Class(className)}
         >
           {isSelected && (
-            <div className="absolute top-0 right-0 bg-amber-500 text-white p-1 z-10">
+            <div className="absolute top-0 right-0 bg-duel-brass text-duel-void p-1 z-10 rounded-bl-md">
               <Star className="h-3 w-3" />
             </div>
           )}
-          
-          <CardHeader className="p-3 pb-1 bg-gradient-to-r from-amber-50 to-amber-100/80">
-            <CardTitle className="text-base flex items-center">
-              {renderIcon(classData.abilities[0]?.iconName || "sword", "h-4 w-4 mr-1.5 text-amber-700")}
-              <span className="truncate">{className}</span>
+
+          <CardHeader className="p-3 pb-1 bg-gradient-to-r from-duel-ink/95 to-duel-void/95 border-b border-duel-brass/15">
+            <CardTitle className="text-base flex items-center justify-between gap-1 font-display">
+              <span className="flex items-center min-w-0 text-duel-parchment">
+                {renderIcon(classData.abilities[0]?.iconName || 'sword', 'h-4 w-4 mr-1.5 text-duel-brass shrink-0')}
+                <span className="truncate">{String(className)}</span>
+              </span>
+              <span className="flex gap-1 shrink-0">
+                <Badge variant="outline" className="text-[10px] border-duel-brass/30 text-duel-mist">
+                  {role}
+                </Badge>
+                <Badge variant="secondary" className="text-[10px] bg-duel-elevated text-duel-brass border-0">
+                  ★{power}
+                </Badge>
+              </span>
             </CardTitle>
-            <CardDescription className="text-xs line-clamp-2 h-8">{classData.description}</CardDescription>
+            <CardDescription className="text-xs line-clamp-2 h-8 text-duel-mist">{classData.description}</CardDescription>
           </CardHeader>
-          
+
           <CardContent className="p-3 pt-2">
-            {/* Stats Row - Responsive Grid */}
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between mb-2 text-stone-200">
               <div className="flex items-center">
-                <Heart className="h-4 w-4 text-red-500 mr-1" />
+                <Heart className="h-4 w-4 text-rose-400 mr-1" />
                 <span className="text-sm font-medium">{classData.health}</span>
               </div>
               <div className="flex items-center">
-                <Sword className="h-4 w-4 text-amber-200 mr-1" />
-                <span className="text-sm font-medium">{classData.attackMin}-{classData.attackMax}</span>
+                <Sword className="h-4 w-4 text-stone-400 mr-1" />
+                <span className="text-sm font-medium">
+                  {classData.attackMin}-{classData.attackMax}
+                </span>
               </div>
               <div className="flex items-center">
-                <Zap className="h-4 w-4 text-blue-500 mr-1" />
+                <Zap className="h-4 w-4 text-amber-400/90 mr-1" />
                 <span className="text-sm font-medium">{classData.mana}</span>
               </div>
             </div>
-            
-            {/* Abilities Section */}
+
             <div className="mt-2 space-y-1.5">
-              <h4 className="text-xs font-semibold text-amber-800 flex items-center">
-                <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                Abilities:
+              <h4 className="text-xs font-semibold text-duel-mist flex items-center">
+                <Sparkles className="h-3.5 w-3.5 mr-1 text-duel-brass/90" />
+                Abilities
               </h4>
               <div className="flex flex-wrap gap-1">
-                {classData.abilities.map((ability, index) => (
-                  renderAbilityBadge(ability, index)
-                ))}
+                {classData.abilities.map((ability, index) => renderAbilityBadge(ability, index))}
               </div>
             </div>
           </CardContent>
@@ -269,88 +233,90 @@ export const ClassSelection = ({
     );
   };
 
-  // Handle battle start with versus screen
   const handleBattleStart = () => {
+    const ai = pickRandomAiClass(player1Class);
+    setOpponentPreviewClass(ai);
+    onOpponentClassLockedIn(ai);
     setShowVersus(true);
   };
 
-  // Render versus screen
-  if (showVersus) {
+  if (showVersus && opponentPreviewClass) {
     const player1Data = PLAYER_CLASSES[player1Class];
-    const player2Data = PLAYER_CLASSES[player2Class];
-    
+    const player2Data = PLAYER_CLASSES[opponentPreviewClass];
+
     return (
-      <div className="max-w-4xl w-full bg-black/80 rounded-lg p-6 animate-in fade-in zoom-in duration-500">
+      <div className="max-w-4xl w-full rounded-2xl border border-duel-brass/25 bg-duel-ink/95 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl animate-in fade-in zoom-in duration-500">
         <div className="relative h-[500px] flex items-center justify-center">
           <div className="absolute inset-0 flex">
-            {/* Player 1 */}
-            <motion.div 
-              initial={{ x: -300, opacity: 0 }} 
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
               className="w-1/2 h-full flex flex-col items-center justify-center p-4"
             >
-              <div className="text-5xl font-bold text-amber-100 mb-4">{player1Name}</div>
-              <div className="text-3xl text-amber-300 mb-6">{player1Class}</div>
-              <div className="flex flex-col items-center">
-                <div className="mb-3 text-amber-200 flex items-center">
-                  <Heart className="h-6 w-6 text-red-500 mr-2" />
+              <div className="text-4xl sm:text-5xl font-bold text-duel-parchment mb-4 font-display tracking-tight">{player1Name}</div>
+              <div className="text-2xl text-duel-brass mb-6">{String(player1Class)}</div>
+              <div className="flex flex-col items-center text-stone-300">
+                <div className="mb-3 flex items-center">
+                  <Heart className="h-6 w-6 text-rose-500 mr-2" />
                   <span className="text-2xl">{player1Data.health} HP</span>
                 </div>
-                <div className="mb-3 text-amber-200 flex items-center">
-                  <Sword className="h-6 w-6 text-gray-300 mr-2" />
-                  <span className="text-xl">{player1Data.attackMin}-{player1Data.attackMax} DMG</span>
+                <div className="mb-3 flex items-center">
+                  <Sword className="h-6 w-6 text-slate-400 mr-2" />
+                  <span className="text-xl">
+                    {player1Data.attackMin}-{player1Data.attackMax} ATK
+                  </span>
                 </div>
               </div>
             </motion.div>
-            
-            {/* VS */}
-            <motion.div 
+
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, duration: 0.5 }}
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
             >
-              <div className="bg-red-600 text-white text-5xl font-black rounded-full h-24 w-24 flex items-center justify-center shadow-lg shadow-red-900/50">
+              <div className="rounded-full h-24 w-24 flex items-center justify-center bg-gradient-to-br from-duel-brass to-duel-flame text-duel-void text-4xl font-black font-display shadow-xl shadow-black/50 border border-duel-brass/40">
                 VS
               </div>
             </motion.div>
-            
-            {/* Player 2 */}
-            <motion.div 
-              initial={{ x: 300, opacity: 0 }} 
+
+            <motion.div
+              initial={{ x: 300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
               className="w-1/2 h-full flex flex-col items-center justify-center p-4"
             >
-              <div className="text-5xl font-bold text-amber-100 mb-4">{isPlayer2Computer ? `${player2Class} AI` : player2Name}</div>
-              <div className="text-3xl text-amber-300 mb-6">{player2Class}</div>
-              <div className="flex flex-col items-center">
-                <div className="mb-3 text-amber-200 flex items-center">
-                  <Heart className="h-6 w-6 text-red-500 mr-2" />
+              <div className="text-3xl sm:text-5xl font-bold text-duel-parchment mb-4 tracking-tight font-display text-center px-2">{`${String(opponentPreviewClass)} AI`}</div>
+              <div className="text-2xl text-rose-300/90 mb-6">{String(opponentPreviewClass)}</div>
+              <div className="flex flex-col items-center text-stone-300">
+                <div className="mb-3 flex items-center">
+                  <Heart className="h-6 w-6 text-rose-500 mr-2" />
                   <span className="text-2xl">{player2Data.health} HP</span>
                 </div>
-                <div className="mb-3 text-amber-200 flex items-center">
-                  <Sword className="h-6 w-6 text-gray-300 mr-2" />
-                  <span className="text-xl">{player2Data.attackMin}-{player2Data.attackMax} DMG</span>
+                <div className="mb-3 flex items-center">
+                  <Sword className="h-6 w-6 text-slate-400 mr-2" />
+                  <span className="text-xl">
+                    {player2Data.attackMin}-{player2Data.attackMax} ATK
+                  </span>
                 </div>
               </div>
             </motion.div>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.5, duration: 0.5 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center"
           >
-            <div className="text-2xl text-amber-300 font-semibold mb-2">Battle Starting...</div>
-            <div className="w-64 bg-gray-700 rounded-full h-2">
-              <motion.div 
-                className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full"
+            <div className="text-xl text-duel-brass font-display font-medium mb-2">Entering arena…</div>
+            <div className="w-64 bg-duel-elevated rounded-full h-2 overflow-hidden border border-duel-brass/20">
+              <motion.div
+                className="bg-gradient-to-r from-duel-brass to-duel-flame h-2 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 3, ease: "linear" }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 3, ease: 'linear' }}
               />
             </div>
           </motion.div>
@@ -360,189 +326,93 @@ export const ClassSelection = ({
   }
 
   return (
-    <div className="max-w-7xl w-full space-y-6 bg-gradient-to-br from-amber-900/20 to-black/40 rounded-xl p-6">
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-4"
-      >
-        <h1 className="text-4xl font-bold text-amber-100">Choose Your Classes</h1>
-        <p className="text-lg text-amber-200">Select the perfect class for each player and prepare for battle!</p>
+    <div className="max-w-7xl w-full space-y-8 rounded-2xl border border-duel-brass/20 bg-gradient-to-br from-duel-ink/90 via-duel-void/95 to-duel-ink/90 p-6 md:p-8 shadow-2xl shadow-black/50">
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-3">
+        <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-duel-parchment">Choose your fighter</h2>
+        <p className="text-duel-mist max-w-xl mx-auto text-sm md:text-base">
+          Every match rolls a random AI opponent — pick a class, then step into the arena.
+        </p>
       </motion.div>
 
-      {/* Player Selection Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 bg-amber-800/30 rounded-lg p-1">
-          <TabsTrigger value="player1" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Player 1
-          </TabsTrigger>
-          <TabsTrigger value="player2" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Player 2
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Player 1 Tab */}
-        <TabsContent value="player1" className="space-y-6">
-          <div className="bg-black/40 rounded-lg p-6 shadow-sm border border-amber-800/30">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1">
-                <Label htmlFor="player1-name" className="text-sm font-medium text-amber-200">Player 1 Name</Label>
-                <Input
-                  id="player1-name"
-                  value={player1Name}
-                  onChange={(e) => setPlayer1Name(e.target.value)}
-                  placeholder="Enter player 1 name"
-                  className="mt-1"
-                />
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-amber-400">{player1Class}</div>
-                <div className="text-sm text-amber-300">Selected Class</div>
-              </div>
-            </div>
+      <div className="rounded-xl border border-duel-brass/15 bg-duel-void/60 p-5 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
+          <div className="flex-1">
+            <Label htmlFor="player1-name" className="text-duel-mist flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-duel-brass/80" />
+              Your name
+            </Label>
+            <Input
+              id="player1-name"
+              value={player1Name}
+              onChange={(e) => setPlayer1Name(e.target.value)}
+              placeholder="Player 1"
+              className="mt-1.5 bg-duel-ink border-duel-brass/25 text-duel-parchment placeholder:text-duel-mist/50 focus-visible:ring-duel-brass/40"
+            />
           </div>
-
-          {/* Category Selection */}
-          <div className="space-y-4">
-            <div className="flex gap-2 flex-wrap">
-              {Object.keys(CLASS_CATEGORIES).map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setSelectedSubcategory(Object.keys(CLASS_CATEGORIES[category as CategoryKey])[0]);
-                  }}
-                  className="flex-1 min-w-0"
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {Object.keys(CLASS_CATEGORIES[selectedCategory as CategoryKey]).map((subcategory) => (
-                <Button
-                  key={subcategory}
-                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
-                  onClick={() => setSelectedSubcategory(subcategory)}
-                  className="flex-1 min-w-0"
-                >
-                  {subcategory}
-                </Button>
-              ))}
-            </div>
+          <div className="text-right">
+            <div className="text-lg font-display font-semibold text-duel-brass">{String(player1Class)}</div>
+            <div className="text-xs text-duel-mist">Selected</div>
           </div>
+        </div>
 
-          {/* Class Grid - Enhanced Responsive Design */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-duel-mist" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search classes…"
+              className="pl-9 bg-duel-ink border-duel-brass/25 text-duel-parchment placeholder:text-duel-mist/50 focus-visible:ring-duel-brass/40"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'Melee', 'Ranged', 'Caster'] as const).map((r) => (
+              <Button
+                key={r}
+                type="button"
+                size="sm"
+                variant={roleFilter === r ? 'default' : 'outline'}
+                onClick={() => setRoleFilter(r === 'all' ? 'all' : (r as RoleKey))}
+                className={
+                  roleFilter === r
+                    ? 'bg-duel-brass text-duel-void hover:bg-amber-400 font-medium'
+                    : 'border-duel-brass/25 text-duel-mist hover:bg-duel-brass/10 hover:text-duel-parchment'
+                }
+              >
+                {r === 'all' ? 'All' : r}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <ScrollArea className="h-[min(62vh,720px)] pr-3">
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4"
           >
-            {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]?.map((className) => 
-              renderClassCard(className as keyof typeof PLAYER_CLASSES, 1, className === player1Class)
+            {filteredClassNames.map((className) =>
+              renderClassCard(className as keyof typeof PLAYER_CLASSES, className === player1Class)
             )}
           </motion.div>
-        </TabsContent>
+        </ScrollArea>
+      </div>
 
-        {/* Player 2 Tab */}
-        <TabsContent value="player2" className="space-y-6">
-          <div className="bg-black/40 rounded-lg p-6 shadow-sm border border-amber-800/30">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1">
-                <Label htmlFor="player2-name" className="text-sm font-medium text-amber-200">Player 2 Name</Label>
-                <Input
-                  id="player2-name"
-                  value={player2Name}
-                  onChange={(e) => setPlayer2Name(e.target.value)}
-                  placeholder="Enter player 2 name"
-                  className="mt-1"
-                  disabled={isPlayer2Computer}
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="computer-mode"
-                    checked={isPlayer2Computer}
-                    onCheckedChange={setIsPlayer2Computer}
-                  />
-                  <Label htmlFor="computer-mode">Computer AI</Label>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-400">{player2Class}</div>
-                  <div className="text-sm text-amber-300">Selected Class</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Category Selection */}
-          <div className="space-y-4">
-            <div className="flex gap-2 flex-wrap">
-              {Object.keys(CLASS_CATEGORIES).map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setSelectedSubcategory(Object.keys(CLASS_CATEGORIES[category as CategoryKey])[0]);
-                  }}
-                  className="flex-1 min-w-0"
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {Object.keys(CLASS_CATEGORIES[selectedCategory as CategoryKey]).map((subcategory) => (
-                <Button
-                  key={subcategory}
-                  variant={selectedSubcategory === subcategory ? "default" : "outline"}
-                  onClick={() => setSelectedSubcategory(subcategory)}
-                  className="flex-1 min-w-0"
-                >
-                  {subcategory}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Class Grid - Enhanced Responsive Design */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
-          >
-            {CLASS_CATEGORIES[selectedCategory as CategoryKey][selectedSubcategory as SubcategoryKey]?.map((className) => 
-              renderClassCard(className as keyof typeof PLAYER_CLASSES, 2, className === player2Class)
-            )}
-          </motion.div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Start Battle Button */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="flex justify-center pt-6"
+        transition={{ delay: 0.15 }}
+        className="flex justify-center pt-2"
       >
         <Button
           onClick={handleBattleStart}
           size="lg"
-          className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-          disabled={!player1Class || !player2Class}
+          className="font-display tracking-wide px-10 py-6 text-lg rounded-xl bg-gradient-to-r from-duel-brass to-amber-600 text-duel-void hover:from-amber-400 hover:to-duel-flame shadow-lg shadow-black/40 border border-duel-brass/30"
+          disabled={!player1Class}
         >
           <Sword className="h-5 w-5 mr-2" />
-          Start Battle
+          Enter arena
           <ArrowRight className="h-5 w-5 ml-2" />
         </Button>
       </motion.div>

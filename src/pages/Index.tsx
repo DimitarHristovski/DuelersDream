@@ -1,208 +1,132 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ClassSelection } from '@/components/game/ClassSelection';
 import { BattleArena } from '@/components/game/BattleArena';
-import { createDefaultEffects, buildDefaultPlayer, Player } from '@/components/game/abilities';
-import { GameStats } from '@/components/game/BattleArena';
+import { GameHeader } from '@/components/game/GameHeader';
+import { buildDefaultPlayer, Player } from '@/components/game/abilities';
 import { PLAYER_CLASSES } from '@/components/game/class-data';
-import { MoveRight, Sword, Trophy } from 'lucide-react';
+import { pickRandomAiClass } from '@/components/game/class-categories';
+import { MoveRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function GamePage() {
-  // Game state
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [winner, setWinner] = useState<Player | null>(null);
-  
-  // Player selections
-  const [player1Class, setPlayer1Class] = useState<keyof typeof PLAYER_CLASSES>("Warrior");
-  const [player2Class, setPlayer2Class] = useState<keyof typeof PLAYER_CLASSES>("Mage");
-  const [player1Name, setPlayer1Name] = useState<string>("Player 1");
-  const [player2Name, setPlayer2Name] = useState<string>("Player 2");
-  const [isPlayer2Computer, setIsPlayer2Computer] = useState<boolean>(true);
-  
-  // Player game states
-  const [player1, setPlayer1] = useState(buildDefaultPlayer(
-    player1Name,
-    player1Class,
-    PLAYER_CLASSES[player1Class],
-    true,
-    false
-  ));
-  
-  // Update player1 when name changes
+
+  const [player1Class, setPlayer1Class] = useState<keyof typeof PLAYER_CLASSES>('Warrior');
+  const [player1Name, setPlayer1Name] = useState<string>('Player 1');
+  const opponentClassForMatchRef = useRef<keyof typeof PLAYER_CLASSES | null>(null);
+
+  const [player1, setPlayer1] = useState(
+    buildDefaultPlayer(player1Name, player1Class, PLAYER_CLASSES[player1Class], true, false)
+  );
+
   useEffect(() => {
-    setPlayer1(buildDefaultPlayer(
-      player1Name,
-      player1Class,
-      PLAYER_CLASSES[player1Class],
-      true,
-      false
-    ));
+    setPlayer1(buildDefaultPlayer(player1Name, player1Class, PLAYER_CLASSES[player1Class], true, false));
   }, [player1Name, player1Class]);
-  
-  const [player2, setPlayer2] = useState(buildDefaultPlayer(
-    player2Name,
-    player2Class,
-    PLAYER_CLASSES[player2Class],
-    false,
-    isPlayer2Computer
-  ));
-  
-  // Update player2 when computer setting changes
-  useEffect(() => {
-    setPlayer2(buildDefaultPlayer(
-      isPlayer2Computer ? `${player2Class} AI` : player2Name,
-      player2Class,
-      PLAYER_CLASSES[player2Class],
-      false,
-      isPlayer2Computer
-    ));
-  }, [isPlayer2Computer, player2Name, player2Class]);
-  
-  // Debug game state
-  useEffect(() => {
-    console.log('Game state changed:', { gameStarted, gameOver, winner });
-  }, [gameStarted, gameOver, winner]);
-  
-  // Game statistics
+
+  const [player2, setPlayer2] = useState(() => {
+    const aiClass = pickRandomAiClass('Warrior');
+    return buildDefaultPlayer(`${String(aiClass)} AI`, aiClass, PLAYER_CLASSES[aiClass], true, true);
+  });
+
   const [gameStats, setGameStats] = useState({
     wins: 0,
     losses: 0,
     gamesPlayed: 0,
-    lastGameResult: ""
+    lastGameResult: '',
   });
-  
-  // Load game stats from localStorage on component mount
+
   useEffect(() => {
     const savedStats = localStorage.getItem('duelGameStats');
     if (savedStats) {
       try {
         setGameStats(JSON.parse(savedStats));
       } catch (e) {
-        console.error("Error loading game stats from localStorage:", e);
+        console.error('Error loading game stats from localStorage:', e);
       }
     }
   }, []);
-  
 
-  
-  // Start the game with selected players
   const startGame = () => {
-    console.log('startGame called');
-    
-    // Create player 1
-    const newPlayer1 = buildDefaultPlayer(
-      player1Name,
-      player1Class,
-      PLAYER_CLASSES[player1Class],
-      true,
-      false
-    );
-    
-    // Create player 2 (can be computer or human)
-    const newPlayer2 = buildDefaultPlayer(
-      isPlayer2Computer ? `${player2Class} AI` : player2Name,
-      player2Class,
-      PLAYER_CLASSES[player2Class],
-      false,
-      isPlayer2Computer
-    );
-    
-    console.log('Created players:', { player1: newPlayer1, player2: newPlayer2 });
-    
+    const aiClass = opponentClassForMatchRef.current ?? pickRandomAiClass(player1Class);
+    opponentClassForMatchRef.current = null;
+
+    const newPlayer1 = buildDefaultPlayer(player1Name, player1Class, PLAYER_CLASSES[player1Class], true, false);
+    const newPlayer2 = buildDefaultPlayer(`${String(aiClass)} AI`, aiClass, PLAYER_CLASSES[aiClass], true, true);
+
     setPlayer1(newPlayer1);
     setPlayer2(newPlayer2);
-    
+
     setGameOver(false);
     setWinner(null);
     setGameStarted(true);
-    
-    console.log('Game started, gameStarted should be true');
   };
-  
-  // Reset game to selection screen
+
   const resetGame = () => {
     setGameStarted(false);
     setGameOver(false);
     setWinner(null);
   };
 
-  // Reset game statistics
   const resetStats = () => {
     const defaultStats = {
       wins: 0,
       losses: 0,
       gamesPlayed: 0,
-      lastGameResult: ""
+      lastGameResult: '',
     };
     setGameStats(defaultStats);
     localStorage.setItem('duelGameStats', JSON.stringify(defaultStats));
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-fixed relative overflow-hidden"
-         style={{ backgroundImage: "url('/assets/medieval-bg.jpg')" }}>
-      
-      {/* Dark overlay for background */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-0"></div>
-      
-      {/* Game content */}
-      <div className="relative z-10 w-full flex flex-col items-center justify-center py-8">
-        <div className="container mx-auto px-4">
-          {/* Game header with title and stats */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <h1 className="text-5xl font-bold mb-4 md:mb-0 text-amber-100 drop-shadow-lg 
-                        bg-gradient-to-br from-amber-200 to-amber-500 bg-clip-text text-transparent">
-              Medieval Combat Arena
-            </h1>
-            
-            {gameStats.gamesPlayed > 0 && (
-              <div className="flex items-center space-x-6 text-amber-200">
-                <div className="flex items-center">
-                  <Trophy className="w-5 h-5 mr-2 text-green-400" />
-                  <span>{gameStats.wins} Wins</span>
-                </div>
-                <div className="flex items-center">
-                  <Sword className="w-5 h-5 mr-2 text-red-400" />
-                  <span>{gameStats.losses} Losses</span>
-                </div>
-                <div>
-                  <span className="text-amber-300 font-medium">{gameStats.gamesPlayed} Games Played</span>
-                </div>
-                <Button
-                  onClick={resetStats}
-                  variant="outline"
-                  size="sm"
-                  className="ml-4 bg-red-900/70 text-red-200 hover:bg-red-800 hover:text-white border-red-700/50"
-                >
-                  Reset Scores
-                </Button>
-              </div>
-            )}
-          </div>
-          
+    <div className="min-h-screen flex flex-col bg-duel-void text-stone-200 relative overflow-x-hidden">
+      <div
+        className="pointer-events-none fixed inset-0 bg-[url('/assets/medieval-bg.jpg')] bg-cover bg-center opacity-[0.12]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed inset-0 bg-gradient-to-b from-duel-void via-duel-ink/95 to-duel-void"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none fixed inset-0 opacity-40"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 162, 39, 0.12), transparent),
+            radial-gradient(ellipse 60% 40% at 100% 50%, rgba(136, 19, 55, 0.08), transparent)`,
+        }}
+        aria-hidden
+      />
+
+      <GameHeader
+        phase={gameStarted ? 'battle' : 'selection'}
+        gamesPlayed={gameStats.gamesPlayed}
+        wins={gameStats.wins}
+        losses={gameStats.losses}
+        onResetStats={resetStats}
+      />
+
+      <main className="relative z-10 flex-1 w-full">
+        <div className="container mx-auto px-4 py-8 md:py-10 max-w-[1600px]">
           {!gameStarted && (
-            <div className="animate-in slide-in-from-bottom-8 duration-700">
-              <ClassSelection 
+            <div className="animate-in slide-in-from-bottom-8 duration-700 max-w-7xl mx-auto">
+              <ClassSelection
                 player1Class={player1Class}
                 setPlayer1Class={setPlayer1Class}
-                player2Class={player2Class}
-                setPlayer2Class={setPlayer2Class}
                 player1Name={player1Name}
                 setPlayer1Name={setPlayer1Name}
-                player2Name={player2Name}
-                setPlayer2Name={setPlayer2Name}
-                isPlayer2Computer={isPlayer2Computer}
-                setIsPlayer2Computer={setIsPlayer2Computer}
+                onOpponentClassLockedIn={(c) => {
+                  opponentClassForMatchRef.current = c;
+                }}
                 startGame={startGame}
               />
             </div>
           )}
-          
+
           {gameStarted && (
-            <div className="animate-in fade-in-0 duration-700">
-              <div className="text-white text-center mb-4">DEBUG: Game started, rendering BattleArena</div>
-              <BattleArena 
+            <div className="animate-in fade-in-0 duration-700 space-y-8">
+              <BattleArena
                 player1={player1}
                 player2={player2}
                 setPlayer1={setPlayer1}
@@ -215,25 +139,29 @@ export default function GamePage() {
                 setGameStats={setGameStats}
                 resetGame={resetGame}
               />
-              
+
               {gameOver && (
-                <div className="flex justify-center mt-6 animate-in slide-in-from-bottom-8 duration-700">
-                  <Button 
+                <div className="flex justify-center animate-in slide-in-from-bottom-8 duration-700">
+                  <Button
                     onClick={resetGame}
-                    className="bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800
-                            text-white font-bold py-3 px-8 rounded-lg shadow-lg flex items-center"
+                    size="lg"
+                    className="font-display tracking-wide px-10 py-6 text-base rounded-xl bg-gradient-to-r from-duel-brass to-amber-600 text-duel-void hover:from-amber-400 hover:to-duel-flame shadow-lg shadow-black/40 border border-duel-brass/40"
                   >
-                    New Battle <MoveRight className="ml-2 h-5 w-5" />
+                    New battle
+                    <MoveRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               )}
             </div>
           )}
         </div>
-      </div>
-      
-      <footer className="mt-8 text-center text-amber-200/70 text-sm relative z-10">
-        <p>Medieval Combat Arena &copy; 2025</p>
+      </main>
+
+      <footer className="relative z-10 border-t border-duel-brass/15 bg-duel-void/80 backdrop-blur-sm py-6 mt-auto">
+        <div className="container mx-auto px-4 text-center text-xs text-duel-mist">
+          <p className="font-display text-duel-brass/80 text-sm mb-1">Duelers Dream</p>
+          <p className="text-duel-mist/80">Arena duel · single player vs random AI</p>
+        </div>
       </footer>
     </div>
   );

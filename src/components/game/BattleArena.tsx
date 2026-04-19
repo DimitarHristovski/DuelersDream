@@ -17,6 +17,7 @@ import {
   applyBleedingEffect
 } from './abilities';
 import { BattleArenaUI } from './BattleArenaUI';
+import { tickRealtimeSecond } from './battle-realtime-tick';
 
 export interface GameStats {
   wins: number;
@@ -54,40 +55,78 @@ export const BattleArena = ({
 }: BattleArenaProps) => {
   const { toast } = useToast();
   const [battleLog, setBattleLog] = useState<string[]>([]);
-  const [turnTimeLeft, setTurnTimeLeft] = useState<number>(20);
-  const [turnTimerActive, setTurnTimerActive] = useState<boolean>(true);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const computerMoveTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoBasicAttackTimer1 = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoBasicAttackTimer2 = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const battleTickIndexRef = useRef(0);
+  const playersRef = useRef({ p1: player1, p2: player2 });
+  playersRef.current = { p1: player1, p2: player2 };
+
+  const [aiThinking, setAiThinking] = useState(false);
+  const handleAttackFromRef = useRef<(attackerNum: 1 | 2) => void>(() => {});
+  const handleAbilityUseRef = useRef<(playerNum: 1 | 2, abilityIndex: number) => void>(() => {});
+
+  const AUTO_BASIC_ATTACK_MS = 2200;
+
+  const clearAutoBasicAttackTimer = (who: 1 | 2 | 'both') => {
+    if (who === 1 || who === 'both') {
+      if (autoBasicAttackTimer1.current) {
+        clearTimeout(autoBasicAttackTimer1.current);
+        autoBasicAttackTimer1.current = null;
+      }
+    }
+    if (who === 2 || who === 'both') {
+      if (autoBasicAttackTimer2.current) {
+        clearTimeout(autoBasicAttackTimer2.current);
+        autoBasicAttackTimer2.current = null;
+      }
+    }
+  };
+
+  const scheduleAutoBasicAttack = (who: 1 | 2) => {
+    if (gameOver) return;
+    const p = who === 1 ? playersRef.current.p1 : playersRef.current.p2;
+    if (p.isComputer) return;
+    const ref = who === 1 ? autoBasicAttackTimer1 : autoBasicAttackTimer2;
+    if (ref.current) clearTimeout(ref.current);
+    ref.current = setTimeout(() => {
+      ref.current = null;
+      handleAttackFromRef.current(who);
+    }, AUTO_BASIC_ATTACK_MS);
+  };
 
   useEffect(() => {
     setBattleLog([
       `Battle begins! ${player1.name} (${player1.className}) vs ${player2.name} (${player2.className})`,
-      `${player1.isActive ? player1.name : player2.name}'s turn to start!`,
+      `Real-time — both fighters act simultaneously.`,
     ]);
   }, []);
 
   const addLogMessage = (message: string) => {
-    setBattleLog((prev) => [message, ...prev.slice(0, 9)]);
+    setBattleLog((prev) => [message, ...prev.slice(0, 499)]);
   };
 
-  const getActiveAndDefender = (): [Player, Player, React.Dispatch<React.SetStateAction<Player>>, React.Dispatch<React.SetStateAction<Player>>] => {
-    if (player1.isActive) return [player1, player2, setPlayer1, setPlayer2];
+  const getAttackerDefender = (
+    attackerNum: 1 | 2
+  ): [Player, Player, React.Dispatch<React.SetStateAction<Player>>, React.Dispatch<React.SetStateAction<Player>>] => {
+    if (attackerNum === 1) return [player1, player2, setPlayer1, setPlayer2];
     return [player2, player1, setPlayer2, setPlayer1];
   };
 
-  const handleAttack = () => {
+  const handleAttackFrom = (attackerNum: 1 | 2) => {
     if (gameOver) return;
-    const [attacker, defender, setAttacker, setDefender] = getActiveAndDefender();
+    clearAutoBasicAttackTimer(attackerNum);
+    const [attacker, defender, setAttacker, setDefender] = getAttackerDefender(attackerNum);
 
     // Cannot attack untargetable target
     if (defender.effects.untargetable && defender.effects.untargetableDuration > 0) {
       addLogMessage(`${defender.name} is untargetable! The attack misses.`);
-      endOfAction(true);
+      scheduleAutoBasicAttack(attackerNum);
       return;
     }
 
     if (attacker.effects.stunned) {
       toast({ title: 'Stunned!', description: 'You are stunned and cannot attack.', variant: 'destructive' });
+      scheduleAutoBasicAttack(attackerNum);
       return;
     }
 
@@ -107,7 +146,7 @@ export const BattleArena = ({
           }
         }));
         
-        endOfAction(true);
+        scheduleAutoBasicAttack(attackerNum);
         return;
       }
     }
@@ -132,14 +171,6 @@ export const BattleArena = ({
     }
     
     const totalBoost = boost + mutagensBoost;
-    console.log('Attack calculation:', {
-      playerName: attacker.name,
-      attackMin: attacker.attackMin,
-      attackMax: attacker.attackMax,
-      attackBoost: totalBoost,
-      attackReduction: reduction,
-      effects: attacker.effects
-    });
     let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, totalBoost, reduction);
     
     // Apply next hit bonus
@@ -209,7 +240,7 @@ export const BattleArena = ({
         abilities: prev.abilities.map(ability => {
           if (ability.name === "Divine Execution" && ability.currentCooldown > 0) {
             const newCooldown = Math.max(0, ability.currentCooldown - 1);
-            addLogMessage(`${attacker.name}'s Executioner's Zeal reduces Divine Execution cooldown by 1! (${newCooldown} turns remaining)`);
+            addLogMessage(`${attacker.name}'s Executioner's Zeal reduces Divine Execution cooldown by 1s! (${newCooldown}s remaining)`);
             return { ...ability, currentCooldown: newCooldown };
           }
           return ability;
@@ -217,528 +248,7 @@ export const BattleArena = ({
       }));
     }
 
-    endOfAction(newHealth > 0);
-  };
-
-  const endOfAction = (shouldContinue: boolean) => {
-    // Reset turn timer
-    setTurnTimeLeft(20);
-    if (shouldContinue) switchTurns();
-  };
-
-  const switchTurns = () => {
-    // Toggle active player, reduce cooldowns for the player becoming active, and regen mana
-    setPlayer1((prev) => {
-      if (prev.isActive) return { ...prev, isActive: false };
-      const updatedAbilities = prev.abilities.map((a) => ({
-        ...a,
-        currentCooldown: a.currentCooldown && a.currentCooldown > 0 ? a.currentCooldown - 1 : 0,
-      }));
-      const manaRegen = 5;
-      let newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
-      if (newMana > prev.mana) addLogMessage(`${prev.name} regenerates ${manaRegen} mana.`);
-
-      // expire temporary attack boost
-      const updatedEffects = { ...prev.effects };
-      if (updatedEffects.attackBoostDuration > 0) {
-        updatedEffects.attackBoostDuration = Math.max(0, updatedEffects.attackBoostDuration - 1);
-        if (updatedEffects.attackBoostDuration === 0) {
-          updatedEffects.attackBoost = 0;
-          addLogMessage(`${prev.name}'s attack boost has worn off.`);
-        }
-      }
-
-      // expire stun effect
-      if (updatedEffects.stunDuration > 0) {
-        updatedEffects.stunDuration = Math.max(0, updatedEffects.stunDuration - 1);
-        if (updatedEffects.stunDuration === 0) {
-          updatedEffects.stunned = false;
-          addLogMessage(`${prev.name} is no longer stunned!`);
-        }
-      }
-
-      // expire attack reduction effect
-      if (updatedEffects.attackReductionDuration > 0) {
-        updatedEffects.attackReductionDuration = Math.max(0, updatedEffects.attackReductionDuration - 1);
-        if (updatedEffects.attackReductionDuration === 0) {
-          updatedEffects.attackReduction = 0;
-          addLogMessage(`${prev.name}'s attack reduction has worn off.`);
-        }
-      }
-
-      // expire shield effect
-      if (updatedEffects.shieldDuration > 0) {
-        updatedEffects.shieldDuration = Math.max(0, updatedEffects.shieldDuration - 1);
-        if (updatedEffects.shieldDuration === 0) {
-          updatedEffects.shield = 0;
-          addLogMessage(`${prev.name}'s shield has worn off.`);
-        }
-      }
-
-      // expire evasion effect
-      if (updatedEffects.evasionDuration > 0) {
-        updatedEffects.evasionDuration = Math.max(0, updatedEffects.evasionDuration - 1);
-        if (updatedEffects.evasionDuration === 0) {
-          updatedEffects.evasion = 0;
-          addLogMessage(`${prev.name}'s evasion has worn off.`);
-        }
-      }
-
-      // expire untargetable effect
-      if (updatedEffects.untargetableDuration > 0) {
-        updatedEffects.untargetableDuration = Math.max(0, updatedEffects.untargetableDuration - 1);
-        if (updatedEffects.untargetableDuration === 0) {
-          updatedEffects.untargetable = false;
-          addLogMessage(`${prev.name} emerges from the shadows.`);
-        }
-      }
-
-      // resolve ambush strike if pending and delay elapsed
-      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
-        const minD = prev.effects.ambushMin || 60;
-        const maxD = prev.effects.ambushMax || 90;
-        const damage = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
-        // Determine opponent setter
-        setPlayer2(o => {
-          const newHealth = Math.max(0, o.health - damage);
-          addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
-          return { ...o, health: newHealth };
-        });
-      }
-
-      // decrement ambush delay if any
-      if (updatedEffects.ambushDelay > 0) {
-        updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
-      }
-      // clear ambushPending after strike
-      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
-        updatedEffects.ambushPending = false;
-        updatedEffects.ambushMin = 0;
-        updatedEffects.ambushMax = 0;
-      }
-
-      // expire repel abilities effect
-      if (updatedEffects.repelAbilitiesDuration > 0) {
-        updatedEffects.repelAbilitiesDuration = Math.max(0, updatedEffects.repelAbilitiesDuration - 1);
-        if (updatedEffects.repelAbilitiesDuration === 0) {
-          updatedEffects.repelAbilities = false;
-          addLogMessage(`${prev.name}'s repelling shield fades.`);
-        }
-      }
-
-      // expire marked target effect
-      if (updatedEffects.markDuration > 0) {
-        updatedEffects.markDuration = Math.max(0, updatedEffects.markDuration - 1);
-        if (updatedEffects.markDuration === 0) {
-          updatedEffects.marked = false;
-          updatedEffects.markDamageIncrease = 0;
-          addLogMessage(`${prev.name} is no longer marked.`);
-        }
-      }
-
-      // expire bleeding effect
-      if (updatedEffects.bleedDuration > 0) {
-        updatedEffects.bleedDuration = Math.max(0, updatedEffects.bleedDuration - 1);
-        if (updatedEffects.bleedDuration === 0) {
-          updatedEffects.bleeding = 0;
-          addLogMessage(`${prev.name} stops bleeding.`);
-        }
-      }
-
-      // expire weapon enhancement effect
-      if (updatedEffects.weaponEnhancementDuration > 0) {
-        updatedEffects.weaponEnhancementDuration = Math.max(0, updatedEffects.weaponEnhancementDuration - 1);
-        if (updatedEffects.weaponEnhancementDuration === 0) {
-          updatedEffects.weaponEnhancement = 0;
-          updatedEffects.weaponEnhancementElement = '';
-          addLogMessage(`${prev.name}'s weapon enhancement has worn off.`);
-        }
-      }
-
-      // expire spell damage boost effect
-      if (updatedEffects.spellDamageBoostDuration > 0) {
-        updatedEffects.spellDamageBoostDuration = Math.max(0, updatedEffects.spellDamageBoostDuration - 1);
-        if (updatedEffects.spellDamageBoostDuration === 0) {
-          updatedEffects.spellDamageBoost = 0;
-          addLogMessage(`${prev.name}'s spell damage boost has worn off.`);
-        }
-      }
-
-      // expire damage reduction effect
-      if (updatedEffects.damageReductionDuration > 0) {
-        updatedEffects.damageReductionDuration = Math.max(0, updatedEffects.damageReductionDuration - 1);
-        if (updatedEffects.damageReductionDuration === 0) {
-          updatedEffects.damageReduction = 0;
-          addLogMessage(`${prev.name}'s damage reduction has worn off.`);
-        }
-      }
-
-      // expire next hit bonus effect
-      if (updatedEffects.nextHitBonusDuration > 0) {
-        updatedEffects.nextHitBonusDuration = Math.max(0, updatedEffects.nextHitBonusDuration - 1);
-        if (updatedEffects.nextHitBonusDuration === 0) {
-          updatedEffects.nextHitBonus = 0;
-          addLogMessage(`${prev.name}'s next hit bonus has worn off.`);
-        }
-      }
-
-      // Apply permanent regeneration if present (heals per turn)
-      let interimHealth = prev.health;
-      if (updatedEffects.regeneration && updatedEffects.regeneration > 0 && prev.health < prev.maxHealth) {
-        const healed = Math.min(updatedEffects.regeneration, prev.maxHealth - prev.health);
-        interimHealth = prev.health + healed;
-        addLogMessage(`${prev.name} regenerates ${healed} health.`);
-      }
-
-      // Check for Totemic Strength passive - parse values from description
-      const totemicStrengthAbility = prev.abilities.find(ability => ability.name === "Totemic Strength");
-      if (totemicStrengthAbility && prev.health < prev.maxHealth) {
-        const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
-        const healAmount = healMatch ? parseInt(healMatch[1]) : 20;
-        const healed = Math.min(healAmount, prev.maxHealth - interimHealth);
-        if (healed > 0) {
-          interimHealth += healed;
-          addLogMessage(`${prev.name}'s Totemic Strength regenerates ${healed} health.`);
-        }
-      }
-
-      // Summoned creature damage to opponent at start of owner's turn (non-lethal)
-      if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
-        const petDamage = prev.effects.summonedCreature.damage;
-        setPlayer2(o => {
-          const reduced = Math.max(1, o.health - petDamage);
-          if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
-          return { ...o, health: reduced };
-        });
-      }
-
-      // Process multiple summoned creatures
-      if (prev.effects.summonedCreatures && prev.effects.summonedCreatures.length > 0) {
-        let totalDamage = 0;
-        const activeCreatures = prev.effects.summonedCreatures.filter(creature => creature.turnsLeft > 0);
-        
-        activeCreatures.forEach(creature => {
-          let creatureDamage = creature.damage;
-          // Apply summoned creature damage boost if active
-          if (prev.effects.summonedCreatureDamageBoost && prev.effects.summonedCreatureDamageBoost > 0) {
-            creatureDamage = Math.floor(creatureDamage * (1 + prev.effects.summonedCreatureDamageBoost / 100));
-          }
-          totalDamage += creatureDamage;
-        });
-        
-        if (totalDamage > 0) {
-          setPlayer2(o => {
-            const reduced = Math.max(1, o.health - totalDamage);
-            addLogMessage(`${prev.name}'s summoned creatures deal ${totalDamage} total damage to ${o.name}!`);
-            return { ...o, health: reduced };
-          });
-        }
-        
-        // Decrement turns for all creatures and remove expired ones
-        updatedEffects.summonedCreatures = prev.effects.summonedCreatures
-          .map(creature => ({ ...creature, turnsLeft: creature.turnsLeft - 1 }))
-          .filter(creature => creature.turnsLeft > 0);
-      }
-
-      // Apply bleeding damage
-      if (updatedEffects.bleeding > 0) {
-        const bleedDamage = updatedEffects.bleedDamage || 6;
-        const newHealth = Math.max(1, interimHealth - bleedDamage);
-        addLogMessage(`${prev.name} takes ${bleedDamage} bleeding damage!`);
-        return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
-      }
-
-      // Apply poison damage
-      if (updatedEffects.poisoned > 0) {
-        const poisonDamage = updatedEffects.poisonDamage || 8;
-        const newHealth = Math.max(1, interimHealth - poisonDamage);
-        addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
-        return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
-      }
-
-      // Check for Mana Overflow passive - parse values from description
-      const manaOverflowAbility = prev.abilities.find(ability => ability.name === "Mana Overflow");
-      if (manaOverflowAbility) {
-        const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
-        const manaGain = manaMatch ? parseInt(manaMatch[1]) : 20;
-        const extraMana = Math.min(manaGain, prev.maxMana - newMana);
-        if (extraMana > 0) {
-          newMana += extraMana;
-          addLogMessage(`${prev.name}'s Mana Overflow grants +${extraMana} mana!`);
-        }
-      }
-
-      // Check for Elemental Harmony passive - parse values from description
-      const elementalHarmonyAbility = prev.abilities.find(ability => ability.name === "Elemental Harmony");
-      if (elementalHarmonyAbility) {
-        const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
-        const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
-        const attackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
-        const spellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
-        
-        updatedEffects.attackBoost = (updatedEffects.attackBoost || 0) + attackGain;
-        updatedEffects.spellDamageBoost = (updatedEffects.spellDamageBoost || 0) + spellGain;
-        addLogMessage(`${prev.name}'s Elemental Harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`);
-      }
-
-      return { ...prev, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects, health: interimHealth };
-    });
-
-    setPlayer2((prev) => {
-      if (prev.isActive) return { ...prev, isActive: false };
-      const updatedAbilities = prev.abilities.map((a) => ({
-        ...a,
-        currentCooldown: a.currentCooldown && a.currentCooldown > 0 ? a.currentCooldown - 1 : 0,
-      }));
-      const manaRegen = 15;
-      let newMana = Math.min(prev.maxMana, prev.mana + manaRegen);
-      if (newMana > prev.mana) addLogMessage(`${prev.name} regenerates ${manaRegen} mana.`);
-
-      // expire temporary attack boost
-      const updatedEffects = { ...prev.effects };
-      if (updatedEffects.attackBoostDuration > 0) {
-        updatedEffects.attackBoostDuration = Math.max(0, updatedEffects.attackBoostDuration - 1);
-        if (updatedEffects.attackBoostDuration === 0) {
-          updatedEffects.attackBoost = 0;
-          addLogMessage(`${prev.name}'s attack boost has worn off.`);
-        }
-      }
-
-      // expire stun effect
-      if (updatedEffects.stunDuration > 0) {
-        updatedEffects.stunDuration = Math.max(0, updatedEffects.stunDuration - 1);
-        if (updatedEffects.stunDuration === 0) {
-          updatedEffects.stunned = false;
-          addLogMessage(`${prev.name} is no longer stunned!`);
-        }
-      }
-
-      // expire attack reduction effect
-      if (updatedEffects.attackReductionDuration > 0) {
-        updatedEffects.attackReductionDuration = Math.max(0, updatedEffects.attackReductionDuration - 1);
-        if (updatedEffects.attackReductionDuration === 0) {
-          updatedEffects.attackReduction = 0;
-          addLogMessage(`${prev.name}'s attack reduction has worn off.`);
-        }
-      }
-
-      // expire shield effect
-      if (updatedEffects.shieldDuration > 0) {
-        updatedEffects.shieldDuration = Math.max(0, updatedEffects.shieldDuration - 1);
-        if (updatedEffects.shieldDuration === 0) {
-          updatedEffects.shield = 0;
-          addLogMessage(`${prev.name}'s shield has worn off.`);
-        }
-      }
-
-      // expire evasion effect
-      if (updatedEffects.evasionDuration > 0) {
-        updatedEffects.evasionDuration = Math.max(0, updatedEffects.evasionDuration - 1);
-        if (updatedEffects.evasionDuration === 0) {
-          updatedEffects.evasion = 0;
-          addLogMessage(`${prev.name}'s evasion has worn off.`);
-        }
-      }
-
-      // expire untargetable effect
-      if (updatedEffects.untargetableDuration > 0) {
-        updatedEffects.untargetableDuration = Math.max(0, updatedEffects.untargetableDuration - 1);
-        if (updatedEffects.untargetableDuration === 0) {
-          updatedEffects.untargetable = false;
-          addLogMessage(`${prev.name} emerges from the shadows.`);
-        }
-      }
-
-      // resolve ambush strike if pending and delay elapsed
-      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
-        const minD = prev.effects.ambushMin || 60;
-        const maxD = prev.effects.ambushMax || 90;
-        const damage = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
-        setPlayer1(o => {
-          const newHealth = Math.max(0, o.health - damage);
-          addLogMessage(`${prev.name} strikes from the shadows for ${damage} damage!`);
-          return { ...o, health: newHealth };
-        });
-      }
-
-      // decrement ambush delay if any
-      if (updatedEffects.ambushDelay > 0) {
-        updatedEffects.ambushDelay = Math.max(0, updatedEffects.ambushDelay - 1);
-      }
-      // clear ambushPending after strike
-      if (prev.effects.ambushPending && prev.effects.ambushDelay <= 0) {
-        updatedEffects.ambushPending = false;
-        updatedEffects.ambushMin = 0;
-        updatedEffects.ambushMax = 0;
-      }
-
-      // expire repel abilities effect
-      if (updatedEffects.repelAbilitiesDuration > 0) {
-        updatedEffects.repelAbilitiesDuration = Math.max(0, updatedEffects.repelAbilitiesDuration - 1);
-        if (updatedEffects.repelAbilitiesDuration === 0) {
-          updatedEffects.repelAbilities = false;
-          addLogMessage(`${prev.name}'s repelling shield fades.`);
-        }
-      }
-
-      // expire marked target effect
-      if (updatedEffects.markDuration > 0) {
-        updatedEffects.markDuration = Math.max(0, updatedEffects.markDuration - 1);
-        if (updatedEffects.markDuration === 0) {
-          updatedEffects.marked = false;
-          updatedEffects.markDamageIncrease = 0;
-          updatedEffects.markDuration = 0;
-          addLogMessage(`${prev.name} is no longer marked.`);
-        }
-      }
-
-      // expire bleeding effect
-      if (updatedEffects.bleedDuration > 0) {
-        updatedEffects.bleedDuration = Math.max(0, updatedEffects.bleedDuration - 1);
-        if (updatedEffects.bleedDuration === 0) {
-          updatedEffects.bleeding = 0;
-          addLogMessage(`${prev.name} stops bleeding.`);
-        }
-      }
-
-      // expire weapon enhancement effect
-      if (updatedEffects.weaponEnhancementDuration > 0) {
-        updatedEffects.weaponEnhancementDuration = Math.max(0, updatedEffects.weaponEnhancementDuration - 1);
-        if (updatedEffects.weaponEnhancementDuration === 0) {
-          updatedEffects.weaponEnhancement = 0;
-          updatedEffects.weaponEnhancementElement = '';
-          addLogMessage(`${prev.name}'s weapon enhancement has worn off.`);
-        }
-      }
-
-      // expire spell damage boost effect
-      if (updatedEffects.spellDamageBoostDuration > 0) {
-        updatedEffects.spellDamageBoostDuration = Math.max(0, updatedEffects.spellDamageBoostDuration - 1);
-        if (updatedEffects.spellDamageBoostDuration === 0) {
-          updatedEffects.spellDamageBoost = 0;
-          addLogMessage(`${prev.name}'s spell damage boost has worn off.`);
-        }
-      }
-
-      // expire damage reduction effect
-      if (updatedEffects.damageReductionDuration > 0) {
-        updatedEffects.damageReductionDuration = Math.max(0, updatedEffects.damageReductionDuration - 1);
-        if (updatedEffects.damageReductionDuration === 0) {
-          updatedEffects.damageReduction = 0;
-          addLogMessage(`${prev.name}'s damage reduction has worn off.`);
-        }
-      }
-
-      // expire next hit bonus effect
-      if (updatedEffects.nextHitBonusDuration > 0) {
-        updatedEffects.nextHitBonusDuration = Math.max(0, updatedEffects.nextHitBonusDuration - 1);
-        if (updatedEffects.nextHitBonusDuration === 0) {
-          updatedEffects.nextHitBonus = 0;
-          addLogMessage(`${prev.name}'s next hit bonus has worn off.`);
-        }
-      }
-
-      // Apply permanent regeneration if present (heals per turn)
-      let interimHealth = prev.health;
-      if (updatedEffects.regeneration && updatedEffects.regeneration > 0 && prev.health < prev.maxHealth) {
-        const healed = Math.min(updatedEffects.regeneration, prev.maxHealth - prev.health);
-        interimHealth = prev.health + healed;
-        addLogMessage(`${prev.name} regenerates ${healed} health.`);
-      }
-
-      // Check for Totemic Strength passive - parse values from description
-      const totemicStrengthAbility = prev.abilities.find(ability => ability.name === "Totemic Strength");
-      if (totemicStrengthAbility && prev.health < prev.maxHealth) {
-        const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
-        const healAmount = healMatch ? parseInt(healMatch[1]) : 20;
-        const healed = Math.min(healAmount, prev.maxHealth - interimHealth);
-        if (healed > 0) {
-          interimHealth += healed;
-          addLogMessage(`${prev.name}'s Totemic Strength regenerates ${healed} health.`);
-        }
-      }
-
-      // Summoned creature damage to opponent at start of owner's turn (non-lethal)
-      if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
-        const petDamage = prev.effects.summonedCreature.damage;
-        setPlayer1(o => {
-          const reduced = Math.max(1, o.health - petDamage);
-          if (petDamage > 0) addLogMessage(`${prev.name}'s wolf bites ${o.name} for ${petDamage} damage!`);
-          return { ...o, health: reduced };
-        });
-      }
-
-      // Process multiple summoned creatures
-      if (prev.effects.summonedCreatures && prev.effects.summonedCreatures.length > 0) {
-        let totalDamage = 0;
-        const activeCreatures = prev.effects.summonedCreatures.filter(creature => creature.turnsLeft > 0);
-        
-        activeCreatures.forEach(creature => {
-          let creatureDamage = creature.damage;
-          // Apply summoned creature damage boost if active
-          if (prev.effects.summonedCreatureDamageBoost && prev.effects.summonedCreatureDamageBoost > 0) {
-            creatureDamage = Math.floor(creatureDamage * (1 + prev.effects.summonedCreatureDamageBoost / 100));
-          }
-          totalDamage += creatureDamage;
-        });
-        
-        if (totalDamage > 0) {
-          setPlayer1(o => {
-            const reduced = Math.max(1, o.health - totalDamage);
-            addLogMessage(`${prev.name}'s summoned creatures deal ${totalDamage} total damage to ${o.name}!`);
-            return { ...o, health: reduced };
-          });
-        }
-        
-        // Decrement turns for all creatures and remove expired ones
-        updatedEffects.summonedCreatures = prev.effects.summonedCreatures
-          .map(creature => ({ ...creature, turnsLeft: creature.turnsLeft - 1 }))
-          .filter(creature => creature.turnsLeft > 0);
-      }
-
-      // Apply bleeding damage
-      if (updatedEffects.bleeding > 0) {
-        const bleedDamage = updatedEffects.bleedDamage || 6;
-        const newHealth = Math.max(1, interimHealth - bleedDamage);
-        addLogMessage(`${prev.name} takes ${bleedDamage} bleeding damage!`);
-        return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
-      }
-
-      // Apply poison damage
-      if (updatedEffects.poisoned > 0) {
-        const poisonDamage = updatedEffects.poisonDamage || 8;
-        const newHealth = Math.max(1, interimHealth - poisonDamage);
-        addLogMessage(`${prev.name} takes ${poisonDamage} poison damage!`);
-        return { ...prev, health: newHealth, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects };
-      }
-
-      // Check for Mana Overflow passive - parse values from description
-      const manaOverflowAbility = prev.abilities.find(ability => ability.name === "Mana Overflow");
-      if (manaOverflowAbility) {
-        const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
-        const manaGain = manaMatch ? parseInt(manaMatch[1]) : 20;
-        const extraMana = Math.min(manaGain, prev.maxMana - newMana);
-        if (extraMana > 0) {
-          newMana += extraMana;
-          addLogMessage(`${prev.name}'s Mana Overflow grants +${extraMana} mana!`);
-        }
-      }
-
-      // Check for Elemental Harmony passive - parse values from description
-      const elementalHarmonyAbility = prev.abilities.find(ability => ability.name === "Elemental Harmony");
-      if (elementalHarmonyAbility) {
-        const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
-        const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
-        const attackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
-        const spellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
-        
-        updatedEffects.attackBoost = (updatedEffects.attackBoost || 0) + attackGain;
-        updatedEffects.spellDamageBoost = (updatedEffects.spellDamageBoost || 0) + spellGain;
-        addLogMessage(`${prev.name}'s Elemental Harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`);
-      }
-
-      return { ...prev, isActive: true, abilities: updatedAbilities, mana: newMana, effects: updatedEffects, health: interimHealth };
-    });
+    scheduleAutoBasicAttack(attackerNum);
   };
 
   const handleAbilityUse = (playerNum: 1 | 2, abilityIndex: number) => {
@@ -749,18 +259,6 @@ export const BattleArena = ({
     const setPlayer = playerNum === 1 ? setPlayer1 : setPlayer2;
     const setOpponent = playerNum === 1 ? setPlayer2 : setPlayer1;
 
-    console.log('=== HANDLE ABILITY USE ===');
-    console.log('Player:', player.name);
-    console.log('Ability index:', abilityIndex);
-    console.log('All abilities:', player.abilities.map(a => a.name));
-    console.log('Selected ability:', player.abilities[abilityIndex]?.name);
-    console.log('========================');
-
-    if (!player.isActive) {
-      toast({ title: 'Not your turn!', description: 'Wait for your turn to use abilities.', variant: 'destructive' });
-      return;
-    }
-
     if (player.effects.stunned) {
       toast({ title: 'Stunned!', description: 'You are stunned and cannot use abilities.', variant: 'destructive' });
       return;
@@ -769,9 +267,10 @@ export const BattleArena = ({
     const ability = player.abilities[abilityIndex];
 
     if ((ability.currentCooldown || 0) > 0) {
+      const secs = Math.ceil(ability.currentCooldown || 0);
       toast({
         title: 'Ability on cooldown!',
-        description: `${ability.name} will be available in ${ability.currentCooldown} turns.`,
+        description: `${ability.name} will be available in ${secs}s.`,
         variant: 'destructive',
       });
       return;
@@ -786,6 +285,8 @@ export const BattleArena = ({
       return;
     }
 
+    clearAutoBasicAttackTimer(playerNum);
+
     // Spend mana
     if (ability.manaCost) {
       setPlayer((prev) => ({ ...prev, mana: Math.max(0, prev.mana - ability.manaCost!) }));
@@ -793,7 +294,7 @@ export const BattleArena = ({
     }
 
     // Apply the ability effect
-    const continueBattle = applyAbilityByDescription(player, opponent, setPlayer, setOpponent, ability);
+    applyAbilityByDescription(player, opponent, setPlayer, setOpponent, ability);
 
     // Put ability on cooldown
     setPlayer((prev) => {
@@ -802,72 +303,72 @@ export const BattleArena = ({
       return { ...prev, abilities: updated };
     });
 
-    endOfAction(continueBattle);
+    scheduleAutoBasicAttack(playerNum);
   };
 
-  // Timer for turn-based gameplay
+  /** Real-time: cooldowns, mana regen, buff durations, DoTs — both fighters every second. */
   useEffect(() => {
-    if (turnTimerActive && !gameOver) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setTurnTimeLeft((prev) => {
-          if (prev <= 1) {
-            const activePlayer = player1.isActive ? player1 : player2;
-            addLogMessage(`${activePlayer.name} took too long! Turn skipped.`);
-            switchTurns();
-            return 20;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [turnTimerActive, gameOver]);
-
-  // Computer AI
-  const computerTurn = () => {
     if (gameOver) return;
-    if (computerMoveTimer.current) clearTimeout(computerMoveTimer.current);
-    computerMoveTimer.current = setTimeout(() => {
-      const computerPlayer = player1.isActive && player1.isComputer ? player1 : player2.isActive && player2.isComputer ? player2 : null;
-      if (!computerPlayer) return;
+    const id = window.setInterval(() => {
+      battleTickIndexRef.current += 1;
+      const { p1, p2 } = playersRef.current;
+      const [np1, np2] = tickRealtimeSecond(p1, p2, battleTickIndexRef.current, addLogMessage);
+      setPlayer1(np1);
+      setPlayer2(np2);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [gameOver]);
 
-      const availableAbilities = computerPlayer.abilities
-        .map((ability, index) => ({ ability, index }))
-        .filter(({ ability }) => {
-          // Check if ability is passive (cannot be activated)
-          const isPassive = (ability.cooldown === 0 && ability.manaCost === 0) || 
-            ability.name === "Mutagens" || ability.name === "Monster Lore" || 
-            ability.name === "Alchemy Mastery" || ability.name === "Totemic Strength" || 
-            ability.name === "Spirit Endurance" || ability.name === "Elemental Mastery" ||
-            ability.name === "Mana Overflow" || ability.name === "Elemental Harmony";
-          
-          // Filter out passive abilities and abilities on cooldown/not enough mana
-          return !isPassive && 
-            (!ability.currentCooldown || ability.currentCooldown <= 0) && 
-            (!ability.manaCost || computerPlayer.mana >= ability.manaCost);
-        });
-
-      if (availableAbilities.length > 0 && Math.random() > 0.3) {
-        const randomIndex = Math.floor(Math.random() * availableAbilities.length);
-        const { index } = availableAbilities[randomIndex];
-        handleAbilityUse(computerPlayer === player1 ? 1 : 2, index);
-      } else {
-        handleAttack();
-      }
-    }, 800);
-  };
-
+  /** Auto basic attack for each human fighter (independent timers). */
   useEffect(() => {
-    if (!gameOver && ((player1.isActive && player1.isComputer) || (player2.isActive && player2.isComputer))) {
-      computerTurn();
-    }
-    return () => {
-      if (computerMoveTimer.current) clearTimeout(computerMoveTimer.current);
-    };
-  }, [player1.isActive, player2.isActive, gameOver]);
+    clearAutoBasicAttackTimer('both');
+    if (gameOver) return;
+    scheduleAutoBasicAttack(1);
+    scheduleAutoBasicAttack(2);
+    return () => clearAutoBasicAttackTimer('both');
+  }, [gameOver, player1.isComputer, player2.isComputer]);
+
+  /** AI acts on its own interval (simultaneous with human). Skipped when both sides are human. */
+  useEffect(() => {
+    if (gameOver) return;
+    if (!player1.isComputer && !player2.isComputer) return;
+    const id = window.setInterval(() => {
+      const runAi = (num: 1 | 2, p: Player) => {
+        if (!p.isComputer || p.effects.stunned) return;
+        setAiThinking(true);
+        window.setTimeout(() => setAiThinking(false), 450);
+        const availableAbilities = p.abilities
+          .map((ability, index) => ({ ability, index }))
+          .filter(({ ability }) => {
+            const isPassive =
+              (ability.cooldown === 0 && ability.manaCost === 0) ||
+              ability.name === 'Mutagens' ||
+              ability.name === 'Monster Lore' ||
+              ability.name === 'Alchemy Mastery' ||
+              ability.name === 'Totemic Strength' ||
+              ability.name === 'Spirit Endurance' ||
+              ability.name === 'Elemental Mastery' ||
+              ability.name === 'Mana Overflow' ||
+              ability.name === 'Elemental Harmony';
+            return (
+              !isPassive &&
+              (!ability.currentCooldown || ability.currentCooldown <= 0) &&
+              (!ability.manaCost || p.mana >= ability.manaCost)
+            );
+          });
+        if (availableAbilities.length > 0 && Math.random() > 0.3) {
+          const randomIndex = Math.floor(Math.random() * availableAbilities.length);
+          handleAbilityUseRef.current(num, availableAbilities[randomIndex].index);
+        } else {
+          handleAttackFromRef.current(num);
+        }
+      };
+      const { p1, p2 } = playersRef.current;
+      runAi(1, p1);
+      runAi(2, p2);
+    }, 900);
+    return () => clearInterval(id);
+  }, [gameOver, player1.isComputer, player2.isComputer]);
 
   // Game over and stats
   useEffect(() => {
@@ -933,7 +434,6 @@ export const BattleArena = ({
       const winPlayer = didP1Die ? player2 : player1;
       setGameOver(true);
       setWinner(winPlayer);
-      setTurnTimerActive(false);
 
       setGameStats((prev) => {
         const updated = {
@@ -948,15 +448,13 @@ export const BattleArena = ({
     }
   }, [player1.health, player2.health]);
 
+  useEffect(() => {
+    if (gameOver) setAiThinking(false);
+  }, [gameOver]);
+
   const applyAbilityByDescription = (player: Player, opponent: Player, setPlayer: Dispatch<SetStateAction<Player>>, setOpponent: Dispatch<SetStateAction<Player>>, ability: Ability): boolean => {
     const description = ability.description.toLowerCase();
-    
-    console.log('=== ANY ABILITY USED ===');
-    console.log('Ability name:', ability.name);
-    console.log('Ability name lowercase:', ability.name.toLowerCase());
-    console.log('Description:', description);
-    console.log('========================');
-    
+
     // If opponent has a repelling shield active, block abilities (not basic attacks)
     if (opponent.effects.repelAbilities && opponent.effects.repelAbilitiesDuration > 0) {
       addLogMessage(`${opponent.name}'s repelling shield negates ${ability.name}!`);
@@ -1041,8 +539,6 @@ export const BattleArena = ({
     
     // Universal attack boost parser - handles all attack boost abilities
     if (description.includes('attack boost') || description.includes('increase attack') || (description.includes('gain') && description.includes('attack'))) {
-      console.log('Attack boost ability detected:', description);
-      
       // Extract damage if present
       const damageMatch = description.match(/deal (\d+) damage/i);
       if (damageMatch) {
@@ -1061,9 +557,7 @@ export const BattleArena = ({
       if (boostMatch) {
         const boostValue = parseInt(boostMatch[1]);
         const duration = turnsMatch ? parseInt(turnsMatch[1]) : 1; // Default to 2 turns
-        
-        console.log('Attack boost values:', { boostValue, duration });
-        
+
         applyAttackBoost(player, setPlayer, boostValue, duration, addLogMessage, `${player.name} gains ${boostValue}% attack boost for ${duration} turn${duration > 1 ? 's' : ''}!`);
         
         // If the same ability also increases spell damage, apply it here too
@@ -1196,20 +690,42 @@ export const BattleArena = ({
       return opponent.health > 0;
     }
 
-    // Execute - Deal massive damage to low health enemies
-    if (ability.name.toLowerCase() === 'execute' || (description.includes('instant') && description.includes('kill'))) {
-      const thresholdMatch = description.match(/(\d+)%/);
-      const damageMatch = description.match(/(\d+)\s*damage/);
-      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 10;
-      const damage = damageMatch ? parseInt(damageMatch[1]) : 40;
-      const healthPercent = (opponent.health / opponent.maxHealth) * 100;
-      
-      if (healthPercent <= threshold) {
-        setOpponent(prev => ({ ...prev, health: 0 }));
-        addLogMessage(`${player.name} executes ${opponent.name} instantly!`);
-        return false; // stop turn switching; game over will trigger
+    // Execute / Divine Execution — only these ability names (avoid matching unrelated "instant kill" text)
+    if (ability.name.toLowerCase() === 'execute' || ability.name.toLowerCase() === 'divine execution') {
+      const thresholdMatch = description.match(/under (\d+)%/);
+      const damageMatch = description.match(/deal (\d+) damage/);
+      const threshold = thresholdMatch ? parseInt(thresholdMatch[1], 10) : 12;
+      let damage = damageMatch ? parseInt(damageMatch[1], 10) : 40;
+
+      if (ability.name.toLowerCase() === 'divine execution') {
+        const oathOfFinalityAbility = player.abilities.find((a) => a.name === 'Oath of Finality');
+        if (oathOfFinalityAbility) {
+          const playerHealthPercent = (player.health / player.maxHealth) * 100;
+          if (playerHealthPercent < 40) {
+            const damageIncrease = Math.floor(damage * 0.3);
+            damage += damageIncrease;
+            addLogMessage(
+              `${player.name}'s Oath of Finality increases Divine Execution spell damage by 30%! (+${damageIncrease} damage)`
+            );
+          }
+        }
       }
-      abilityDealDamage(damage, `${player.name} uses Execute and deals ${damage} damage!`);
+
+      const healthPercent = (opponent.health / opponent.maxHealth) * 100;
+      if (healthPercent <= threshold) {
+        setOpponent((prev) => ({ ...prev, health: 0 }));
+        addLogMessage(
+          ability.name.toLowerCase() === 'divine execution'
+            ? `${player.name} uses Divine Execution and instantly kills ${opponent.name}!`
+            : `${player.name} executes ${opponent.name} instantly!`
+        );
+        return false;
+      }
+      const msg =
+        ability.name.toLowerCase() === 'divine execution'
+          ? `${player.name} uses Divine Execution and deals ${damage} damage!`
+          : `${player.name} uses Execute and deals ${damage} damage!`;
+      abilityDealDamage(damage, msg);
       return opponent.health > 0;
     }
 
@@ -1424,7 +940,6 @@ export const BattleArena = ({
 
     // Elemental Warden abilities (must be before generic handlers)
     if (ability.name === "Fire Blast") {
-      console.log("Fire Blast ability triggered!");
       const damage = Math.floor(Math.random() * (35 - 25 + 1)) + 25; // 25-35 damage
       abilityDealDamage(damage, `${player.name} blasts with fire for ${damage} damage!`);
       
@@ -1446,39 +961,19 @@ export const BattleArena = ({
     }
 
     if (ability.name === "Water Spout") {
-     
-      
       // Parse damage from description "Deal 50 water damage , heal 30 health"
       const damageMatch = description.match(/deal (\d+) water damage/);
       const damage = damageMatch ? parseInt(damageMatch[1]) : 50;
-      console.log("About to deal damage:", damage);
-      
-      try {
-        const result = abilityDealDamage(damage, `${player.name} summons a water spout for ${damage} damage!`);
-        console.log("Damage dealt, result:", result);
-        console.log("Opponent health after damage:", opponent.health);
-      } catch (error) {
-        console.error("Error in abilityDealDamage:", error);
-      }
-      
+      abilityDealDamage(damage, `${player.name} summons a water spout for ${damage} damage!`);
+
       // Parse heal amount from description "heal 30 health"
       const healMatch = description.match(/heal (\d+) health/);
       const healAmount = healMatch ? parseInt(healMatch[1]) : 30;
-      console.log("Heal amount:", healAmount);
-      
-      try {
-        applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is refreshed and restores ${healAmount} health!`);
-        console.log("Heal applied successfully");
-      } catch (error) {
-        console.error("Error in applyHeal:", error);
-      }
-      
-      console.log("=== END WATER SPOUT DEBUG ===");
+      applyHeal(player, setPlayer, healAmount, addLogMessage, `${player.name} is refreshed and restores ${healAmount} health!`);
       return opponent.health > 0;
     }
 
     if (ability.name === "Earth Tremor") {
-      console.log("Earth Tremor ability triggered!");
       const damage = Math.floor(Math.random() * (40 - 30 + 1)) + 30; // 30-40 damage
       abilityDealDamage(damage, `${player.name} causes an earth tremor for ${damage} damage!`);
       // Increase spell damage by 30%
@@ -1494,7 +989,6 @@ export const BattleArena = ({
     }
 
     if (ability.name === "Wind Slash") {
-      console.log("Wind Slash ability triggered!");
       const damage = Math.floor(Math.random() * (25 - 15 + 1)) + 15; // 15-25 damage
       abilityDealDamage(damage, `${player.name} slashes with wind for ${damage} damage!`);
       // Increase attack by 30% for 2 turns
@@ -1503,7 +997,6 @@ export const BattleArena = ({
     }
 
     if (ability.name === "Spirit Bolt") {
-      console.log("Spirit Bolt ability triggered!");
       const damage = Math.floor(Math.random() * (45 - 35 + 1)) + 35; // 35-45 damage
       abilityDealDamage(damage, `${player.name} channels spirit energy for ${damage} damage!`);
       // Restore 15 mana
@@ -1720,23 +1213,6 @@ export const BattleArena = ({
       }
       return true;
     }
-    if (ability.name === "Starlight Volley") {
-      const damageMatch = description.match(/(\d+)-(\d+) damage (\d+) times/);
-      if (damageMatch) {
-        const minDamage = parseInt(damageMatch[1]);
-        const maxDamage = parseInt(damageMatch[2]);
-        const times = parseInt(damageMatch[3]);
-        
-        let totalDamage = 0;
-        for (let i = 0; i < times; i++) {
-          const damage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
-          totalDamage += damage;
-          dealDamage(damage, opponent, setOpponent, addLogMessage, `Starlight arrow hits for ${damage} damage!`);
-        }
-        addLogMessage(`${player.name} unleashes a barrage of ${times} astral arrows for ${totalDamage} total damage!`);
-      }
-      return true;
-    }
 
     // Summon Imp ability
     if (ability.name === "Summon Imp") {
@@ -1752,18 +1228,6 @@ export const BattleArena = ({
       }));
       
       addLogMessage(`${player.name} summons an imp that will deal ${damage} damage every turn!`);
-      return true;
-    }
-    if (ability.name === "Summon Imp") {
-      setPlayer(prev => ({
-        ...prev,
-        effects: {
-          ...prev.effects,
-          summonedCreature: { damage: 8, turnsLeft: 999 }
-        }
-      }));
-      
-      addLogMessage(`${player.name} summons an imp that will deal 8 damage every turn!`);
       return true;
     }
 
@@ -1786,77 +1250,45 @@ export const BattleArena = ({
       return true;
     }
 
-   
-
-    // Default case - just log the ability use
     addLogMessage(`${player.name} uses ${ability.name}!`);
-
-    // Divine Execution - If enemy is under 30% health: instantly kill; otherwise deal 400 damage. Restore 10% health.
-    if (ability.name.toLowerCase() === 'divine execution') {
-      console.log('=== DIVINE EXECUTION TRIGGERED ===');
-      console.log('Description:', description);
-      console.log('Player:', player.name, 'Health:', player.health);
-      console.log('Opponent:', opponent.name, 'Health:', opponent.health);
-      
-      const thresholdMatch = description.match(/under (\d+)% health/);
-      const damageMatch = description.match(/deal (\d+) damage/);
-      
-      console.log('Regex matches:', { thresholdMatch, damageMatch });
-      
-      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 30;
-      let damage = damageMatch ? parseInt(damageMatch[1]) : 400;
-      
-      // Check for Oath of Finality passive - increase spell damage by 30% when below 40% HP
-      const oathOfFinalityAbility = player.abilities.find(ability => ability.name === "Oath of Finality");
-      if (oathOfFinalityAbility) {
-        const playerHealthPercent = (player.health / player.maxHealth) * 100;
-        if (playerHealthPercent < 40) {
-          const damageIncrease = Math.floor(damage * 0.30);
-          damage += damageIncrease;
-          addLogMessage(`${player.name}'s Oath of Finality increases Divine Execution spell damage by 30%! (+${damageIncrease} damage)`);
-        }
-      }
-      
-      console.log('Parsed values:', { threshold, damage });
-      
-      const healthPercent = (opponent.health / opponent.maxHealth) * 100;
-      console.log('Opponent health percent:', healthPercent);
-      
-      if (healthPercent < threshold) {
-        console.log('Executing instant kill');
-        setOpponent(prev => ({ ...prev, health: 0 }));
-        addLogMessage(`${player.name} uses Divine Execution and instantly kills ${opponent.name}!`);
-        return false;
-      } else {
-        console.log('Executing damage only');
-        // Deal damage to opponent
-        const newOpponentHealth = Math.max(0, opponent.health - damage);
-        console.log('Damaging opponent from', opponent.health, 'to', newOpponentHealth);
-        setOpponent(prev => ({ ...prev, health: newOpponentHealth }));
-        addLogMessage(`${player.name} uses Divine Execution and deals ${damage} damage!`);
-        
-        return newOpponentHealth > 0;
-      }
-    }
-
     return true;
   };
 
+  handleAttackFromRef.current = handleAttackFrom;
+  handleAbilityUseRef.current = handleAbilityUse;
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (gameOver) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!player1.isComputer) handleAttackFromRef.current(1);
+        return;
+      }
+      const slot = parseInt(e.key, 10);
+      if (slot >= 1 && slot <= 4 && !player1.isComputer) {
+        handleAbilityUseRef.current(1, slot - 1);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [gameOver, player1.isComputer]);
+
   return (
-    <div>
-      <div className="text-white text-center mb-4">DEBUG: BattleArena component rendered</div>
-      <BattleArenaUI
-        player1={player1}
-        player2={player2}
-        gameOver={gameOver}
-        winner={winner}
-        battleLog={battleLog}
-        turnTimeLeft={turnTimeLeft}
-        handleAttack={handleAttack}
-        handleAbilityUse={handleAbilityUse}
-        resetGame={resetGame}
-        gameStats={gameStats}
-      />
-    </div>
+    <BattleArenaUI
+      player1={player1}
+      player2={player2}
+      gameOver={gameOver}
+      winner={winner}
+      battleLog={battleLog}
+      handleAttack={() => handleAttackFrom(1)}
+      handleAbilityUse={handleAbilityUse}
+      resetGame={resetGame}
+      gameStats={gameStats}
+      aiThinking={aiThinking}
+      basicAttackAutomatic
+    />
   );
 };

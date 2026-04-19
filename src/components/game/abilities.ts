@@ -5,7 +5,9 @@ export interface Ability {
   name: string;
   iconName: string; // Changed from icon: JSX.Element to iconName: string
   description: string;
+  /** Base cooldown in seconds (real-time while in battle). */
   cooldown: number;
+  /** Remaining cooldown in seconds; decrements every real-time second. */
   currentCooldown?: number;
   manaCost?: number; // Mana cost to use the ability
 }
@@ -19,6 +21,7 @@ export interface Player {
   maxMana: number;
   attackMin: number;
   attackMax: number;
+  /** In arena both fighters are “active”; combat is real-time (no alternating turns). */
   isActive: boolean;
   abilities: Ability[];
   effects: {
@@ -203,9 +206,6 @@ export const applyAttackBoost = (
   addLogMessage: (message: string) => void,
   logMessage: string
 ) => {
-  console.log('applyAttackBoost called with:', { boostValue, duration, playerName: player.name });
-  console.log('Player effects before:', player.effects);
-  
   // Set attack boost effect (store duration+1 to account for start-of-turn decrement)
   setPlayer(prev => {
     const newEffects = {
@@ -213,7 +213,6 @@ export const applyAttackBoost = (
       attackBoost: boostValue,
       attackBoostDuration: duration + 5
     };
-    console.log('Player effects after:', newEffects);
     return {
       ...prev,
       effects: newEffects
@@ -457,7 +456,7 @@ export const removeAllPositiveEffects = (
   addLogMessage(logMessage);
 };
 
-// Cooldown reduction function
+/** Reduce all ability cooldowns by `reduction` seconds (real-time). */
 export const reduceAllCooldowns = (
   player: Player,
   setPlayer: Dispatch<SetStateAction<Player>>,
@@ -661,23 +660,19 @@ export const calculateAttackDamage = (
   reduction: number = 0
 ): number => {
   let damage = Math.floor(Math.random() * (max - min + 1)) + min;
-  console.log('calculateAttackDamage:', { min, max, boost, reduction, baseDamage: damage });
-  
+
   // Apply damage boost if any
   if (boost > 0) {
-    const boostedDamage = Math.floor(damage * (1 + boost/100));
-    console.log(`Applying ${boost}% attack boost: ${damage} -> ${boostedDamage}`);
+    const boostedDamage = Math.floor(damage * (1 + boost / 100));
     damage = boostedDamage;
   }
-  
+
   // Apply damage reduction if any
   if (reduction > 0) {
-    const reducedDamage = Math.floor(damage * (1 - reduction/100));
-    console.log(`Applying ${reduction}% attack reduction: ${damage} -> ${reducedDamage}`);
+    const reducedDamage = Math.floor(damage * (1 - reduction / 100));
     damage = reducedDamage;
   }
-  
-  console.log('Final damage:', damage);
+
   return damage;
 };
 

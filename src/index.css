@@ -96,8 +96,14 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Cinzel', serif, system-ui, sans-serif;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: 'Cinzel', serif;
   }
   
   /* Medieval game styles */

@@ -15,7 +15,24 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["Cinzel", "serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+      },
       colors: {
+        duel: {
+          void: "#0a0908",
+          ink: "#1c1917",
+          panel: "#292524",
+          elevated: "#44403c",
+          brass: "#c9a227",
+          "brass-dim": "#a16207",
+          flame: "#ea580c",
+          ember: "#9a3412",
+          wine: "#881337",
+          parchment: "#faf7f2",
+          mist: "#a8a29e",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
