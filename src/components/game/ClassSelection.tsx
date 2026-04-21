@@ -20,6 +20,7 @@ import { PLAYER_CLASSES, getIconByName } from './class-data';
 import { motion } from 'framer-motion';
 import { computePowerScore } from '@/lib/combat-meta';
 import { CLASS_ROLES, ALL_CLASSES_ORDERED, pickRandomAiClass, type RoleKey } from './class-categories';
+import { getBalancedPlayerClass } from './class-role-balance';
 
 interface ClassSelectionProps {
   player1Class: keyof typeof PLAYER_CLASSES;
@@ -138,19 +139,19 @@ export const ClassSelection = ({
           </div>
         </div>
         {isHovered && (
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-64 bg-duel-ink/98 text-duel-parchment text-xs rounded-lg shadow-xl border border-duel-brass/25">
-            <div className="flex items-center mb-2">
-              {renderIcon(ability.iconName, 'h-4 w-4 mr-2 text-duel-brass')}
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-64 bg-black text-white text-xs rounded-lg shadow-xl border border-neutral-600">
+            <div className="flex items-center mb-2 text-white">
+              {renderIcon(ability.iconName, 'h-4 w-4 mr-2 text-amber-300')}
               <p className="font-semibold">{ability.name}</p>
             </div>
-            <p className="text-slate-400 mb-2">{ability.description}</p>
-            <div className="flex items-center justify-between text-duel-mist">
+            <p className="text-zinc-300 mb-2 leading-snug">{ability.description}</p>
+            <div className="flex items-center justify-between text-zinc-200 border-t border-neutral-600 pt-2 mt-1">
               <span className="inline-flex items-center gap-1">
-                <Clock className="h-3 w-3 text-duel-brass/80" /> {ability.cooldown}s CD
+                <Clock className="h-3 w-3 text-zinc-400" /> {ability.cooldown}s CD
               </span>
               {ability.manaCost !== undefined && (
                 <span className="inline-flex items-center gap-1">
-                  <Zap className="h-3 w-3 text-amber-400/90" /> {ability.manaCost} MP
+                  <Zap className="h-3 w-3 text-zinc-400" /> {ability.manaCost} MP
                 </span>
               )}
             </div>
@@ -161,8 +162,9 @@ export const ClassSelection = ({
   };
 
   const renderClassCard = (className: keyof typeof PLAYER_CLASSES, isSelected: boolean) => {
-    const classData = PLAYER_CLASSES[className];
-    if (!classData) return null;
+    const raw = PLAYER_CLASSES[className];
+    if (!raw) return null;
+    const classData = getBalancedPlayerClass(String(className), raw);
     const power = computePowerScore(classData);
     const role = roleForClass(String(className));
 
@@ -185,7 +187,7 @@ export const ClassSelection = ({
           <CardHeader className="p-3 pb-1 bg-gradient-to-r from-duel-ink/95 to-duel-void/95 border-b border-duel-brass/15">
             <CardTitle className="text-base flex items-center justify-between gap-1 font-display">
               <span className="flex items-center min-w-0 text-duel-parchment">
-                {renderIcon(classData.abilities[0]?.iconName || 'sword', 'h-4 w-4 mr-1.5 text-duel-brass shrink-0')}
+                {renderIcon(raw.abilities[0]?.iconName || 'sword', 'h-4 w-4 mr-1.5 text-duel-brass shrink-0')}
                 <span className="truncate">{String(className)}</span>
               </span>
               <span className="flex gap-1 shrink-0">
@@ -197,7 +199,7 @@ export const ClassSelection = ({
                 </Badge>
               </span>
             </CardTitle>
-            <CardDescription className="text-xs line-clamp-2 h-8 text-duel-mist">{classData.description}</CardDescription>
+            <CardDescription className="text-xs line-clamp-2 h-8 text-duel-mist">{raw.description}</CardDescription>
           </CardHeader>
 
           <CardContent className="p-3 pt-2">
@@ -224,7 +226,7 @@ export const ClassSelection = ({
                 Abilities
               </h4>
               <div className="flex flex-wrap gap-1">
-                {classData.abilities.map((ability, index) => renderAbilityBadge(ability, index))}
+                {raw.abilities.map((ability, index) => renderAbilityBadge(ability, index))}
               </div>
             </div>
           </CardContent>
@@ -241,8 +243,8 @@ export const ClassSelection = ({
   };
 
   if (showVersus && opponentPreviewClass) {
-    const player1Data = PLAYER_CLASSES[player1Class];
-    const player2Data = PLAYER_CLASSES[opponentPreviewClass];
+    const player1Data = getBalancedPlayerClass(String(player1Class), PLAYER_CLASSES[player1Class]);
+    const player2Data = getBalancedPlayerClass(String(opponentPreviewClass), PLAYER_CLASSES[opponentPreviewClass]);
 
     return (
       <div className="max-w-4xl w-full rounded-2xl border border-duel-brass/25 bg-duel-ink/95 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl animate-in fade-in zoom-in duration-500">

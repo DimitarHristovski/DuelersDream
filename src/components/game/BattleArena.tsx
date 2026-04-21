@@ -18,6 +18,7 @@ import {
 } from './abilities';
 import { BattleArenaUI } from './BattleArenaUI';
 import { tickRealtimeSecond } from './battle-realtime-tick';
+import { getRoleAbilityDamageMultiplier } from './class-role-balance';
 
 export interface GameStats {
   wins: number;
@@ -65,7 +66,10 @@ export const BattleArena = ({
   const handleAttackFromRef = useRef<(attackerNum: 1 | 2) => void>(() => {});
   const handleAbilityUseRef = useRef<(playerNum: 1 | 2, abilityIndex: number) => void>(() => {});
 
+  /** Human auto basic-attack cadence (Space / timer). */
   const AUTO_BASIC_ATTACK_MS = 2200;
+  /** AI uses the same tick so solo fights do not look like only the bot is acting (was 900ms vs 2200ms). */
+  const AI_ACTION_INTERVAL_MS = AUTO_BASIC_ATTACK_MS;
 
   const clearAutoBasicAttackTimer = (who: 1 | 2 | 'both') => {
     if (who === 1 || who === 'both') {
@@ -366,7 +370,7 @@ export const BattleArena = ({
       const { p1, p2 } = playersRef.current;
       runAi(1, p1);
       runAi(2, p2);
-    }, 900);
+    }, AI_ACTION_INTERVAL_MS);
     return () => clearInterval(id);
   }, [gameOver, player1.isComputer, player2.isComputer]);
 
@@ -467,10 +471,13 @@ export const BattleArena = ({
       return true;
     }
 
+    const roleAbilityDmgMult = getRoleAbilityDamageMultiplier(player.className, ability.description);
+
     // Helper: when abilities deal damage, ensure counterattack triggers like basic attacks
     const abilityDealDamage = (rawDamage: number, message: string, onAppliedDamage?: (actualDamage: number) => void) => {
+      const scaled = Math.max(1, Math.floor(rawDamage * roleAbilityDmgMult));
       return dealDamage(
-        rawDamage,
+        scaled,
         opponent,
         setOpponent,
         addLogMessage,
@@ -836,7 +843,8 @@ export const BattleArena = ({
       const totalDamage = hit1 + hit2;
       
       // Deal both attacks as total damage
-      dealDamage(totalDamage, opponent, setOpponent, addLogMessage, `${player.name} unleashes Blood Frenzy and strikes twice for ${hit1} + ${hit2} = ${totalDamage} total damage!`);
+      const frenzyDmg = Math.max(1, Math.floor(totalDamage * roleAbilityDmgMult));
+      dealDamage(frenzyDmg, opponent, setOpponent, addLogMessage, `${player.name} unleashes Blood Frenzy and strikes twice for ${hit1} + ${hit2} = ${frenzyDmg} total damage!`);
 
       // Apply self-damage
       setPlayer(prev => ({ ...prev, health: Math.max(1, prev.health - selfDamage) }));
@@ -1209,7 +1217,8 @@ export const BattleArena = ({
         }
         
         // Apply all damage at once
-        dealDamage(totalDamage, opponent, setOpponent, addLogMessage, `${player.name} unleashes a barrage of ${times} astral arrows for ${totalDamage} total damage!`);
+        const volleyDmg = Math.max(1, Math.floor(totalDamage * roleAbilityDmgMult));
+        dealDamage(volleyDmg, opponent, setOpponent, addLogMessage, `${player.name} unleashes a barrage of ${times} astral arrows for ${volleyDmg} total damage!`);
       }
       return true;
     }
@@ -1268,7 +1277,7 @@ export const BattleArena = ({
         return;
       }
       const slot = parseInt(e.key, 10);
-      if (slot >= 1 && slot <= 4 && !player1.isComputer) {
+      if (slot >= 1 && slot <= 6 && !player1.isComputer) {
         handleAbilityUseRef.current(1, slot - 1);
       }
     };

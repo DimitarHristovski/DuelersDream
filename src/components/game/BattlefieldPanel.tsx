@@ -143,8 +143,8 @@ export function BattlefieldPanel({
 
         <p className="mt-2 text-center text-[10px] text-duel-mist/90 leading-relaxed px-1">
           {basicAttackAutomatic
-            ? 'You: Space · 1–4 · auto basic attacks · AI opponent'
-            : 'You: Space · 1–4'}
+            ? 'You: Space · 1–6 · auto basic attacks · AI opponent'
+            : 'You: Space · 1–6'}
         </p>
       </div>
     </div>

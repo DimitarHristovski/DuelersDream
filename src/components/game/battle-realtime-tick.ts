@@ -1,4 +1,5 @@
 import type { Player } from './abilities';
+import { getRoleCombatRegen } from './class-categories';
 
 /** How often former “start of turn” passives (Totemic, Mana Overflow, Elemental Harmony) fire. */
 const PASSIVE_BURST_SEC = 5;
@@ -22,6 +23,7 @@ function applyPeriodicForSide(
   self: Player,
   other: Player,
   manaRegenPerSec: number,
+  hpRegenPerSec: number,
   tickIndex: number,
   log: (msg: string) => void
 ): { self: Player; other: Player } {
@@ -172,6 +174,15 @@ function applyPeriodicForSide(
     }
   }
 
+  // Role-based passive recovery (melee / ranged / caster), every real-time second
+  if (hpRegenPerSec > 0 && interimHealth < prev.maxHealth) {
+    const gained = Math.min(hpRegenPerSec, prev.maxHealth - interimHealth);
+    if (gained > 0) {
+      interimHealth += gained;
+      log(`${prev.name} restores ${gained} health.`);
+    }
+  }
+
   if (prev.effects.summonedCreature && prev.effects.summonedCreature.damage > 0) {
     const petDamage = prev.effects.summonedCreature.damage;
     opponent = {
@@ -288,10 +299,13 @@ export function tickRealtimeSecond(
   let a = tickAbilityCooldowns(p1);
   let b = tickAbilityCooldowns(p2);
 
-  const r1 = applyPeriodicForSide(a, b, 1, tickIndex, log);
+  const reg1 = getRoleCombatRegen(a.className);
+  const reg2 = getRoleCombatRegen(b.className);
+
+  const r1 = applyPeriodicForSide(a, b, reg1.manaPerSec, reg1.hpPerSec, tickIndex, log);
   a = r1.self;
   b = r1.other;
 
-  const r2 = applyPeriodicForSide(b, a, 3, tickIndex, log);
+  const r2 = applyPeriodicForSide(b, a, reg2.manaPerSec, reg2.hpPerSec, tickIndex, log);
   return [r2.other, r2.self];
 }

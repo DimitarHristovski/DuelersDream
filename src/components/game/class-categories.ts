@@ -39,6 +39,28 @@ export const CLASS_ROLES = {
 
 export type RoleKey = keyof typeof CLASS_ROLES;
 
+/** Per-second combat recovery by role (real-time tick). */
+export const ROLE_COMBAT_REGEN = {
+  Melee: { hpPerSec: 3, manaPerSec: 1 },
+  Ranged: { hpPerSec: 2, manaPerSec: 2 },
+  Caster: { hpPerSec: 1, manaPerSec: 3 },
+} as const;
+
+export function getRoleCombatRegen(className: string): { role: RoleKey; hpPerSec: number; manaPerSec: number } {
+  const name = String(className);
+  if ((CLASS_ROLES.Melee as readonly string[]).includes(name)) {
+    return { role: 'Melee', ...ROLE_COMBAT_REGEN.Melee };
+  }
+  if ((CLASS_ROLES.Ranged as readonly string[]).includes(name)) {
+    return { role: 'Ranged', ...ROLE_COMBAT_REGEN.Ranged };
+  }
+  if ((CLASS_ROLES.Caster as readonly string[]).includes(name)) {
+    return { role: 'Caster', ...ROLE_COMBAT_REGEN.Caster };
+  }
+  // Unknown class name: treat as melee for recovery
+  return { role: 'Melee', ...ROLE_COMBAT_REGEN.Melee };
+}
+
 /** Flat list for search / “All fighters” grid order */
 export const ALL_CLASSES_ORDERED: readonly string[] = [
   ...CLASS_ROLES.Melee,

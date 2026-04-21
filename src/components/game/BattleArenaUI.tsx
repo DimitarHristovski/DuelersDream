@@ -578,7 +578,7 @@ export const BattleArenaUI = ({
                 {!player.isComputer && (
                   <span className="text-[10px] text-slate-500 flex items-center gap-1">
                     <Keyboard className="h-3 w-3" />
-                    {playerNum === 1 ? '1–4' : '6–9'}
+                    {playerNum === 1 ? '1–6' : '6–9'}
                   </span>
                 )}
               </div>
@@ -676,13 +676,13 @@ export const BattleArenaUI = ({
                         )}
                       </Button>
                       
-                      <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-52 bg-duel-ink text-duel-parchment text-xs rounded-lg border border-duel-brass/25 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                        <p className="font-semibold mb-1 flex items-center gap-1.5">
+                      <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 w-52 bg-black text-white text-xs rounded-lg border border-neutral-600 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <p className="font-semibold mb-1 flex items-center gap-1.5 text-white">
                           {(() => {
                             try {
                               if (ability.iconName) {
                                 const Icon = getIconByName(ability.iconName);
-                                return <Icon className="h-4 w-4 text-duel-brass shrink-0" />;
+                                return <Icon className="h-4 w-4 text-amber-300 shrink-0" />;
                               }
                               return null;
                             } catch {
@@ -691,23 +691,23 @@ export const BattleArenaUI = ({
                           })()}
                           {ability.name}
                         </p>
-                        <p className="text-[10px] text-duel-mist leading-snug">{ability.description}</p>
-                        <div className="flex justify-between mt-2 pt-2 border-t border-duel-brass/15">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400">
-                            <Clock className="h-3 w-3" /> {ability.cooldown}s CD
+                        <p className="text-[10px] text-zinc-300 leading-snug">{ability.description}</p>
+                        <div className="flex justify-between mt-2 pt-2 border-t border-neutral-600">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-200">
+                            <Clock className="h-3 w-3 text-zinc-400" /> {ability.cooldown}s CD
                           </span>
                           {ability.manaCost && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-300">
-                              <Zap className="h-3 w-3" /> {ability.manaCost} MP
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-200">
+                              <Zap className="h-3 w-3 text-zinc-400" /> {ability.manaCost} MP
                             </span>
                           )}
                         </div>
                         {boostedPreview && (
-                          <div className="mt-2 text-[10px] text-violet-300 flex items-center gap-1 font-medium">
-                            <Sparkles className="h-3 w-3" /> Surge: {boostedPreview}
+                          <div className="mt-2 text-[10px] text-zinc-200 flex items-center gap-1 font-medium">
+                            <Sparkles className="h-3 w-3 text-amber-300" /> Surge: {boostedPreview}
                           </div>
                         )}
-                        <div className="absolute left-1/2 -translate-x-1/2 top-full border-8 border-transparent border-t-duel-ink drop-shadow-sm" />
+                        <div className="absolute left-1/2 -translate-x-1/2 top-full border-8 border-transparent border-t-black drop-shadow-sm" />
                       </div>
                     </div>
                   );
@@ -863,7 +863,7 @@ export const BattleArenaUI = ({
                   <p className="text-center text-xs sm:text-sm text-duel-mist leading-relaxed px-1 flex flex-wrap items-center justify-center gap-1">
                     <Keyboard className="h-3.5 w-3.5 text-duel-brass/80 shrink-0" />
                     <span>
-                      <span className="font-semibold text-duel-brass">You</span>: <kbd className="px-1 rounded border border-duel-brass/30 bg-duel-void text-[10px] text-duel-parchment">1–4</kbd>{' '}
+                      <span className="font-semibold text-duel-brass">You</span>: <kbd className="px-1 rounded border border-duel-brass/30 bg-duel-void text-[10px] text-duel-parchment">1–6</kbd>{' '}
                       skills · <kbd className="px-1 rounded border border-duel-brass/30 bg-duel-void text-[10px] text-duel-parchment">Space</kbd> strike — AI opponent
                     </span>
                   </p>

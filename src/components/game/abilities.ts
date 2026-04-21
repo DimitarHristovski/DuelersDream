@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import { PlayerClass } from './class-data';
+import { getBalancedPlayerClass } from './class-role-balance';
 
 export interface Ability {
   name: string;
@@ -738,17 +739,18 @@ export const buildDefaultPlayer = (
   isActive: boolean,
   isComputer = false
 ): Player => {
+  const balanced = getBalancedPlayerClass(className, classData);
   return {
     name,
     className,
-    health: classData.health,
-    maxHealth: classData.health,
-    mana: classData.mana,
-    maxMana: classData.maxMana,
-    attackMin: classData.attackMin,
-    attackMax: classData.attackMax,
+    health: balanced.health,
+    maxHealth: balanced.health,
+    mana: balanced.mana,
+    maxMana: balanced.maxMana,
+    attackMin: balanced.attackMin,
+    attackMax: balanced.attackMax,
     isActive,
-    abilities: classData.abilities.map((ability) => ({
+    abilities: balanced.abilities.map((ability) => ({
       ...ability,
       currentCooldown: 0
     })),
