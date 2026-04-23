@@ -19,6 +19,7 @@ import {
 import { BattleArenaUI } from './BattleArenaUI';
 import { tickRealtimeSecond } from './battle-realtime-tick';
 import { getRoleAbilityDamageMultiplier } from './class-role-balance';
+import { isPassiveAbility } from '@/lib/is-passive-ability';
 
 export interface GameStats {
   wins: number;
@@ -310,6 +311,32 @@ export const BattleArena = ({
     scheduleAutoBasicAttack(playerNum);
   };
 
+  /** Necromancy Mastery as a passive still applies the summon damage aura (no button press). */
+  useEffect(() => {
+    const applyNecromancyMasteryPassive = (
+      p: Player,
+      setPlayer: React.Dispatch<React.SetStateAction<Player>>
+    ) => {
+      const m = p.abilities.find((a) => a.name === 'Necromancy Mastery' && isPassiveAbility(a));
+      if (!m) return;
+      const boostMatch = m.description.match(/(\d+)% more damage everyturn/);
+      const boostPercent = boostMatch ? parseInt(boostMatch[1], 10) : 35;
+      setPlayer((prev) => {
+        if (prev.effects.summonedCreatureDamageBoost >= boostPercent) return prev;
+        return {
+          ...prev,
+          effects: {
+            ...prev.effects,
+            summonedCreatureDamageBoost: boostPercent,
+            summonedCreatureDamageBoostDuration: 999,
+          },
+        };
+      });
+    };
+    applyNecromancyMasteryPassive(player1, setPlayer1);
+    applyNecromancyMasteryPassive(player2, setPlayer2);
+  }, [player1.abilities, player2.abilities, player1.className, player2.className]);
+
   /** Real-time: cooldowns, mana regen, buff durations, DoTs — both fighters every second. */
   useEffect(() => {
     if (gameOver) return;
@@ -344,18 +371,8 @@ export const BattleArena = ({
         const availableAbilities = p.abilities
           .map((ability, index) => ({ ability, index }))
           .filter(({ ability }) => {
-            const isPassive =
-              (ability.cooldown === 0 && ability.manaCost === 0) ||
-              ability.name === 'Mutagens' ||
-              ability.name === 'Monster Lore' ||
-              ability.name === 'Alchemy Mastery' ||
-              ability.name === 'Totemic Strength' ||
-              ability.name === 'Spirit Endurance' ||
-              ability.name === 'Elemental Mastery' ||
-              ability.name === 'Mana Overflow' ||
-              ability.name === 'Elemental Harmony';
             return (
-              !isPassive &&
+              !isPassiveAbility(ability) &&
               (!ability.currentCooldown || ability.currentCooldown <= 0) &&
               (!ability.manaCost || p.mana >= ability.manaCost)
             );

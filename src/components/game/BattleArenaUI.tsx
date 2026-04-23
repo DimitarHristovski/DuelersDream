@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Player } from './abilities';
 import { PLAYER_CLASSES, getIconByName } from './class-data';
+import { isPassiveAbility } from '@/lib/is-passive-ability';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BattlefieldPanel } from './BattlefieldPanel';
 
@@ -357,11 +358,7 @@ export const BattleArenaUI = ({
             
             {/* Passive Abilities Status */}
             {(() => {
-              const hasPassiveAbilities = player.abilities.some(ability => 
-                ability.name === "Mutagens" || ability.name === "Monster Killer" || ability.name === "Monster Lore" || ability.name === "Alchemy Mastery" || 
-                ability.name === "Totemic Strength" || ability.name === "Spirit Endurance" ||
-                ability.name === "Elemental Mastery" || ability.name === "Mana Overflow" || ability.name === "Elemental Harmony"
-              );
+              const hasPassiveAbilities = player.abilities.some((ability) => isPassiveAbility(ability));
               
               if (!hasPassiveAbilities) return null;
               
@@ -586,11 +583,7 @@ export const BattleArenaUI = ({
                 {player.abilities.map((ability, index) => {
                   const isDisabled = (ability.currentCooldown || 0) > 0;
                   const notEnoughMana = ability.manaCost && player.mana < ability.manaCost;
-                  const isPassive = (ability.cooldown === 0 && ability.manaCost === 0) || 
-                    ability.name === "Mutagens" || ability.name === "Monster Lore" || 
-                    ability.name === "Alchemy Mastery" || ability.name === "Totemic Strength" || 
-                    ability.name === "Spirit Endurance" || ability.name === "Elemental Mastery" ||
-                    ability.name === "Mana Overflow" || ability.name === "Elemental Harmony";
+                  const isPassive = isPassiveAbility(ability);
                   const spellBoost = player.effects.spellDamageBoost || 0;
                   const boostedPreview = getBoostedDamagePreview(ability.description, spellBoost, player);
                   const slotKey = playerNum === 1 ? String(index + 1) : String(index + 6);
