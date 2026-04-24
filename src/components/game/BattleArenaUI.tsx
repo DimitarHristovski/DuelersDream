@@ -12,6 +12,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Player } from './abilities';
 import { PLAYER_CLASSES, getIconByName } from './class-data';
 import { isPassiveAbility } from '@/lib/is-passive-ability';
+import {
+  passiveAttackWhileLowHp,
+  passiveConditionalAttackBoost,
+  passiveCooldownTrimSecondsPerPulse,
+  passiveDamageReductionWhileHealthy,
+  passiveEvasionPercentPerPulse,
+  passiveHarmonyGains,
+  passiveHpBurstHeal,
+  passiveLifestealBasicPercent,
+  passiveManaBurstGain,
+  passiveReflectPercentFromAttacks,
+  passiveShieldBurstGain,
+  passiveSpellDamageWhileHighHealth,
+  passiveSpellDamageWhileHighMana,
+  passiveSpellDamageWhileLow,
+} from '@/lib/passive-runtime';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BattlefieldPanel } from './BattlefieldPanel';
 
@@ -77,34 +93,12 @@ export const BattleArenaUI = ({
     // Skip non-damage abilities
     if (!desc.includes('deal')) return null;
 
-    // Check for Monster Lore and Monster Killer passive boosts
     let totalSpellBoost = spellBoost || 0;
-    
-    // Check Monster Lore
-    const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
-    if (monsterLoreAbility) {
+    const spellLow = passiveSpellDamageWhileLow(player);
+    if (spellLow) {
       const healthPercent = (player.health / player.maxHealth) * 100;
-      const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
-      const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
-      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
-      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-      
-      if (healthPercent < threshold) {
-        totalSpellBoost += boostPercent;
-      }
-    }
-    
-    // Check Monster Killer
-    const monsterKillerAbility = player.abilities.find(ability => ability.name === "Monster Killer");
-    if (monsterKillerAbility) {
-      const healthPercent = (player.health / player.maxHealth) * 100;
-      const boostMatch = monsterKillerAbility.description.match(/increase spell damage by (\d+)%/i);
-      const thresholdMatch = monsterKillerAbility.description.match(/under (\d+)% health/i);
-      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
-      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-      
-      if (healthPercent < threshold) {
-        totalSpellBoost += boostPercent;
+      if (healthPercent < spellLow.threshold) {
+        totalSpellBoost += spellLow.boost;
       }
     }
 
@@ -364,45 +358,55 @@ export const BattleArenaUI = ({
               
               const healthPercent = (player.health / player.maxHealth) * 100;
               
-              // Parse Mutagens - "Increase attack by X% while above Y% health"
-              const mutagensAbility = player.abilities.find(ability => ability.name === "Mutagens");
+              const atkPassive = passiveConditionalAttackBoost(player);
               let mutagensActive = false;
               let mutagensBoost = 0;
               let mutagensThreshold = 50;
-              if (mutagensAbility) {
-                const boostMatch = mutagensAbility.description.match(/increase attack by (\d+)%/i);
-                const thresholdMatch = mutagensAbility.description.match(/above (\d+)% health/i);
-                mutagensBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
-                mutagensThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+              if (atkPassive) {
+                mutagensBoost = atkPassive.boost;
+                mutagensThreshold = atkPassive.threshold;
                 mutagensActive = healthPercent > mutagensThreshold;
               }
-              
-              // Parse Monster Lore - "Increase spell damage by X% while under Y% health"
-              const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
-              let monsterLoreActive = false;
-              let monsterLoreBoost = 0;
-              let monsterLoreThreshold = 50;
-              if (monsterLoreAbility) {
-                const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
-                const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
-                monsterLoreBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
-                monsterLoreThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-                monsterLoreActive = healthPercent < monsterLoreThreshold;
+
+              const spellLowPassive = passiveSpellDamageWhileLow(player);
+              let spellLowActive = false;
+              let spellLowBoost = 0;
+              let spellLowThreshold = 50;
+              if (spellLowPassive) {
+                spellLowBoost = spellLowPassive.boost;
+                spellLowThreshold = spellLowPassive.threshold;
+                spellLowActive = healthPercent < spellLowThreshold;
               }
-              
-              // Parse Monster Killer - "Increase spell damage by X% while under Y% health"
-              const monsterKillerAbility = player.abilities.find(ability => ability.name === "Monster Killer");
-              let monsterKillerActive = false;
-              let monsterKillerBoost = 0;
-              let monsterKillerThreshold = 50;
-              if (monsterKillerAbility) {
-                const boostMatch = monsterKillerAbility.description.match(/increase spell damage by (\d+)%/i);
-                const thresholdMatch = monsterKillerAbility.description.match(/under (\d+)% health/i);
-                monsterKillerBoost = boostMatch ? parseInt(boostMatch[1]) : 100;
-                monsterKillerThreshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-                monsterKillerActive = healthPercent < monsterKillerThreshold;
+
+              const manaPercent = player.maxMana > 0 ? (player.mana / player.maxMana) * 100 : 0;
+              const spellHighManaPassive = passiveSpellDamageWhileHighMana(player);
+              let spellHighManaActive = false;
+              if (spellHighManaPassive) {
+                spellHighManaActive = manaPercent > spellHighManaPassive.threshold;
               }
-              
+              const spellHighHpPassive = passiveSpellDamageWhileHighHealth(player);
+              let spellHighHpActive = false;
+              if (spellHighHpPassive) {
+                spellHighHpActive = healthPercent > spellHighHpPassive.threshold;
+              }
+
+              const atkLowPassive = passiveAttackWhileLowHp(player);
+              let atkLowActive = false;
+              if (atkLowPassive) {
+                atkLowActive = healthPercent < atkLowPassive.threshold;
+              }
+
+              const drPassive = passiveDamageReductionWhileHealthy(player);
+              let drPassiveActive = false;
+              if (drPassive) {
+                drPassiveActive = healthPercent > drPassive.threshold;
+              }
+
+              const thornsPct = passiveReflectPercentFromAttacks(player);
+              const siphonPct = passiveLifestealBasicPercent(player);
+              const evaPulse = passiveEvasionPercentPerPulse(player);
+              const cadenceTrim = passiveCooldownTrimSecondsPerPulse(player);
+
               // Parse Alchemy Mastery - "All healing received is X% stronger while under Y% health"
               const alchemyMasteryAbility = player.abilities.find(ability => ability.name === "Alchemy Mastery");
               let alchemyMasteryActive = false;
@@ -415,15 +419,9 @@ export const BattleArenaUI = ({
                 alchemyMasteryActive = healthPercent < threshold;
               }
               
-              // Parse Totemic Strength - "Regenerate X health everyturn"
-              const totemicStrengthAbility = player.abilities.find(ability => ability.name === "Totemic Strength");
-              let totemicStrengthActive = false;
-              let totemicStrengthHeal = 0;
-              if (totemicStrengthAbility) {
-                const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
-                totemicStrengthHeal = healMatch ? parseInt(healMatch[1]) : 20;
-                totemicStrengthActive = true; // Always active
-              }
+              const passiveHealBurst = passiveHpBurstHeal(player);
+              const totemicStrengthActive = passiveHealBurst > 0;
+              const totemicStrengthHeal = passiveHealBurst;
               
               // Parse Spirit Endurance - "Reincarnation" (passive with cooldown)
               const spiritEnduranceAbility = player.abilities.find(ability => ability.name === "Spirit Endurance");
@@ -441,28 +439,21 @@ export const BattleArenaUI = ({
                 elementalMasteryActive = true; // Always active
               }
               
-              // Parse Mana Overflow - "Gain +X mana at the start of your turn"
-              const manaOverflowAbility = player.abilities.find(ability => ability.name === "Mana Overflow");
-              let manaOverflowActive = false;
-              let manaOverflowGain = 0;
-              if (manaOverflowAbility) {
-                const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
-                manaOverflowGain = manaMatch ? parseInt(manaMatch[1]) : 20;
-                manaOverflowActive = true; // Always active
-              }
-              
-              // Parse Elemental Harmony - "Every turn gain X% attack and X% spell damage (stacks)"
-              const elementalHarmonyAbility = player.abilities.find(ability => ability.name === "Elemental Harmony");
+              const manaOverflowGain = passiveManaBurstGain(player);
+              const manaOverflowActive = manaOverflowGain > 0;
+
+              const harmony = passiveHarmonyGains(player);
               let elementalHarmonyActive = false;
               let elementalHarmonyAttackGain = 0;
               let elementalHarmonySpellGain = 0;
-              if (elementalHarmonyAbility) {
-                const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
-                const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
-                elementalHarmonyAttackGain = attackMatch ? parseInt(attackMatch[1]) : 1;
-                elementalHarmonySpellGain = spellMatch ? parseInt(spellMatch[1]) : 1;
-                elementalHarmonyActive = true; // Always active
+              if (harmony) {
+                elementalHarmonyAttackGain = harmony.attack;
+                elementalHarmonySpellGain = harmony.spell;
+                elementalHarmonyActive = true;
               }
+
+              const shieldPassiveGain = passiveShieldBurstGain(player);
+              const shieldPassiveActive = shieldPassiveGain > 0;
               
               return (
                 <Collapsible className="space-y-1">
@@ -476,19 +467,61 @@ export const BattleArenaUI = ({
                   {mutagensActive && (
                     <Badge variant="outline" className="bg-emerald-100 text-emerald-900 border-emerald-300 py-1 font-medium">
                       <Beaker className="h-3 w-3 mr-1 text-emerald-600" />
-                      Mutagens (+{mutagensBoost}% ATK)
+                      Attack passive (+{mutagensBoost}% ATK)
                     </Badge>
                   )}
-                  {monsterLoreActive && (
+                  {spellLowActive && (
                     <Badge variant="outline" className="bg-violet-100 text-violet-900 border-violet-300 py-1 font-medium">
                       <BookOpen className="h-3 w-3 mr-1 text-violet-600" />
-                      Monster Lore (+{monsterLoreBoost}% SPELL)
+                      Spell surge (+{spellLowBoost}% SPELL)
                     </Badge>
                   )}
-                  {monsterKillerActive && (
+                  {spellHighManaPassive && spellHighManaActive && (
+                    <Badge variant="outline" className="bg-indigo-100 text-indigo-900 border-indigo-300 py-1 font-medium">
+                      <Sparkles className="h-3 w-3 mr-1 text-indigo-600" />
+                      Reservoir (+{spellHighManaPassive.boost}% SPELL)
+                    </Badge>
+                  )}
+                  {spellHighHpPassive && spellHighHpActive && (
+                    <Badge variant="outline" className="bg-cyan-100 text-cyan-900 border-cyan-300 py-1 font-medium">
+                      <Sparkles className="h-3 w-3 mr-1 text-cyan-600" />
+                      Luminous (+{spellHighHpPassive.boost}% SPELL)
+                    </Badge>
+                  )}
+                  {atkLowPassive && atkLowActive && (
+                    <Badge variant="outline" className="bg-orange-100 text-orange-900 border-orange-300 py-1 font-medium">
+                      <Sword className="h-3 w-3 mr-1 text-orange-600" />
+                      Desperation (+{atkLowPassive.boost}% ATK)
+                    </Badge>
+                  )}
+                  {drPassive && drPassiveActive && (
+                    <Badge variant="outline" className="bg-slate-100 text-slate-900 border-slate-300 py-1 font-medium">
+                      <Shield className="h-3 w-3 mr-1 text-slate-600" />
+                      Bulwark (-{drPassive.percent}% taken)
+                    </Badge>
+                  )}
+                  {thornsPct > 0 && (
+                    <Badge variant="outline" className="bg-amber-100 text-amber-950 border-amber-300 py-1 font-medium">
+                      <Zap className="h-3 w-3 mr-1 text-amber-700" />
+                      Thorns ({thornsPct}% reflect)
+                    </Badge>
+                  )}
+                  {siphonPct > 0 && (
                     <Badge variant="outline" className="bg-rose-100 text-rose-900 border-rose-300 py-1 font-medium">
-                      <BookOpen className="h-3 w-3 mr-1 text-rose-600" />
-                      Monster Killer (+{monsterKillerBoost}% SPELL)
+                      <Droplet className="h-3 w-3 mr-1 text-rose-600" />
+                      Siphon basics ({siphonPct}%)
+                    </Badge>
+                  )}
+                  {evaPulse > 0 && (
+                    <Badge variant="outline" className="bg-emerald-100 text-emerald-900 border-emerald-300 py-1 font-medium">
+                      <Zap className="h-3 w-3 mr-1 text-emerald-600" />
+                      Footing ({evaPulse}% eva pulse)
+                    </Badge>
+                  )}
+                  {cadenceTrim > 0 && (
+                    <Badge variant="outline" className="bg-blue-100 text-blue-900 border-blue-300 py-1 font-medium">
+                      <Clock className="h-3 w-3 mr-1 text-blue-600" />
+                      Cadence (-{cadenceTrim}s CD / surge)
                     </Badge>
                   )}
                   {alchemyMasteryActive && (
@@ -500,7 +533,13 @@ export const BattleArenaUI = ({
                   {totemicStrengthActive && (
                     <Badge variant="outline" className="bg-teal-100 text-teal-900 border-teal-300 py-1 font-medium">
                       <Heart className="h-3 w-3 mr-1 text-teal-600" />
-                      Totemic (+{totemicStrengthHeal} HP)
+                      Vitality (+{totemicStrengthHeal} HP / burst)
+                    </Badge>
+                  )}
+                  {shieldPassiveActive && (
+                    <Badge variant="outline" className="bg-slate-100 text-slate-900 border-slate-300 py-1 font-medium">
+                      <Shield className="h-3 w-3 mr-1 text-slate-600" />
+                      Ward refresh (+{shieldPassiveGain})
                     </Badge>
                   )}
                   {spiritEnduranceActive && (

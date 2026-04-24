@@ -1,7 +1,15 @@
 import type { Player } from './abilities';
 import { getRoleCombatRegen } from './class-categories';
+import {
+  passiveCooldownTrimSecondsPerPulse,
+  passiveEvasionPercentPerPulse,
+  passiveHarmonyGains,
+  passiveHpBurstHeal,
+  passiveManaBurstGain,
+  passiveShieldBurstGain,
+} from '@/lib/passive-runtime';
 
-/** How often former “start of turn” passives (Totemic, Mana Overflow, Elemental Harmony) fire. */
+/** How often passive surge effects (vitality, mana overflow, harmony, shields) tick in real time. */
 const PASSIVE_BURST_SEC = 5;
 
 function tickAbilityCooldowns(p: Player): Player {
@@ -29,6 +37,7 @@ function applyPeriodicForSide(
 ): { self: Player; other: Player } {
   const burst = tickIndex > 0 && tickIndex % PASSIVE_BURST_SEC === 0;
   const prev = self;
+  let outAbilities = prev.abilities;
   let newMana = Math.min(prev.maxMana, prev.mana + manaRegenPerSec);
   if (newMana > prev.mana) {
     log(`${prev.name} regenerates ${manaRegenPerSec} mana.`);
@@ -159,18 +168,12 @@ function applyPeriodicForSide(
     if (healed > 0) log(`${prev.name} regenerates ${healed} health.`);
   }
 
-  const totemicStrengthAbility = prev.abilities.find((ability) => ability.name === 'Totemic Strength');
-  if (
-    burst &&
-    totemicStrengthAbility &&
-    interimHealth < prev.maxHealth
-  ) {
-    const healMatch = totemicStrengthAbility.description.match(/regenerate (\d+) health everyturn/i);
-    const healAmount = healMatch ? parseInt(healMatch[1], 10) : 20;
-    const healed = Math.min(healAmount, prev.maxHealth - interimHealth);
+  const passiveHeal = passiveHpBurstHeal(prev);
+  if (burst && passiveHeal > 0 && interimHealth < prev.maxHealth) {
+    const healed = Math.min(passiveHeal, prev.maxHealth - interimHealth);
     if (healed > 0) {
       interimHealth += healed;
-      log(`${prev.name}'s Totemic Strength regenerates ${healed} health.`);
+      log(`${prev.name}'s passive vitality restores ${healed} health.`);
     }
   }
 
@@ -249,28 +252,53 @@ function applyPeriodicForSide(
   }
 
   if (burst) {
-    const manaOverflowAbility = prev.abilities.find((ability) => ability.name === 'Mana Overflow');
-    if (manaOverflowAbility) {
-      const manaMatch = manaOverflowAbility.description.match(/gain \+(\d+) mana at the start of your turn/i);
-      const manaGain = manaMatch ? parseInt(manaMatch[1], 10) : 20;
-      const extraMana = Math.min(manaGain, prev.maxMana - newMana);
+    const manaBurst = passiveManaBurstGain(prev);
+    if (manaBurst > 0) {
+      const extraMana = Math.min(manaBurst, prev.maxMana - newMana);
       if (extraMana > 0) {
         newMana += extraMana;
-        log(`${prev.name}'s Mana Overflow grants +${extraMana} mana!`);
+        log(`${prev.name}'s passive mana surge grants +${extraMana} mana!`);
       }
     }
 
-    const elementalHarmonyAbility = prev.abilities.find((ability) => ability.name === 'Elemental Harmony');
-    if (elementalHarmonyAbility) {
-      const attackMatch = elementalHarmonyAbility.description.match(/(\d+)% attack/i);
-      const spellMatch = elementalHarmonyAbility.description.match(/(\d+)% spell damage/i);
-      const attackGain = attackMatch ? parseInt(attackMatch[1], 10) : 1;
-      const spellGain = spellMatch ? parseInt(spellMatch[1], 10) : 1;
+    const harmony = passiveHarmonyGains(prev);
+    if (harmony) {
+      const attackGain = harmony.attack;
+      const spellGain = harmony.spell;
       updatedEffects.attackBoost = (updatedEffects.attackBoost || 0) + attackGain;
       updatedEffects.spellDamageBoost = (updatedEffects.spellDamageBoost || 0) + spellGain;
       log(
-        `${prev.name}'s Elemental Harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`
+        `${prev.name}'s elemental harmony increases attack by +${attackGain}% and spell damage by +${spellGain}%!`
       );
+    }
+
+    const shieldGain = passiveShieldBurstGain(prev);
+    if (shieldGain > 0) {
+      const cap = Math.floor(prev.maxHealth * 0.35);
+      const next = Math.min(cap, (updatedEffects.shield || 0) + shieldGain);
+      const added = next - (updatedEffects.shield || 0);
+      if (added > 0) {
+        updatedEffects.shield = next;
+        updatedEffects.shieldDuration = Math.max(updatedEffects.shieldDuration || 0, PASSIVE_BURST_SEC + 1);
+        log(`${prev.name}'s passive wards gain ${added} shield.`);
+      }
+    }
+
+    const evPulse = passiveEvasionPercentPerPulse(prev);
+    if (evPulse > 0) {
+      updatedEffects.evasion = Math.max(updatedEffects.evasion || 0, evPulse);
+      updatedEffects.evasionDuration = Math.max(updatedEffects.evasionDuration || 0, PASSIVE_BURST_SEC + 2);
+      log(`${prev.name}'s passive footing holds at ${evPulse}% evasion.`);
+    }
+
+    const trimCd = passiveCooldownTrimSecondsPerPulse(prev);
+    if (trimCd > 0) {
+      outAbilities = prev.abilities.map((ab) => {
+        const cd = ab.currentCooldown ?? 0;
+        if (cd <= 0) return ab;
+        return { ...ab, currentCooldown: Math.max(0, cd - trimCd) };
+      });
+      log(`${prev.name}'s passive cadence trims ability cooldowns by ${trimCd}s.`);
     }
   }
 
@@ -280,7 +308,7 @@ function applyPeriodicForSide(
       health: interimHealth,
       mana: newMana,
       effects: updatedEffects,
-      abilities: prev.abilities,
+      abilities: outAbilities,
       isActive: true,
     },
     other: opponent,

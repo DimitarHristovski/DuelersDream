@@ -20,6 +20,14 @@ import { BattleArenaUI } from './BattleArenaUI';
 import { tickRealtimeSecond } from './battle-realtime-tick';
 import { getRoleAbilityDamageMultiplier } from './class-role-balance';
 import { isPassiveAbility } from '@/lib/is-passive-ability';
+import {
+  passiveAttackWhileLowHp,
+  passiveBonusSpellDamageFraction,
+  passiveConditionalAttackBoost,
+  passiveDamageReductionWhileHealthyFraction,
+  passiveLifestealBasicPercent,
+  passiveReflectPercentFromAttacks,
+} from '@/lib/passive-runtime';
 
 export interface GameStats {
   wins: number;
@@ -159,22 +167,27 @@ export const BattleArena = ({
     const boost = attacker.effects.attackBoost || 0;
     const reduction = defender.effects.attackReduction || 0;
     
-    // Check for Mutagens passive - parse values from description
+    // Conditional attack passive (Mutagens-style text on any passive)
     let mutagensBoost = 0;
-    const mutagensAbility = attacker.abilities.find(ability => ability.name === "Mutagens");
-    if (mutagensAbility) {
+    const atkPassive = passiveConditionalAttackBoost(attacker);
+    if (atkPassive) {
       const healthPercent = (attacker.health / attacker.maxHealth) * 100;
-      const boostMatch = mutagensAbility.description.match(/increase attack by (\d+)%/i);
-      const thresholdMatch = mutagensAbility.description.match(/above (\d+)% health/i);
-      const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
-      const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-      
+      const boostPercent = atkPassive.boost;
+      const threshold = atkPassive.threshold;
       if (healthPercent > threshold) {
         mutagensBoost = boostPercent;
-        addLogMessage(`${attacker.name}'s Mutagens provide ${boostPercent}% attack boost!`);
+        addLogMessage(`${attacker.name}'s combat passive grants ${boostPercent}% attack boost!`);
       }
     }
-    
+    const atkLow = passiveAttackWhileLowHp(attacker);
+    if (atkLow) {
+      const healthPercent = (attacker.health / attacker.maxHealth) * 100;
+      if (healthPercent < atkLow.threshold) {
+        mutagensBoost += atkLow.boost;
+        addLogMessage(`${attacker.name}'s low-health combat passive adds ${atkLow.boost}% attack!`);
+      }
+    }
+
     const totalBoost = boost + mutagensBoost;
     let damage = calculateAttackDamage(attacker.attackMin, attacker.attackMax, totalBoost, reduction);
     
@@ -201,14 +214,32 @@ export const BattleArena = ({
       damage += markedBonus;
       addLogMessage(`${defender.name} takes ${markedBonus} bonus damage from being marked!`);
     }
-    
+
+    const drFrac = passiveDamageReductionWhileHealthyFraction(defender);
+    if (drFrac > 0) {
+      damage = Math.max(1, Math.floor(damage * (1 - drFrac)));
+    }
+
     const newHealth = Math.max(0, defender.health - damage);
 
     setDefender((prev) => ({ ...prev, health: newHealth }));
     addLogMessage(`${attacker.name} attacks ${defender.name} for ${damage} damage!`);
 
+    const lsPct = passiveLifestealBasicPercent(attacker);
+    if (lsPct > 0 && damage > 0) {
+      const heal = Math.max(1, Math.floor((damage * lsPct) / 100));
+      setAttacker((prev) => ({
+        ...prev,
+        health: Math.min(prev.maxHealth, prev.health + heal),
+      }));
+      addLogMessage(`${attacker.name}'s siphon passive restores ${heal} health.`);
+    }
+
     // Counterattack: defender reflects a percentage of damage back to attacker
-    const reflectPct = defender.effects.counterAttack || 0;
+    const reflectPct = Math.min(
+      45,
+      (defender.effects.counterAttack || 0) + passiveReflectPercentFromAttacks(defender)
+    );
     if (reflectPct > 0 && damage > 0) {
       const reflected = Math.max(1, Math.floor(damage * reflectPct / 100));
       setAttacker(prev => ({ ...prev, health: Math.max(0, prev.health - reflected) }));
@@ -319,7 +350,7 @@ export const BattleArena = ({
     ) => {
       const m = p.abilities.find((a) => a.name === 'Necromancy Mastery' && isPassiveAbility(a));
       if (!m) return;
-      const boostMatch = m.description.match(/(\d+)% more damage everyturn/);
+      const boostMatch = m.description.match(/(\d+)% more damage\s*(?:everyturn|always)\b/i);
       const boostPercent = boostMatch ? parseInt(boostMatch[1], 10) : 35;
       setPlayer((prev) => {
         if (prev.effects.summonedCreatureDamageBoost >= boostPercent) return prev;
@@ -493,20 +524,25 @@ export const BattleArena = ({
     // Helper: when abilities deal damage, ensure counterattack triggers like basic attacks
     const abilityDealDamage = (rawDamage: number, message: string, onAppliedDamage?: (actualDamage: number) => void) => {
       const scaled = Math.max(1, Math.floor(rawDamage * roleAbilityDmgMult));
+      const drFrac = passiveDamageReductionWhileHealthyFraction(opponent);
+      const afterDr = Math.max(1, Math.floor(scaled * (1 - drFrac)));
       return dealDamage(
-        scaled,
+        afterDr,
         opponent,
         setOpponent,
         addLogMessage,
         message,
         (actual) => {
-          // Trigger class counterattack
+          // Trigger class counterattack + passive thorns
           if (actual > 0) {
-            const reflectPct = opponent.effects.counterAttack || 0;
+            const reflectPct = Math.min(
+              45,
+              (opponent.effects.counterAttack || 0) + passiveReflectPercentFromAttacks(opponent)
+            );
             if (reflectPct > 0) {
               const reflected = Math.max(1, Math.floor(actual * reflectPct / 100));
               setPlayer(prev => ({ ...prev, health: Math.max(0, prev.health - reflected) }));
-              addLogMessage(`${opponent.name} counterattacks for ${reflected} damage!`);
+              addLogMessage(`${opponent.name} reflects ${reflected} damage!`);
             }
           }
           // Allow callers (e.g., vampiric strike) to act on actual applied damage
@@ -1084,7 +1120,7 @@ export const BattleArena = ({
 
     if (ability.name === "Necromancy Mastery") {
       // Parse boost percentage from description "All summoned creatures deal 150% more damage everyturn"
-      const boostMatch = description.match(/(\d+)% more damage everyturn/);
+      const boostMatch = description.match(/(\d+)% more damage\s*(?:everyturn|always)\b/i);
       const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 150;
       
       setPlayer(prev => ({
@@ -1118,20 +1154,9 @@ export const BattleArena = ({
         damage = boosted;
       }
       
-      // Check for Monster Lore passive - parse values from description
-      const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
-      if (monsterLoreAbility) {
-        const healthPercent = (player.health / player.maxHealth) * 100;
-        const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
-        const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
-        const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
-        const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-        
-        if (healthPercent < threshold) {
-          const monsterLoreBoost = Math.floor(damage * (boostPercent / 100));
-          damage += monsterLoreBoost;
-          addLogMessage(`${player.name}'s Monster Lore provides ${boostPercent}% spell damage boost!`);
-        }
+      const spellFrac = passiveBonusSpellDamageFraction(player);
+      if (spellFrac > 0) {
+        damage += Math.floor(damage * spellFrac);
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
@@ -1148,20 +1173,9 @@ export const BattleArena = ({
         damage = boosted;
       }
       
-      // Check for Monster Lore passive - parse values from description
-      const monsterLoreAbility = player.abilities.find(ability => ability.name === "Monster Lore");
-      if (monsterLoreAbility) {
-        const healthPercent = (player.health / player.maxHealth) * 100;
-        const boostMatch = monsterLoreAbility.description.match(/increase spell damage by (\d+)%/i);
-        const thresholdMatch = monsterLoreAbility.description.match(/under (\d+)% health/i);
-        const boostPercent = boostMatch ? parseInt(boostMatch[1]) : 100;
-        const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
-        
-        if (healthPercent < threshold) {
-          const monsterLoreBoost = Math.floor(damage * (boostPercent / 100));
-          damage += monsterLoreBoost;
-          addLogMessage(`${player.name}'s Monster Lore provides ${boostPercent}% spell damage boost!`);
-        }
+      const spellFrac = passiveBonusSpellDamageFraction(player);
+      if (spellFrac > 0) {
+        damage += Math.floor(damage * spellFrac);
       }
       abilityDealDamage(damage, `${player.name} uses ${ability.name} and deals ${damage} damage!`);
       return opponent.health > 0;
